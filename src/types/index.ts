@@ -27,6 +27,21 @@ export interface AgentConfig {
   maxConcurrent: number;
   timeout: number;
   retryAttempts: number;
+  browserMCP?: BrowserMCPIntegrationConfig;
+}
+
+export interface BrowserMCPIntegrationConfig {
+  enabled: boolean;
+  serverUrl: string;
+  port: number;
+  enabledAgents: string[];
+  defaultConfig: {
+    enableScreenshots: boolean;
+    enableAccessibility: boolean;
+    timeout: number;
+    maxRetries: number;
+    sandbox: boolean;
+  };
 }
 
 export interface QualityConfig {
@@ -75,6 +90,22 @@ export interface Agent {
   capabilities: string[];
   status: 'idle' | 'busy' | 'error';
   execute: (issueId: string, worktreeId: string) => Promise<void>;
+}
+
+export interface ToolExecutionContext {
+  issueId: string;
+  worktreeId: string;
+  agentId: string;
+  startTime: Date;
+  metadata?: Record<string, any>;
+}
+
+export interface ToolResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+  duration?: number;
+  metadata?: Record<string, any>;
 }
 
 export interface ExecutionPattern {
@@ -302,7 +333,7 @@ export interface GotchaPattern {
   pattern: string; // regex or text pattern
   occurrences: GotchaOccurrence[];
   severity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'build' | 'runtime' | 'logic' | 'integration' | 'configuration';
+  category: 'build' | 'runtime' | 'logic' | 'integration' | 'configuration' | 'deployment';
   solution?: string;
   preventionSteps: string[];
   createdAt: Date;
@@ -357,6 +388,7 @@ export interface KnowledgeQuery {
     projectId?: string;
     agentTypes?: string[];
     minEffectiveness?: number;
+    excludeIds?: string[];
   };
   limit?: number;
   includeGlobal?: boolean;

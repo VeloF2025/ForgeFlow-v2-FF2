@@ -3,6 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execa } from 'execa';
 import { globby } from 'globby';
+import { BrowserMCPTool, BrowserAction } from '../tools/browser-mcp-tool';
+import type { ToolExecutionContext } from '../types';
 
 interface CoverageReport {
   lines: { total: number; covered: number; percentage: number };
@@ -33,6 +35,8 @@ export class TestCoverageValidatorAgent extends BaseAgent {
     statements: 95,
   };
 
+  private browserTool: BrowserMCPTool;
+
   constructor() {
     super('test-coverage-validator', [
       'test-writing',
@@ -41,7 +45,17 @@ export class TestCoverageValidatorAgent extends BaseAgent {
       'fixture-creation',
       'integration-testing',
       'e2e-testing',
+      'browser-e2e-testing',
+      'ui-testing',
     ]);
+
+    // Initialize Browser MCP tool for E2E testing
+    this.browserTool = new BrowserMCPTool({
+      enableScreenshots: true,
+      enableAccessibility: false,
+      timeout: 45000,
+      maxRetries: 3,
+    });
   }
 
   async execute(issueId: string, worktreeId: string): Promise<void> {
@@ -230,12 +244,15 @@ export class TestCoverageValidatorAgent extends BaseAgent {
   }
 
   /**
-   * Create E2E tests for user workflows
+   * Create E2E tests for user workflows using Browser MCP
    */
   private async writeE2ETests(worktreeId: string): Promise<void> {
     this.logger.info(`Implementing E2E test scenarios in worktree: ${worktreeId}`);
 
     try {
+      // Initialize browser tool for E2E testing
+      await this.browserTool.initialize();
+
       // Check if web dashboard exists
       const webDir = path.join(process.cwd(), 'src', 'web');
       const webExists = await fs
@@ -247,16 +264,22 @@ export class TestCoverageValidatorAgent extends BaseAgent {
         const e2eDir = path.join(process.cwd(), 'tests', 'e2e');
         await fs.mkdir(e2eDir, { recursive: true });
 
+        // Create traditional Playwright tests
         await this.createDashboardE2ETests(e2eDir);
         await this.createAPIE2ETests(e2eDir);
 
-        this.logger.info('E2E test suite created for web dashboard and API');
+        // Create Browser MCP powered tests
+        await this.createBrowserMCPE2ETests(e2eDir, worktreeId);
+
+        this.logger.info('E2E test suite created with Browser MCP integration');
       } else {
         this.logger.info('No web interface detected, skipping E2E tests');
       }
     } catch (error) {
       this.logger.error('Failed to write E2E tests:', error);
       throw error;
+    } finally {
+      await this.browserTool.disconnect();
     }
   }
 
@@ -825,6 +848,267 @@ test.describe('ForgeFlow API E2E', () => {
 `;
 
     await fs.writeFile(path.join(testDir, 'api.spec.ts'), testContent, 'utf8');
+  }
+
+  private async createBrowserMCPE2ETests(testDir: string, worktreeId: string): Promise<void> {
+    this.logger.debug('Creating Browser MCP powered E2E tests');
+
+    const context: ToolExecutionContext = {
+      issueId: this.currentIssueId || '',
+      worktreeId,
+      agentId: this.id,
+      startTime: new Date(),
+    };
+
+    try {
+      // Test basic navigation and functionality
+      await this.browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      // Take screenshot for baseline
+      const screenshotResult = await this.browserTool.executeAction({
+        type: 'screenshot',
+      }, context);
+
+      // Test user workflows
+      const testWorkflows: Array<{ name: string; actions: BrowserAction[] }> = [
+        {
+          name: 'Dashboard Navigation',
+          actions: [
+            { type: 'click', selector: 'nav a[href="/dashboard"]' },
+            { type: 'wait', selector: '[data-testid="dashboard-content"]' },
+            { type: 'screenshot' },
+          ],
+        },
+        {
+          name: 'Agent Status Check',
+          actions: [
+            { type: 'click', selector: 'nav a[href="/agents"]' },
+            { type: 'wait', selector: '[data-testid="agent-list"]' },
+            { type: 'extract', selector: '[data-testid="agent-status"]' },
+          ],
+        },
+        {
+          name: 'Execution Monitoring',
+          actions: [
+            { type: 'click', selector: 'nav a[href="/executions"]' },
+            { type: 'wait', selector: '[data-testid="executions-table"]' },
+            { type: 'screenshot' },
+          ],
+        },
+      ];
+
+      for (const workflow of testWorkflows) {
+        this.logger.debug(`Testing workflow: ${workflow.name}`);
+        for (const action of workflow.actions) {
+          try {
+            await this.browserTool.executeAction(action, context);
+          } catch (error) {
+            this.logger.warning(`Workflow step failed: ${workflow.name} - ${action.type}`, error);
+          }
+        }
+      }
+
+      // Create Browser MCP test file
+      const testContent = `import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { BrowserMCPTool } from '../../src/tools/browser-mcp-tool';
+import type { ToolExecutionContext } from '../../src/types';
+
+describe('Browser MCP E2E Tests', () => {
+  let browserTool: BrowserMCPTool;
+  let context: ToolExecutionContext;
+
+  beforeEach(async () => {
+    browserTool = new BrowserMCPTool({
+      enableScreenshots: true,
+      timeout: 30000,
+    });
+    
+    context = {
+      issueId: 'test-issue',
+      worktreeId: 'test-worktree',
+      agentId: 'test-agent',
+      startTime: new Date(),
+    };
+
+    await browserTool.initialize();
+  });
+
+  afterEach(async () => {
+    await browserTool.disconnect();
+  });
+
+  describe('Dashboard Functionality', () => {
+    it('should load dashboard and take screenshot', async () => {
+      const result = await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      expect(result.success).toBe(true);
+
+      const screenshot = await browserTool.executeAction({
+        type: 'screenshot',
+      }, context);
+
+      expect(screenshot.success).toBe(true);
+      expect(screenshot.data).toHaveProperty('screenshot');
+    });
+
+    it('should test navigation between pages', async () => {
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      // Test dashboard navigation
+      const dashboardClick = await browserTool.executeAction({
+        type: 'click',
+        selector: 'nav a[href="/dashboard"]',
+      }, context);
+
+      expect(dashboardClick.success).toBe(true);
+
+      // Wait for content to load
+      await browserTool.executeAction({
+        type: 'wait',
+        selector: '[data-testid="dashboard-content"]',
+      }, context);
+    });
+  });
+
+  describe('Agent Status Monitoring', () => {
+    it('should extract agent status information', async () => {
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010/agents',
+      }, context);
+
+      const agentData = await browserTool.executeAction({
+        type: 'extract',
+        selector: '[data-testid="agent-list"]',
+      }, context);
+
+      expect(agentData.success).toBe(true);
+      expect(agentData.data).toHaveProperty('data');
+    });
+
+    it('should test agent interaction workflows', async () => {
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010/agents',
+      }, context);
+
+      // Click on agent details
+      await browserTool.executeAction({
+        type: 'click',
+        selector: '[data-testid="agent-card"]:first-child',
+      }, context);
+
+      // Take screenshot of agent details
+      const detailsScreenshot = await browserTool.executeAction({
+        type: 'screenshot',
+      }, context);
+
+      expect(detailsScreenshot.success).toBe(true);
+    });
+  });
+
+  describe('Responsive Design Testing', () => {
+    it('should test mobile viewport', async () => {
+      // Set mobile viewport
+      await browserTool.executeAction({
+        type: 'evaluate',
+        script: 'window.resizeTo(375, 667)',
+      }, context);
+
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      const mobileScreenshot = await browserTool.executeAction({
+        type: 'screenshot',
+      }, context);
+
+      expect(mobileScreenshot.success).toBe(true);
+    });
+
+    it('should test tablet viewport', async () => {
+      // Set tablet viewport
+      await browserTool.executeAction({
+        type: 'evaluate',
+        script: 'window.resizeTo(768, 1024)',
+      }, context);
+
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      const tabletScreenshot = await browserTool.executeAction({
+        type: 'screenshot',
+      }, context);
+
+      expect(tabletScreenshot.success).toBe(true);
+    });
+  });
+
+  describe('Performance Testing', () => {
+    it('should measure page performance metrics', async () => {
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      const metrics = await browserTool.getPerformanceMetrics();
+      
+      expect(metrics).toHaveProperty('loadTime');
+      expect(metrics).toHaveProperty('firstContentfulPaint');
+      expect(metrics).toHaveProperty('largestContentfulPaint');
+      
+      // Check Core Web Vitals thresholds
+      expect(metrics.largestContentfulPaint).toBeLessThan(2500);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should handle navigation to non-existent pages', async () => {
+      const result = await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010/non-existent-page',
+      }, context);
+
+      // Should handle gracefully, not crash
+      expect(result).toBeDefined();
+    });
+
+    it('should handle invalid selectors gracefully', async () => {
+      await browserTool.executeAction({
+        type: 'navigate',
+        url: 'http://localhost:3010',
+      }, context);
+
+      const result = await browserTool.executeAction({
+        type: 'click',
+        selector: '#non-existent-element',
+      }, context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+  });
+});
+`;
+
+      await fs.writeFile(path.join(testDir, 'browser-mcp.test.ts'), testContent, 'utf8');
+      this.logger.info('Browser MCP E2E test file created successfully');
+
+    } catch (error) {
+      this.logger.warning('Failed to create Browser MCP E2E tests', error);
+    }
   }
 }
 

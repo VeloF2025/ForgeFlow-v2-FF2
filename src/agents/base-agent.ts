@@ -8,6 +8,7 @@ export abstract class BaseAgent implements Agent {
   public readonly capabilities: string[];
   public status: 'idle' | 'busy' | 'error';
   protected logger: LogContext;
+  protected currentIssueId?: string;
 
   constructor(type: string, capabilities: string[]) {
     this.id = `${type}-${randomUUID().slice(0, 8)}`;
@@ -20,12 +21,14 @@ export abstract class BaseAgent implements Agent {
   abstract execute(issueId: string, worktreeId: string): Promise<void>;
 
   protected preExecute(issueId: string, worktreeId: string): void {
+    this.currentIssueId = issueId;
     this.logger.info(`Starting execution for issue: ${issueId} in worktree: ${worktreeId}`);
     this.status = 'busy';
   }
 
   protected postExecute(issueId: string, success: boolean): void {
     this.status = 'idle';
+    this.currentIssueId = undefined;
     const statusMsg = success ? 'completed successfully' : 'failed';
     this.logger.info(`Execution ${statusMsg} for issue: ${issueId}`);
   }
