@@ -1,0 +1,27 @@
+github:
+  token: ${GITHUB_TOKEN}
+  owner: ${GITHUB_OWNER}
+  repo: ${GITHUB_REPO}
+
+worktree:
+  basePath: .worktrees
+  maxWorktrees: 10
+  cleanupOnError: true
+
+agents:
+  maxConcurrent: 5
+  timeout: 300000
+  retryAttempts: 3
+
+quality:
+  linting: true
+  testing: true
+  coverage: 95
+  security: true
+  performance: true
+
+protocols:
+  nlnh: true
+  antihall: true
+  ryr: true
+  rulesPath: .

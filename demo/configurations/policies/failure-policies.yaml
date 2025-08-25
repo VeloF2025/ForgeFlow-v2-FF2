@@ -1,0 +1,358 @@
+# ForgeFlow v2 - Advanced Failure Policies Configuration
+# Defines intelligent error handling, retry strategies, and recovery mechanisms
+
+# Global Failure Policy Settings
+global:
+  # Default behavior for all agents
+  defaultBehavior:
+    maxRetries: 3                   # Maximum retry attempts before failure
+    retryDelay: 5000               # Initial delay between retries (ms)
+    retryBackoff: "exponential"    # Strategy: exponential, linear, fixed
+    backoffMultiplier: 2.0         # Multiplier for exponential backoff
+    maxRetryDelay: 60000           # Maximum delay between retries (ms)
+    jitterEnabled: true            # Add random jitter to prevent thundering herd
+    jitterRange: 0.1               # Jitter range (10% of delay)
+
+  # Circuit breaker configuration
+  circuitBreaker:
+    enabled: true                  # Enable circuit breaker pattern
+    failureThreshold: 5            # Number of failures before opening circuit
+    resetTimeout: 60000            # Time before attempting circuit reset (ms)
+    halfOpenMaxCalls: 3            # Max calls in half-open state
+    monitorWindow: 300000          # Sliding window for failure tracking (ms)
+    minimumThroughput: 10          # Minimum calls before circuit can open
+
+# Agent-Specific Failure Policies
+agents:
+  strategic-planner:
+    description: "Strategic planning is critical - immediate escalation on failure"
+    maxRetries: 1                  # Planning failures are critical, escalate quickly
+    retryDelay: 10000              # Longer initial delay for planning
+    retryBackoff: "linear"         # Linear backoff for planning tasks
+    
+    circuitBreaker:
+      failureThreshold: 2          # More sensitive - planning failures are costly
+      resetTimeout: 300000         # Longer reset timeout (5 minutes)
+    
+    recovery:
+      strategy: "escalate"         # Escalate to human intervention
+      fallbackAgent: null          # No fallback - planning is unique
+      cleanupWorktree: true
+      notifyStakeholders: true
+      createEscalationIssue: true
+      severity: "critical"
+
+  system-architect:
+    description: "Architecture decisions require careful retry logic"
+    maxRetries: 2                  # Architecture mistakes are expensive
+    retryDelay: 15000              # Longer delay for architectural thinking
+    retryBackoff: "exponential"
+    backoffMultiplier: 1.5         # Gentler backoff for architecture work
+    
+    circuitBreaker:
+      failureThreshold: 3          # Allow a few failures before opening
+      resetTimeout: 120000         # 2-minute reset timeout
+    
+    recovery:
+      strategy: "fallback_and_retry"
+      fallbackAgent: "strategic-planner"  # Fall back to re-planning
+      cleanupWorktree: true
+      reviewRequired: true         # Require human review of architecture changes
+      severity: "high"
+
+  code-implementer:
+    description: "Code implementation with robust retry and recovery"
+    maxRetries: 3                  # Standard retry count for implementation
+    retryDelay: 3000               # Quick retry for implementation tasks
+    retryBackoff: "exponential"
+    backoffMultiplier: 2.0
+    
+    circuitBreaker:
+      failureThreshold: 5          # More tolerance for implementation failures
+      resetTimeout: 60000          # Standard reset timeout
+    
+    recovery:
+      strategy: "retry_with_different_approach"
+      fallbackAgent: "system-architect"  # Re-architect if implementation fails
+      cleanupWorktree: true
+      diffApproach:
+        enabled: true              # Try different implementation approaches
+        maxApproaches: 2           # Maximum alternative approaches to try
+        approachTimeout: 600000    # Timeout for each approach (10 minutes)
+      severity: "medium"
+
+  test-coverage-validator:
+    description: "Testing is crucial - multiple recovery strategies"
+    maxRetries: 4                  # More retries for testing (flaky tests)
+    retryDelay: 2000               # Quick retry for tests
+    retryBackoff: "linear"         # Linear backoff to avoid exponential delays
+    backoffMultiplier: 1.0         # No backoff multiplication
+    maxRetryDelay: 10000           # Cap retry delay for tests
+    
+    circuitBreaker:
+      failureThreshold: 8          # High tolerance for test flakiness
+      resetTimeout: 30000          # Quick reset for tests
+      halfOpenMaxCalls: 5          # More calls in half-open for tests
+    
+    recovery:
+      strategy: "parallel_retry"   # Try multiple test approaches in parallel
+      fallbackAgent: "code-quality-reviewer"  # Quality review if tests fail
+      cleanupWorktree: false       # Keep test artifacts for debugging
+      testStrategies:
+        - "unit_tests_only"        # Try unit tests only
+        - "integration_tests_focus" # Focus on integration tests
+        - "reduced_coverage"        # Accept lower coverage temporarily
+      severity: "medium"
+
+  code-quality-reviewer:
+    description: "Quality review with emphasis on standards compliance"
+    maxRetries: 2                  # Quality review should be definitive
+    retryDelay: 5000               # Moderate delay for quality review
+    retryBackoff: "linear"
+    
+    circuitBreaker:
+      failureThreshold: 3          # Quality failures are significant
+      resetTimeout: 90000          # Longer reset for quality issues
+    
+    recovery:
+      strategy: "detailed_analysis"
+      fallbackAgent: null          # Quality review cannot be delegated
+      cleanupWorktree: false       # Keep artifacts for manual review
+      requireHumanReview: true     # Always require human review on failure
+      detailedLogging: true        # Enable detailed logging for analysis
+      severity: "high"
+
+  security-auditor:
+    description: "Security is non-negotiable - strict failure handling"
+    maxRetries: 1                  # Security issues require immediate attention
+    retryDelay: 30000              # Longer delay for security analysis
+    retryBackoff: "fixed"          # Fixed delay for security
+    
+    circuitBreaker:
+      failureThreshold: 1          # Immediate circuit opening for security
+      resetTimeout: 600000         # Long reset timeout (10 minutes)
+    
+    recovery:
+      strategy: "escalate_immediately"
+      fallbackAgent: null          # Security cannot be skipped
+      cleanupWorktree: false       # Preserve security artifacts
+      notifySecurityTeam: true     # Immediate security team notification
+      blockDeployment: true        # Block deployment on security failures
+      requireSecurityReview: true  # Mandatory security review
+      severity: "critical"
+
+  performance-optimizer:
+    description: "Performance optimization with graceful degradation"
+    maxRetries: 3                  # Standard retries for performance
+    retryDelay: 10000              # Longer delay for performance testing
+    retryBackoff: "exponential"
+    
+    circuitBreaker:
+      failureThreshold: 4          # Reasonable tolerance for performance issues
+      resetTimeout: 120000         # 2-minute reset timeout
+    
+    recovery:
+      strategy: "graceful_degradation"
+      fallbackAgent: null          # Performance is optional but desired
+      cleanupWorktree: true
+      acceptablePerformance: true  # Accept reasonable performance if optimal fails
+      performanceThresholds:
+        minimum: 70                # Minimum acceptable performance score
+        warning: 80                # Warning threshold
+        target: 90                 # Target performance score
+      severity: "low"
+
+  antihallucination-validator:
+    description: "Hallucination validation with high accuracy requirements"
+    maxRetries: 2                  # Limited retries for validation
+    retryDelay: 1000               # Quick retry for validation
+    retryBackoff: "fixed"          # Fixed delay for consistent validation
+    
+    circuitBreaker:
+      failureThreshold: 2          # Low threshold for validation failures
+      resetTimeout: 180000         # 3-minute reset timeout
+    
+    recovery:
+      strategy: "human_validation"
+      fallbackAgent: null          # Validation cannot be automated if failing
+      cleanupWorktree: true
+      requireHumanValidation: true # Human validation required on failure
+      validationTimeout: 1800000   # 30-minute timeout for human validation
+      severity: "high"
+
+  deployment-automation:
+    description: "Deployment requires careful failure handling and rollback"
+    maxRetries: 1                  # Deployment failures are serious
+    retryDelay: 30000              # Long delay for deployment retry
+    retryBackoff: "fixed"
+    
+    circuitBreaker:
+      failureThreshold: 1          # Immediate circuit opening for deployment
+      resetTimeout: 900000         # 15-minute reset timeout
+    
+    recovery:
+      strategy: "rollback_and_analyze"
+      fallbackAgent: null          # Deployment cannot be delegated
+      cleanupWorktree: true
+      automaticRollback: true      # Automatic rollback on failure
+      rollbackTimeout: 300000      # 5-minute rollback timeout
+      preserveDeploymentLogs: true # Keep deployment logs for analysis
+      notifyDevOpsTeam: true       # Notify DevOps team immediately
+      severity: "critical"
+
+# Failure Pattern-Specific Policies
+patterns:
+  feature-development:
+    description: "Feature development failure policy with parallel recovery"
+    
+    # Phase-specific failure handling
+    phases:
+      planning:
+        maxRetries: 1              # Planning failures require rework
+        recovery:
+          strategy: "restart_planning"
+          requireStakeholderInput: true
+      
+      implementation:
+        maxRetries: 2              # Implementation can be retried
+        recovery:
+          strategy: "parallel_recovery"
+          allowPartialSuccess: true  # Some agents can succeed while others retry
+          minimumSuccessThreshold: 0.6  # 60% of agents must succeed
+      
+      quality-assurance:
+        maxRetries: 3              # Quality issues can be fixed
+        recovery:
+          strategy: "iterative_improvement"
+          allowQualityDegradation: false  # Never compromise quality
+      
+      deployment:
+        maxRetries: 1              # Deployment failures are critical
+        recovery:
+          strategy: "rollback_and_fix"
+          automaticRollback: true
+
+  bug-fix-sprint:
+    description: "Emergency bug fix with accelerated failure handling"
+    
+    # Emergency mode overrides
+    emergencyMode:
+      enabled: true
+      maxRetries: 1               # Quick retries in emergency
+      retryDelay: 1000            # Minimal delay in emergency
+      
+      recovery:
+        strategy: "parallel_emergency_fix"
+        deployMultipleAgents: true  # Deploy multiple agents to same issue
+        acceptPartialFix: true      # Accept partial fixes in emergency
+        requireHotfixApproval: true # Hotfix approval process
+        notifyIncidentTeam: true    # Notify incident response team
+
+  security-audit:
+    description: "Security audit with zero-tolerance failure policy"
+    
+    securityMode:
+      enabled: true
+      maxRetries: 0               # No retries for security - human intervention required
+      failFast: true              # Fail immediately on security issues
+      
+      recovery:
+        strategy: "security_escalation"
+        blockAllOperations: true    # Block all other operations on security failure
+        requireSecurityClearance: true  # Security team clearance required
+        mandatorySecurityReview: true   # Mandatory security review
+        quarantineChanges: true     # Quarantine any changes made
+
+# Recovery Actions Configuration
+recoveryActions:
+  # Cleanup actions
+  cleanup:
+    worktree:
+      enabled: true               # Clean up failed worktrees
+      preserveArtifacts: true     # Keep important artifacts
+      archiveLocation: ".ff2/recovery/worktrees"
+    
+    processes:
+      enabled: true               # Kill hanging processes
+      gracefulTimeout: 30000      # Grace period before force kill
+      forceKillTimeout: 60000     # Timeout before giving up
+    
+    temporaryFiles:
+      enabled: true               # Clean up temporary files
+      preservePattern: "*.log,*.error,*.debug"  # Files to preserve
+      cleanupDelay: 300000        # Delay before cleanup (5 minutes)
+
+  # Notification actions
+  notifications:
+    email:
+      enabled: false              # Configure email notifications
+      recipients: []              # Email recipients
+      
+    slack:
+      enabled: false              # Configure Slack notifications
+      channels:
+        critical: "#incidents"
+        high: "#alerts"
+        medium: "#warnings"
+        low: "#info"
+    
+    github:
+      enabled: true               # Create GitHub issues for failures
+      labels: ["forgeflow-failure", "needs-investigation"]
+      assignees: []               # Auto-assign to specific users
+      
+  # Escalation actions
+  escalation:
+    humanIntervention:
+      enabled: true               # Enable human intervention requests
+      timeout: 3600000            # Timeout for human response (1 hour)
+      escalationLevels:
+        - "team-lead"
+        - "tech-lead" 
+        - "engineering-manager"
+    
+    fallbackAgents:
+      enabled: true               # Enable fallback to other agents
+      maxFallbacks: 2             # Maximum fallback attempts
+      fallbackDelay: 60000        # Delay before trying fallback
+
+# Monitoring and Alerting for Failures
+monitoring:
+  # Failure metrics
+  metrics:
+    failureRate: true             # Track failure rates
+    recoveryTime: true            # Track recovery times
+    circuitBreakerState: true     # Track circuit breaker states
+    retryPatterns: true           # Analyze retry patterns
+  
+  # Alerting thresholds
+  alerts:
+    failureRateThreshold: 0.1     # Alert if failure rate > 10%
+    recoveryTimeThreshold: 300000 # Alert if recovery > 5 minutes
+    circuitBreakerOpen: true      # Alert when circuit breaker opens
+    consecutiveFailures: 3        # Alert after N consecutive failures
+  
+  # Health checks
+  healthChecks:
+    interval: 30000               # Health check interval (30 seconds)
+    timeout: 10000                # Health check timeout (10 seconds)
+    failureThreshold: 3           # Failures before marking unhealthy
+    recoveryThreshold: 2          # Successes before marking healthy
+
+# Testing Failure Policies
+testing:
+  # Chaos engineering for failure policy testing
+  chaosEngineering:
+    enabled: false                # Enable chaos testing (use carefully!)
+    scenarios:
+      networkFailure: 0.01        # 1% chance of network failure
+      processKill: 0.005          # 0.5% chance of process kill
+      resourceExhaustion: 0.002   # 0.2% chance of resource exhaustion
+  
+  # Failure injection for testing
+  failureInjection:
+    enabled: false                # Enable failure injection
+    patterns:
+      - "random_timeout"          # Random timeout failures
+      - "memory_limit"            # Memory limit failures
+      - "disk_full"               # Disk full failures

@@ -1,0 +1,14 @@
+{
+  "version": "2.0",
+  "initialized": true,
+  "github_integration": true,
+  "worktrees": [],
+  "active_issues": [],
+  "agent_assignments": {},
+  "github_repo": {
+    "owner": "automazeio",
+    "repo": "ccpm",
+    "full_name": "automazeio/ccpm"
+  },
+  "initialized_at": "2025-08-24T20:48:50.295285"
+}

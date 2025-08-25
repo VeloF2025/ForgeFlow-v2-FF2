@@ -1,0 +1,463 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forgeflow.dev/schemas/custom-agent-definition.json",
+  "title": "ForgeFlow Custom Agent Definition Schema",
+  "description": "Schema for defining custom agents in the ForgeFlow V2 system",
+  "type": "object",
+  "required": [
+    "name",
+    "type",
+    "version", 
+    "capabilities",
+    "implementation"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Agent name in kebab-case format"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$",
+      "description": "Agent type identifier (must be unique)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9]+)?$",
+      "description": "Semantic version (e.g., 1.0.0, 2.1.0-beta)"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable display name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Detailed description of agent purpose and functionality"
+    },
+    "author": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Author name"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Author email address"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Author website or profile URL"
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
+      },
+      "description": "List of capabilities this agent provides"
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
+          },
+          "description": "Required agent types"
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Tool name"
+              },
+              "version": {
+                "type": "string",
+                "description": "Required tool version"
+              },
+              "optional": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether this tool is optional"
+              }
+            }
+          },
+          "description": "Required external tools or CLI programs"
+        },
+        "npm": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z0-9@/_-]+$": {
+              "type": "string"
+            }
+          },
+          "description": "NPM package dependencies"
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON schema for agent configuration"
+        },
+        "defaults": {
+          "type": "object",
+          "description": "Default configuration values"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Required configuration keys"
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["javascript", "typescript", "python", "shell", "docker"],
+          "description": "Implementation type"
+        },
+        "main": {
+          "type": "string",
+          "description": "Main implementation file path (relative to agent directory)"
+        },
+        "class": {
+          "type": "string",
+          "description": "Main class name for OOP implementations"
+        },
+        "function": {
+          "type": "string",
+          "description": "Main function name for functional implementations"
+        },
+        "dockerImage": {
+          "type": "string",
+          "description": "Docker image for containerized agents"
+        },
+        "entrypoint": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Docker entrypoint command"
+        },
+        "environment": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z][A-Z0-9_]*$": {
+              "type": "string"
+            }
+          },
+          "description": "Environment variables"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 3600000,
+          "default": 300000,
+          "description": "Execution timeout in milliseconds"
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "default": 3,
+          "description": "Number of retry attempts"
+        },
+        "parallel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether agent supports parallel execution"
+        },
+        "isolation": {
+          "type": "string",
+          "enum": ["none", "process", "container"],
+          "default": "process",
+          "description": "Execution isolation level"
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "maxMemory": {
+              "type": "string",
+              "pattern": "^\\d+[KMG]B$",
+              "description": "Maximum memory usage (e.g., '512MB', '2GB')"
+            },
+            "maxCpu": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 4.0,
+              "description": "Maximum CPU cores"
+            }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "criteria"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Quality gate name"
+              },
+              "criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Quality criteria"
+              },
+              "blocking": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether gate failures block execution"
+              }
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Metric name"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["counter", "gauge", "histogram", "timer"],
+                "description": "Metric type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Metric description"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Metric tags"
+              }
+            }
+          }
+        }
+      }
+    },
+    "testing": {
+      "type": "object",
+      "properties": {
+        "unitTests": {
+          "type": "object",
+          "properties": {
+            "framework": {
+              "type": "string",
+              "enum": ["jest", "vitest", "mocha", "pytest", "go-test"],
+              "description": "Testing framework"
+            },
+            "pattern": {
+              "type": "string",
+              "description": "Test file pattern (glob)"
+            },
+            "coverage": {
+              "type": "object",
+              "properties": {
+                "minimum": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 90,
+                  "description": "Minimum test coverage percentage"
+                }
+              }
+            }
+          }
+        },
+        "integrationTests": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether integration tests are available"
+            },
+            "pattern": {
+              "type": "string",
+              "description": "Integration test pattern"
+            }
+          }
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "filesystem:read",
+              "filesystem:write", 
+              "network:http",
+              "network:socket",
+              "process:spawn",
+              "environment:read",
+              "environment:write"
+            ]
+          },
+          "description": "Required security permissions"
+        },
+        "sandbox": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether agent should run in sandbox"
+        },
+        "trustedSources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Trusted source URLs for downloads"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "properties": {
+        "forgeflowVersion": {
+          "type": "string",
+          "pattern": "^[~^]?\\d+\\.\\d+\\.\\d+",
+          "description": "Compatible ForgeFlow version range"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["windows", "linux", "darwin", "docker"]
+          },
+          "description": "Supported platforms"
+        },
+        "nodeVersion": {
+          "type": "string",
+          "pattern": "^[~^]?\\d+\\.\\d+\\.\\d+",
+          "description": "Required Node.js version"
+        }
+      }
+    },
+    "documentation": {
+      "type": "object",
+      "properties": {
+        "readme": {
+          "type": "string",
+          "description": "Path to README file"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Example name"
+              },
+              "description": {
+                "type": "string",
+                "description": "Example description"
+              },
+              "file": {
+                "type": "string",
+                "description": "Example file path"
+              }
+            }
+          }
+        },
+        "changelog": {
+          "type": "string",
+          "description": "Path to changelog file"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "description": "Searchable tags"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "planning",
+            "implementation", 
+            "testing",
+            "security",
+            "performance",
+            "deployment",
+            "monitoring",
+            "analysis",
+            "integration",
+            "utility"
+          ],
+          "description": "Agent category"
+        },
+        "maturity": {
+          "type": "string",
+          "enum": ["experimental", "beta", "stable", "deprecated"],
+          "default": "beta",
+          "description": "Maturity level"
+        },
+        "license": {
+          "type": "string",
+          "description": "License identifier (SPDX format)"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "Source code repository URL"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "name": "readme-generator",
+  "type": "readme-generator",
+  "version": "1.0.0",
+  "displayName": "README Generator",
+  "description": "Automatically generates comprehensive README.md files for projects based on codebase analysis",
+  "author": {
+    "name": "ForgeFlow Team",
+    "email": "team@forgeflow.dev",
+    "url": "https://forgeflow.dev"
+  },
+  "capabilities": [
+    "documentation-generation",
+    "codebase-analysis",
+    "markdown-creation",
+    "project-structure-analysis",
+    "dependency-analysis",
+    "usage-example-generation"
+  ],
+  "dependencies": {
+    "tools": [
+      {
+        "name": "git",
+        "version": "2.0.0",
+        "optional": false
+      }
+    ],
+    "npm": {
+      "marked": "^4.0.0",
+      "yaml": "^2.0.0",
+      "glob": "^8.0.0"
+    }
+  },
+  "configuration": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "includeInstallation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include installation instructions"
+        },
+        "includeUsage": {
+          "type": "boolean", 
+          "default": true,
+          "description": "Include usage examples"
+        },
+        "includeLicense": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include license information"
+        },
+        "includeBadges": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include status badges"
+        },
+        "template": {
+          "type": "string",
+          "enum": ["standard", "minimal", "comprehensive"],
+          "default": "standard",
+          "description": "README template style"
+        }
+      }
+    },
+    "defaults": {
+      "includeInstallation": true,
+      "includeUsage": true,
+      "includeLicense": true,
+      "includeBadges": true,
+      "template": "standard"
+    },
+    "required": ["template"]
+  },
+  "implementation": {
+    "type": "javascript",
+    "main": "index.js",
+    "class": "ReadmeGeneratorAgent"
+  },
+  "execution": {
+    "timeout": 120000,
+    "retries": 2,
+    "parallel": true,
+    "isolation": "process",
+    "resources": {
+      "maxMemory": "256MB",
+      "maxCpu": 1.0
+    }
+  },
+  "quality": {
+    "gates": [
+      {
+        "name": "README Validation",
+        "criteria": [
+          "Generated README.md is valid markdown",
+          "All required sections are present",
+          "No broken internal links"
+        ],
+        "blocking": true
+      }
+    ],
+    "metrics": [
+      {
+        "name": "readme_generation_time",
+        "type": "timer",
+        "description": "Time taken to generate README",
+        "tags": ["template", "size"]
+      },
+      {
+        "name": "readme_sections_generated",
+        "type": "counter",
+        "description": "Number of sections generated",
+        "tags": ["section_type"]
+      }
+    ]
+  },
+  "testing": {
+    "unitTests": {
+      "framework": "jest",
+      "pattern": "**/*.test.js",
+      "coverage": {
+        "minimum": 85
+      }
+    },
+    "integrationTests": {
+      "enabled": true,
+      "pattern": "**/*.integration.test.js"
+    }
+  },
+  "security": {
+    "permissions": [
+      "filesystem:read",
+      "filesystem:write",
+      "network:http"
+    ],
+    "sandbox": true,
+    "trustedSources": [
+      "https://api.github.com",
+      "https://img.shields.io"
+    ]
+  },
+  "compatibility": {
+    "forgeflowVersion": "^2.0.0",
+    "platforms": ["windows", "linux", "darwin"],
+    "nodeVersion": "^16.0.0"
+  },
+  "documentation": {
+    "readme": "README.md",
+    "examples": [
+      {
+        "name": "Basic Usage",
+        "description": "Generate a standard README for a Node.js project",
+        "file": "examples/basic-usage.js"
+      },
+      {
+        "name": "Custom Template", 
+        "description": "Use custom template for README generation",
+        "file": "examples/custom-template.js"
+      }
+    ],
+    "changelog": "CHANGELOG.md"
+  },
+  "metadata": {
+    "tags": ["documentation", "readme", "markdown", "automation"],
+    "category": "utility",
+    "maturity": "stable",
+    "license": "MIT",
+    "repository": "https://github.com/forgeflow/agents/readme-generator"
+  }
+}

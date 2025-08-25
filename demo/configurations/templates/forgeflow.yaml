@@ -1,0 +1,329 @@
+# ForgeFlow v2 Configuration Template
+# Copy this file to your project root as 'forgeflow.yaml'
+# Customize the settings based on your project requirements
+
+# GitHub Integration Settings
+github:
+  owner: your-github-username        # Replace with your GitHub username or organization
+  repo: your-repository-name         # Replace with your repository name
+  # token: use GITHUB_TOKEN environment variable instead of storing here
+
+# Worktree Management
+worktree:
+  basePath: .worktrees              # Directory for isolated agent worktrees
+  maxWorktrees: 10                  # Maximum concurrent worktrees
+  cleanupOnError: true              # Auto-cleanup failed worktrees
+  prefix: "ff2-agent-"              # Prefix for worktree branch names
+  lockTimeout: 300000               # Lock timeout in milliseconds (5 minutes)
+
+# Agent Configuration
+agents:
+  maxConcurrent: 5                  # Maximum concurrent agents
+  timeout: 300000                   # Agent timeout in milliseconds (5 minutes)
+  retryAttempts: 3                  # Number of retry attempts on failure
+  defaultPriority: "normal"         # Default priority: low, normal, high, critical
+  
+  # Agent-specific overrides
+  overrides:
+    strategic-planner:
+      timeout: 600000               # Strategic planning gets more time
+      priority: "high"
+    
+    test-coverage-validator:
+      timeout: 900000               # Testing can take longer
+      retryAttempts: 2              # Less retries for testing
+    
+    security-auditor:
+      priority: "critical"          # Security always gets priority
+
+# Quality Gates - Zero Tolerance Policy
+quality:
+  linting: true                     # ESLint/TSLint enforcement
+  testing: true                     # Test execution required
+  coverage: 95                      # Minimum test coverage percentage
+  security: true                    # Security vulnerability scanning
+  performance: true                 # Performance benchmarking
+  
+  # Quality thresholds
+  thresholds:
+    lintErrors: 0                   # Zero lint errors allowed
+    lintWarnings: 0                 # Zero lint warnings allowed
+    testFailures: 0                 # Zero test failures allowed
+    coverageMin: 95                 # Minimum coverage percentage
+    performanceScore: 90            # Minimum Lighthouse performance score
+    securityGrade: "A"              # Minimum security grade (A, B, C, D, F)
+
+# Protocol Configuration
+protocols:
+  nlnh: true                        # No Lies, No Hallucination protocol
+  antihall: true                    # Anti-hallucination validator
+  ryr: true                         # Remember Your Rules protocol
+  rulesPath: .                      # Path to RULES.md and other rule files
+  
+  # Protocol settings
+  nlnh:
+    strictMode: true                # Strict truth enforcement
+    confidenceThreshold: 0.8        # Minimum confidence for claims
+  
+  antihall:
+    codebaseAnalysis: true          # Analyze codebase for validation
+    apiValidation: true             # Validate API endpoints exist
+    realTimeChecks: true            # Real-time hallucination checking
+  
+  ryr:
+    autoRefresh: true               # Auto-refresh rules from files
+    checkInterval: 300000           # Check for rule updates (5 minutes)
+
+# Execution Patterns
+patterns:
+  # Feature Development - Parallel component/feature development
+  feature-development:
+    name: "Feature Development"
+    description: "Parallel development of features with full quality gates"
+    phases:
+      - name: "planning"
+        agents: ["strategic-planner"]
+        parallel: false
+        timeout: 600000
+      
+      - name: "implementation"
+        agents: 
+          - "system-architect"
+          - "code-implementer" 
+          - "test-coverage-validator"
+        parallel: true
+        timeout: 1800000
+      
+      - name: "quality-assurance"
+        agents:
+          - "code-quality-reviewer"
+          - "security-auditor"
+          - "performance-optimizer"
+        parallel: true
+        timeout: 900000
+      
+      - name: "deployment"
+        agents: ["deployment-automation"]
+        parallel: false
+        timeout: 600000
+
+  # Bug Fix Sprint - Rapid parallel issue resolution
+  bug-fix-sprint:
+    name: "Bug Fix Sprint" 
+    description: "Emergency parallel bug fixing with accelerated quality gates"
+    emergency: true                 # Enables emergency mode optimizations
+    phases:
+      - name: "analysis"
+        agents: ["antihallucination-validator"]
+        parallel: false
+        timeout: 300000
+      
+      - name: "fixing"
+        agents:
+          - "code-implementer"
+          - "test-coverage-validator"
+          - "code-quality-reviewer"
+        parallel: true
+        timeout: 600000
+      
+      - name: "validation"
+        agents: ["security-auditor", "performance-optimizer"]
+        parallel: true
+        timeout: 300000
+
+  # Security Audit - Comprehensive security analysis
+  security-audit:
+    name: "Security Audit"
+    description: "Comprehensive parallel security analysis and remediation"
+    phases:
+      - name: "discovery"
+        agents: ["security-auditor"]
+        parallel: false
+        timeout: 600000
+      
+      - name: "analysis"
+        agents:
+          - "security-auditor"
+          - "code-quality-reviewer"
+          - "antihallucination-validator"
+        parallel: true
+        timeout: 1200000
+      
+      - name: "remediation"
+        agents:
+          - "code-implementer"
+          - "test-coverage-validator"
+        parallel: true
+        timeout: 900000
+      
+      - name: "validation"
+        agents: ["security-auditor", "performance-optimizer"]
+        parallel: true
+        timeout: 600000
+
+# Failure Policies - Advanced error handling and recovery
+failurePolicies:
+  # Default policy for all agents
+  default:
+    maxRetries: 3
+    retryDelay: 5000                # Initial delay in milliseconds
+    retryBackoff: "exponential"     # exponential, linear, fixed
+    backoffMultiplier: 2
+    maxRetryDelay: 60000            # Maximum delay between retries
+    
+    # Circuit breaker settings
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 5           # Failures before opening circuit
+      resetTimeout: 60000           # Time before attempting reset
+      monitorWindow: 300000         # Window for failure tracking
+    
+    # Recovery actions
+    recovery:
+      cleanupWorktree: true         # Clean up agent worktree on failure
+      notifyOnFailure: true         # Send failure notifications
+      createGitHubIssue: true       # Create GitHub issue for persistent failures
+      escalate: true                # Escalate to next available agent
+
+  # Agent-specific failure policies
+  agents:
+    strategic-planner:
+      maxRetries: 1                 # Planning failures are critical
+      recovery:
+        fallback: "human-intervention"
+    
+    security-auditor:
+      circuitBreaker:
+        failureThreshold: 2         # More sensitive for security
+      recovery:
+        escalate: false             # Never skip security
+        requireManualReview: true
+
+# Monitoring and Observability
+monitoring:
+  enabled: true
+  metrics:
+    prometheus: true                # Export Prometheus metrics
+    port: 9090                     # Metrics server port
+    path: "/metrics"               # Metrics endpoint path
+  
+  logging:
+    level: "info"                  # debug, info, warn, error
+    format: "json"                 # json, text
+    file: "logs/forgeflow.log"     # Log file path
+    rotation: true                 # Enable log rotation
+    maxSize: "100MB"               # Max log file size
+    maxFiles: 5                    # Number of rotated files to keep
+  
+  dashboard:
+    enabled: true                  # Enable web dashboard
+    port: 3010                     # Dashboard port
+    auth: false                    # Enable authentication (set to true in production)
+
+# Integrations
+integrations:
+  # Slack notifications
+  slack:
+    enabled: false                 # Set to true to enable
+    webhook: ""                    # Slack webhook URL (use environment variable)
+    channels:
+      success: "#forgeflow-success"
+      failure: "#forgeflow-alerts"
+      security: "#security-alerts"
+  
+  # Jira integration
+  jira:
+    enabled: false                 # Set to true to enable
+    server: ""                     # Jira server URL
+    project: ""                    # Jira project key
+    # credentials: use environment variables
+  
+  # Email notifications
+  email:
+    enabled: false                 # Set to true to enable
+    smtp:
+      host: ""                     # SMTP server
+      port: 587                    # SMTP port
+      secure: true                 # Use TLS
+      # auth: use environment variables
+
+# Development Settings
+development:
+  mockMode: false                  # Enable mock mode for testing
+  debugMode: false                 # Enable debug logging
+  dryRun: false                   # Simulate execution without making changes
+  
+  # Demo mode settings
+  demo:
+    enabled: false                 # Enable demo mode
+    simulateDelay: true            # Add realistic delays to demo
+    generateFakeData: true         # Generate demo data and metrics
+
+# Performance Tuning
+performance:
+  # Resource limits
+  memory:
+    maxHeapSize: "2GB"             # Maximum heap size for agents
+    gcInterval: 300000             # Garbage collection interval
+  
+  cpu:
+    maxThreads: 8                  # Maximum concurrent threads
+    threadPoolSize: 4              # Thread pool size
+  
+  # Caching
+  cache:
+    enabled: true                  # Enable caching
+    ttl: 3600000                   # Cache TTL in milliseconds (1 hour)
+    maxSize: 1000                  # Maximum cache entries
+  
+  # Networking
+  network:
+    timeout: 30000                 # Network timeout in milliseconds
+    retries: 3                     # Network request retries
+    keepAlive: true                # HTTP keep-alive
+
+# Security Settings
+security:
+  # API security
+  api:
+    rateLimit: 1000                # Requests per minute
+    cors:
+      enabled: true
+      origins: ["http://localhost:3000", "https://your-domain.com"]
+    
+    # JWT settings (if using authentication)
+    jwt:
+      algorithm: "HS256"
+      expiresIn: "1h"
+      # secret: use JWT_SECRET environment variable
+  
+  # Input validation
+  validation:
+    maxPayloadSize: "10MB"         # Maximum request payload size
+    sanitizeInput: true            # Sanitize all input data
+    validateSchemas: true          # Validate against JSON schemas
+  
+  # Audit logging
+  audit:
+    enabled: true                  # Enable audit logging
+    level: "info"                  # Audit log level
+    includePayloads: false         # Include request/response payloads
+
+# Environment-Specific Overrides
+environments:
+  development:
+    quality:
+      coverage: 80                 # Lower coverage for dev
+    monitoring:
+      logging:
+        level: "debug"             # More verbose logging
+  
+  production:
+    quality:
+      coverage: 98                 # Higher coverage for prod
+    security:
+      api:
+        rateLimit: 500             # More restrictive rate limiting
+    monitoring:
+      logging:
+        level: "warn"              # Less verbose logging

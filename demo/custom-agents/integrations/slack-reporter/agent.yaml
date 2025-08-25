@@ -1,0 +1,524 @@
+# Slack Integration Agent
+# Specialized agent for Slack notifications, reporting, and team collaboration
+
+name: "slack-reporter"
+displayName: "Slack Integration Specialist"
+description: "Expert in Slack integration, notifications, reporting, and team collaboration workflows"
+version: "1.0.0"
+category: "integration"
+
+# Agent capabilities and specializations
+capabilities:
+  - "real-time-notifications"
+  - "progress-reporting"
+  - "team-collaboration"
+  - "alert-management"
+  - "workflow-integration"
+  - "custom-bot-commands"
+
+# Supported Slack features
+supportedFeatures:
+  - "incoming-webhooks"
+  - "bot-api"
+  - "slash-commands"
+  - "interactive-components"
+  - "workflow-builder"
+  - "app-mentions"
+
+# Agent configuration
+config:
+  # Execution settings
+  timeout: 30000                  # 30 seconds for Slack operations
+  priority: "normal"              # Normal priority for notifications
+  retryAttempts: 3                # Retry failed Slack API calls
+  
+  # Slack API settings
+  slack:
+    apiTimeout: 10000             # Slack API timeout (10 seconds)
+    rateLimitHandling: true       # Handle Slack rate limits
+    batchSize: 20                 # Batch size for bulk operations
+    maxMessageLength: 4000        # Maximum message length
+    
+  # Notification settings
+  notifications:
+    realTime: true                # Enable real-time notifications
+    batching: false               # Disable batching for important alerts
+    threading: true               # Use threads for related messages
+    formatting: "rich"            # Rich formatting with blocks and attachments
+    
+  # Reporting settings
+  reporting:
+    scheduleReports: true         # Enable scheduled reports
+    executionSummaries: true      # Send execution summaries
+    errorReporting: true          # Report errors and failures
+    metricsDashboard: true        # Include metrics in reports
+
+# Agent behavior patterns
+patterns:
+  real-time-notifications:
+    description: "Send immediate notifications for critical events"
+    triggers:
+      - "agent-started"
+      - "agent-completed"
+      - "agent-failed"
+      - "quality-gate-failed"
+      - "security-alert"
+      - "deployment-status"
+    channels:
+      success: "#forgeflow-success"
+      alerts: "#forgeflow-alerts"
+      security: "#security-alerts"
+      
+  progress-reporting:
+    description: "Provide regular progress updates"
+    schedule: "every-5-minutes"   # Update frequency
+    format: "threaded"            # Use threads for progress updates
+    includeMetrics: true          # Include performance metrics
+    
+  team-collaboration:
+    description: "Facilitate team collaboration and decision-making"
+    features:
+      - "approval-requests"       # Request approvals via Slack
+      - "status-polling"          # Poll team members for status
+      - "decision-tracking"       # Track team decisions
+      - "escalation-workflows"    # Handle escalations
+
+# Slack message templates
+messageTemplates:
+  agentStarted:
+    type: "blocks"
+    template: |
+      {
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "🚀 Agent Started"
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Agent:* {{agentName}}"
+              },
+              {
+                "type": "mrkdwn", 
+                "text": "*Pattern:* {{pattern}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Epic:* {{epicId}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Started:* {{timestamp}}"
+              }
+            ]
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": "View details: <{{dashboardUrl}}|Dashboard> | <{{githubUrl}}|GitHub Issue>"
+              }
+            ]
+          }
+        ]
+      }
+      
+  agentCompleted:
+    type: "blocks"
+    template: |
+      {
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "✅ Agent Completed Successfully",
+              "emoji": true
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Agent:* {{agentName}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Duration:* {{duration}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Quality Score:* {{qualityScore}}/100"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Files Changed:* {{filesChanged}}"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Summary:* {{summary}}"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Changes"
+                },
+                "url": "{{githubPrUrl}}",
+                "style": "primary"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Dashboard"
+                },
+                "url": "{{dashboardUrl}}"
+              }
+            ]
+          }
+        ]
+      }
+      
+  agentFailed:
+    type: "blocks"
+    template: |
+      {
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "🚨 Agent Failed",
+              "emoji": true
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Agent:* {{agentName}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Error:* {{errorType}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Duration:* {{duration}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Retry Attempt:* {{retryAttempt}}/{{maxRetries}}"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Error Details:*\n```{{errorMessage}}```"
+            }
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "View Logs"
+                },
+                "url": "{{logsUrl}}",
+                "style": "danger"
+              },
+              {
+                "type": "button",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Retry Agent"
+                },
+                "value": "retry_{{agentId}}"
+              }
+            ]
+          }
+        ]
+      }
+      
+  executionSummary:
+    type: "blocks"
+    template: |
+      {
+        "blocks": [
+          {
+            "type": "header",
+            "text": {
+              "type": "plain_text",
+              "text": "📊 Execution Summary",
+              "emoji": true
+            }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Epic:* {{epicTitle}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Total Duration:* {{totalDuration}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Agents Used:* {{agentCount}}"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Success Rate:* {{successRate}}%"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Results:*\n{{#each results}}• {{agentName}}: {{status}} ({{duration}})\n{{/each}}"
+            }
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Quality Metrics:*\n• Test Coverage: {{testCoverage}}%\n• Code Quality: {{codeQuality}}/100\n• Performance: {{performanceScore}}/100"
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Files Changed:*\n• Created: {{filesCreated}}\n• Modified: {{filesModified}}\n• Deleted: {{filesDeleted}}"
+              }
+            ]
+          }
+        ]
+      }
+
+# Interactive components and slash commands
+interactiveComponents:
+  slashCommands:
+    - name: "/ff-status"
+      description: "Get current ForgeFlow execution status"
+      handler: "getExecutionStatus"
+      
+    - name: "/ff-agents"
+      description: "List active and available agents"
+      handler: "listAgents"
+      
+    - name: "/ff-retry"
+      description: "Retry a failed agent execution"
+      handler: "retryAgent"
+      usage: "/ff-retry [agent-id]"
+      
+    - name: "/ff-stop"
+      description: "Stop a running execution"
+      handler: "stopExecution"
+      usage: "/ff-stop [execution-id]"
+      
+    - name: "/ff-report"
+      description: "Generate and send execution report"
+      handler: "generateReport"
+      usage: "/ff-report [execution-id] [channel]"
+      
+  buttons:
+    - id: "retry_agent"
+      handler: "handleRetryAgent"
+      
+    - id: "stop_execution"
+      handler: "handleStopExecution"
+      
+    - id: "approve_deployment"
+      handler: "handleApproveDeployment"
+      
+    - id: "view_details"
+      handler: "handleViewDetails"
+
+# Channel routing and management
+channelRouting:
+  # Success notifications
+  success:
+    defaultChannel: "#forgeflow-success"
+    conditions:
+      - agent: "all"
+        events: ["completed", "milestone-reached"]
+        
+  # Alert notifications  
+  alerts:
+    defaultChannel: "#forgeflow-alerts"
+    conditions:
+      - agent: "all"
+        events: ["failed", "timeout", "retry"]
+      - severity: ["high", "critical"]
+        
+  # Security notifications
+  security:
+    defaultChannel: "#security-alerts"
+    conditions:
+      - agent: "security-auditor"
+        events: ["vulnerability-found", "compliance-issue"]
+      - category: "security"
+        
+  # Team-specific channels
+  teamChannels:
+    frontend: "#frontend-team"
+    backend: "#backend-team"
+    devops: "#devops-team"
+    qa: "#qa-team"
+
+# Reporting and analytics
+reporting:
+  schedules:
+    daily:
+      time: "09:00"
+      timezone: "UTC"
+      channels: ["#forgeflow-daily"]
+      content: "daily-summary"
+      
+    weekly:
+      time: "Monday 10:00"
+      timezone: "UTC"
+      channels: ["#leadership", "#engineering-all"]
+      content: "weekly-analytics"
+      
+    monthly:
+      time: "1st 14:00"
+      timezone: "UTC"
+      channels: ["#leadership"]
+      content: "monthly-metrics"
+      
+  customReports:
+    - name: "performance-trends"
+      schedule: "weekly"
+      includeCharts: true
+      
+    - name: "quality-metrics"
+      schedule: "daily"
+      threshold-alerts: true
+      
+    - name: "agent-efficiency"
+      schedule: "monthly"
+      comparative-analysis: true
+
+# Integration settings
+integrations:
+  github:
+    linkPRs: true                 # Link to GitHub PRs in messages
+    linkIssues: true              # Link to GitHub issues
+    statusUpdates: true           # Post status updates to GitHub
+    
+  jira:
+    linkTickets: true             # Link to Jira tickets
+    statusSync: true              # Sync status with Jira
+    
+  dashboard:
+    embedMetrics: true            # Embed dashboard metrics
+    deepLinks: true               # Provide deep links to dashboard
+
+# Error handling and fallback
+errorHandling:
+  onSlackApiError:
+    - "log-error"                 # Log the error
+    - "retry-with-backoff"        # Retry with exponential backoff
+    - "fallback-to-webhook"       # Use webhook if API fails
+    - "notify-admin"              # Notify admin of Slack issues
+    
+  onRateLimit:
+    - "respect-rate-limits"       # Automatically handle rate limits
+    - "queue-messages"            # Queue messages for later sending
+    - "prioritize-critical"       # Send critical messages first
+    
+  onChannelNotFound:
+    - "use-default-channel"       # Fall back to default channel
+    - "notify-admin"              # Notify admin of missing channel
+    - "log-warning"               # Log the issue
+
+# Security and permissions
+security:
+  permissions:
+    required:
+      - "chat:write"              # Send messages to channels
+      - "chat:write.public"       # Send messages to public channels
+      - "commands"                # Handle slash commands
+      - "im:write"                # Send direct messages
+      - "users:read"              # Read user information
+      
+    optional:
+      - "reactions:write"         # Add reactions to messages
+      - "pins:write"              # Pin important messages
+      - "files:write"             # Upload files and reports
+      
+  tokenStorage:
+    encrypted: true               # Encrypt stored tokens
+    rotation: "monthly"           # Rotate tokens monthly
+    
+  messageFiltering:
+    enabled: true                 # Filter sensitive information
+    patterns:
+      - "api-keys"                # Filter API keys
+      - "passwords"               # Filter passwords
+      - "tokens"                  # Filter access tokens
+
+# Performance optimization
+performance:
+  messageQueuing:
+    enabled: true                 # Enable message queuing
+    batchSize: 10                 # Messages per batch
+    batchTimeout: 2000            # Batch timeout in milliseconds
+    
+  caching:
+    channelCache: true            # Cache channel information
+    userCache: true               # Cache user information
+    templateCache: true           # Cache message templates
+    ttl: 3600000                  # Cache TTL (1 hour)
+    
+  rateLimitManagement:
+    respectLimits: true           # Respect Slack rate limits
+    backoffStrategy: "exponential" # Backoff strategy
+    maxRetries: 5                 # Maximum retries for rate-limited requests
+
+# Monitoring and observability
+monitoring:
+  metrics:
+    - "messages-sent"             # Number of messages sent
+    - "api-response-time"         # Slack API response time
+    - "error-rate"                # Error rate for Slack operations
+    - "rate-limit-hits"           # Rate limit encounters
+    - "user-engagement"           # User interaction with messages
+    
+  health-checks:
+    enabled: true                 # Enable health checks
+    interval: 60000               # Check every minute
+    endpoint: "api.test"          # Slack API test endpoint
+    
+  alerting:
+    onHighErrorRate: true         # Alert on high error rate
+    onApiDown: true               # Alert if Slack API is down
+    onRateLimitExceeded: true     # Alert on rate limit issues

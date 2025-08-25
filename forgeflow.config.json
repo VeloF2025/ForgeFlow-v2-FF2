@@ -1,0 +1,32 @@
+{
+  "project_name": "ForgeFlow v2",
+  "project_path": "C:\\Jarvis\\AI Workspace\\ForgeFlow v2",
+  "activation_time": "2025-08-24T21:42:16.777279",
+  "forgeflow_version": "1.0.0",
+  "agents": {
+    "planner": {
+      "enabled": true,
+      "priority": 1
+    },
+    "architect": {
+      "enabled": true,
+      "priority": 2
+    },
+    "coder": {
+      "enabled": true,
+      "priority": 3
+    },
+    "tester": {
+      "enabled": true,
+      "priority": 4
+    },
+    "reviewer": {
+      "enabled": true,
+      "priority": 5
+    },
+    "antihallucination": {
+      "enabled": true,
+      "priority": 0
+    }
+  }
+}

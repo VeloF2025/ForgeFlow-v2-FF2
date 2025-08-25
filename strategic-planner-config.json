@@ -1,0 +1,83 @@
+{
+  "enabled": true,
+  "version": "2.0.0",
+  "activatedAt": "2025-08-24T19:54:02.649Z",
+  "capabilities": {
+    "task-breakdown": {
+      "enabled": true,
+      "granularity": "atomic",
+      "parallelization": true,
+      "estimationAccuracy": "high"
+    },
+    "parallel-execution-planning": {
+      "enabled": true,
+      "maxConcurrentStreams": 10,
+      "worktreeIntegration": true,
+      "githubIntegration": true
+    },
+    "risk-assessment": {
+      "enabled": true,
+      "proactiveIdentification": true,
+      "mitigationStrategies": true,
+      "continuousMonitoring": true
+    },
+    "quality-gates-design": {
+      "enabled": true,
+      "zeroTolerancePolicy": true,
+      "blockingGates": true,
+      "continuousValidation": true
+    },
+    "milestone-definition": {
+      "enabled": true,
+      "smartScheduling": true,
+      "dependencyTracking": true,
+      "progressMonitoring": true
+    }
+  },
+  "integration": {
+    "github": {
+      "issueCreation": true,
+      "labelManagement": true,
+      "milestoneTracking": true,
+      "commentBasedReporting": true
+    },
+    "worktrees": {
+      "parallelBranches": true,
+      "isolatedExecution": true,
+      "automaticCleanup": true,
+      "conflictPrevention": true
+    },
+    "orchestrator": {
+      "agentPoolIntegration": true,
+      "executionPatternSupport": true,
+      "realTimeStatusTracking": true,
+      "qualityGateEnforcement": true
+    }
+  },
+  "patterns": {
+    "feature-development": {
+      "phases": 4,
+      "parallelPhases": 2,
+      "estimatedEfficiency": 85,
+      "qualityGates": 5
+    },
+    "bug-fix-sprint": {
+      "phases": 3,
+      "parallelPhases": 1,
+      "estimatedEfficiency": 95,
+      "qualityGates": 3
+    },
+    "security-audit": {
+      "phases": 3,
+      "parallelPhases": 2,
+      "estimatedEfficiency": 90,
+      "qualityGates": 4
+    }
+  },
+  "performance": {
+    "estimatedTimeReduction": "60%",
+    "parallelizationEfficiency": "85%",
+    "qualityImprovement": "40%",
+    "riskMitigation": "75%"
+  }
+}

@@ -1,0 +1,491 @@
+# ForgeFlow v2 Failure Policies Configuration
+# Comprehensive failure handling with retry strategies and recovery actions
+
+version: "1.0"
+description: "ForgeFlow v2 Failure Policies Configuration"
+lastUpdated: "2025-01-25"
+
+# Default global settings
+defaults:
+  retryStrategy:
+    strategyType: "exponential"
+    maxAttempts: 3
+    initialDelay: 1000
+    maxDelay: 15000
+    backoffMultiplier: 2
+    jitter: true
+    jitterType: "full"
+    giveUpAfter: 60000
+  circuitBreaker:
+    enabled: false
+    failureThreshold: 5
+    successThreshold: 2
+    timeout: 60000
+    halfOpenMaxCalls: 3
+    volumeThreshold: 10
+    errorRateThreshold: 50
+
+# Failure Policies
+policies:
+  # GitHub API Error Policy
+  - id: "github-api-policy"
+    name: "GitHub API Error Policy"
+    description: "Handles GitHub API errors with exponential backoff and rate limit recovery"
+    enabled: true
+    priority: 10
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "github_integration"
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 5
+      initialDelay: 1000
+      maxDelay: 30000
+      backoffMultiplier: 2
+      jitter: true
+      jitterType: "full"
+      giveUpAfter: 300000  # 5 minutes
+      shouldRetry:
+        - field: "message"
+          operator: "contains"
+          value: "rate limit"
+        - field: "message"
+          operator: "contains"
+          value: "503"
+        - field: "message"
+          operator: "contains"
+          value: "502"
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 5
+      successThreshold: 2
+      timeout: 60000
+      halfOpenMaxCalls: 3
+      volumeThreshold: 10
+      errorRateThreshold: 40
+      slowCallDurationThreshold: 10000
+      slowCallRateThreshold: 30
+      healthCheckInterval: 30000
+      enableHealthChecks: true
+    recoveryActions:
+      - actionType: "github-rate-limit-wait"
+        parameters:
+          respectHeaders: true
+          maxWaitTime: 300000
+        runBefore: true
+        priority: 10
+        timeout: 300000
+      - actionType: "service-health-check"
+        parameters:
+          healthEndpoints:
+            - "https://api.github.com"
+            - "https://status.github.com/api/status.json"
+        runBefore: true
+        priority: 8
+        timeout: 10000
+
+  # Git Operations Policy
+  - id: "git-operations-policy"
+    name: "Git Operations Policy"
+    description: "Handles git command failures with cleanup and retry"
+    enabled: true
+    priority: 9
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "worktree_management"
+    retryStrategy:
+      strategyType: "linear"
+      maxAttempts: 3
+      initialDelay: 2000
+      maxDelay: 10000
+      giveUpAfter: 120000  # 2 minutes
+      shouldRetry:
+        - field: "message"
+          operator: "contains"
+          value: "lock"
+        - field: "message"
+          operator: "contains"
+          value: "conflict"
+        - field: "message"
+          operator: "contains"
+          value: "merge"
+    recoveryActions:
+      - actionType: "git-cleanup"
+        parameters:
+          resetHard: false
+          cleanUntracked: false
+        runBefore: true
+        priority: 10
+        timeout: 30000
+        maxRetries: 1
+
+  # Network Timeout Policy
+  - id: "network-timeout-policy"
+    name: "Network Timeout Policy"
+    description: "Handles network timeouts and connectivity issues"
+    enabled: true
+    priority: 8
+    conditions:
+      - field: "category"
+        operator: "in"
+        value: ["timeout", "network"]
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 4
+      initialDelay: 5000
+      maxDelay: 60000
+      backoffMultiplier: 1.5
+      jitter: true
+      jitterType: "decorrelated"
+      giveUpAfter: 180000  # 3 minutes
+    recoveryActions:
+      - actionType: "network-connectivity-check"
+        parameters:
+          timeout: 30000
+          testHosts:
+            - "https://api.github.com"
+            - "https://google.com"
+            - "https://cloudflare.com"
+        runBefore: true
+        priority: 9
+        timeout: 35000
+
+  # Agent Execution Policy
+  - id: "agent-execution-policy"
+    name: "Agent Execution Policy"
+    description: "Handles agent execution failures with state recovery"
+    enabled: true
+    priority: 9
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "agent_execution"
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 3
+      initialDelay: 2000
+      maxDelay: 20000
+      backoffMultiplier: 2
+      jitter: true
+      giveUpAfter: 120000  # 2 minutes
+    recoveryActions:
+      - actionType: "agent-state-reset"
+        parameters:
+          preserveContext: true
+        runBefore: true
+        priority: 9
+        timeout: 5000
+
+  # File System Policy
+  - id: "file-system-policy"
+    name: "File System Policy"
+    description: "Handles file system operation failures"
+    enabled: true
+    priority: 7
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "file_system"
+    retryStrategy:
+      strategyType: "fixed"
+      maxAttempts: 2
+      initialDelay: 1000
+      maxDelay: 5000
+      giveUpAfter: 30000  # 30 seconds
+    recoveryActions:
+      - actionType: "file-permission-recovery"
+        parameters:
+          targetPath: null  # Will use context working directory
+        runBefore: true
+        priority: 8
+        timeout: 10000
+
+  # External Service Policy
+  - id: "external-service-policy"
+    name: "External Service Policy"
+    description: "Handles external service failures with adaptive retry"
+    enabled: true
+    priority: 6
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "external_service"
+    retryStrategy:
+      strategyType: "adaptive"
+      maxAttempts: 4
+      initialDelay: 1500
+      maxDelay: 45000
+      backoffMultiplier: 1.8
+      jitter: true
+      jitterType: "full"
+      giveUpAfter: 240000  # 4 minutes
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 3
+      successThreshold: 2
+      timeout: 45000
+      halfOpenMaxCalls: 2
+      volumeThreshold: 5
+      errorRateThreshold: 60
+    recoveryActions:
+      - actionType: "service-health-check"
+        parameters:
+          healthEndpoints: []  # Will be configured per service
+        runBefore: true
+        priority: 7
+        timeout: 15000
+
+  # Database Operations Policy
+  - id: "database-policy"
+    name: "Database Operations Policy"
+    description: "Handles database connection and query failures"
+    enabled: true
+    priority: 8
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "database"
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 4
+      initialDelay: 2000
+      maxDelay: 30000
+      backoffMultiplier: 1.6
+      jitter: true
+      giveUpAfter: 180000  # 3 minutes
+      shouldRetry:
+        - field: "message"
+          operator: "contains"
+          value: "connection"
+        - field: "message"
+          operator: "contains"
+          value: "timeout"
+        - field: "message"
+          operator: "contains"
+          value: "lock"
+        - field: "message"
+          operator: "contains"
+          value: "deadlock"
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 4
+      successThreshold: 3
+      timeout: 30000
+      halfOpenMaxCalls: 2
+      volumeThreshold: 8
+
+  # Security Violation Policy (No Retry)
+  - id: "security-policy"
+    name: "Security Violation Policy"
+    description: "Handles security violations - no retry, immediate failure"
+    enabled: true
+    priority: 10
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "security"
+    retryStrategy:
+      strategyType: "fixed"
+      maxAttempts: 1
+      initialDelay: 0
+      maxDelay: 0
+      giveUpAfter: 1000
+    # No recovery actions for security violations
+
+  # Validation Error Policy (Minimal Retry)
+  - id: "validation-policy"
+    name: "Validation Error Policy"
+    description: "Handles validation errors with minimal retry"
+    enabled: true
+    priority: 3
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "validation"
+    retryStrategy:
+      strategyType: "fixed"
+      maxAttempts: 2
+      initialDelay: 500
+      maxDelay: 1000
+      giveUpAfter: 5000
+
+  # Rate Limiting Policy
+  - id: "rate-limiting-policy"
+    name: "Rate Limiting Policy"
+    description: "Handles rate limiting with progressive backoff"
+    enabled: true
+    priority: 9
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "rate_limiting"
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 5
+      initialDelay: 10000  # Start with 10 seconds for rate limits
+      maxDelay: 300000     # Max 5 minutes
+      backoffMultiplier: 1.5
+      jitter: true
+      jitterType: "equal"
+      giveUpAfter: 600000  # 10 minutes total
+
+  # Configuration Error Policy (No Retry)
+  - id: "configuration-policy"
+    name: "Configuration Error Policy"
+    description: "Handles configuration errors - typically not retryable"
+    enabled: true
+    priority: 5
+    conditions:
+      - field: "category"
+        operator: "equals"
+        value: "configuration"
+    retryStrategy:
+      strategyType: "fixed"
+      maxAttempts: 1
+      initialDelay: 0
+      maxDelay: 0
+      giveUpAfter: 1000
+
+  # Critical Error Policy
+  - id: "critical-error-policy"
+    name: "Critical Error Policy"
+    description: "Handles critical errors with immediate escalation"
+    enabled: true
+    priority: 10
+    conditions:
+      - field: "severity"
+        operator: "equals"
+        value: "critical"
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 2
+      initialDelay: 5000
+      maxDelay: 15000
+      backoffMultiplier: 3
+      jitter: false
+      giveUpAfter: 30000
+    # Recovery actions for critical errors would be handled by specific policies
+
+  # Default Catch-All Policy
+  - id: "default-retry-policy"
+    name: "Default Retry Policy"
+    description: "Catch-all policy for unmatched errors"
+    enabled: true
+    priority: 1
+    conditions: []  # Matches everything not caught by other policies
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 3
+      initialDelay: 1000
+      maxDelay: 15000
+      backoffMultiplier: 2
+      jitter: true
+      jitterType: "full"
+      giveUpAfter: 60000  # 1 minute
+
+# Policy inheritance examples
+# Note: These show how policies can inherit from others
+policyTemplates:
+  # Template for API-based services
+  - id: "api-service-template"
+    name: "API Service Template"
+    description: "Base template for API service policies"
+    enabled: false
+    priority: 5
+    retryStrategy:
+      strategyType: "exponential"
+      maxAttempts: 4
+      initialDelay: 1000
+      maxDelay: 30000
+      backoffMultiplier: 2
+      jitter: true
+      jitterType: "full"
+      giveUpAfter: 180000
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 5
+      successThreshold: 2
+      timeout: 60000
+      halfOpenMaxCalls: 3
+      volumeThreshold: 10
+      errorRateThreshold: 50
+    recoveryActions:
+      - actionType: "service-health-check"
+        runBefore: true
+        priority: 7
+        timeout: 15000
+
+  # Template for local operations
+  - id: "local-operation-template"
+    name: "Local Operation Template"
+    description: "Base template for local file/system operations"
+    enabled: false
+    priority: 3
+    retryStrategy:
+      strategyType: "linear"
+      maxAttempts: 3
+      initialDelay: 1000
+      maxDelay: 10000
+      giveUpAfter: 60000
+    circuitBreaker:
+      enabled: false
+
+# Advanced configuration
+advanced:
+  # Global circuit breaker settings
+  globalCircuitBreaker:
+    enabled: false
+    systemwideFailureThreshold: 20
+    recoveryTimeout: 300000  # 5 minutes
+    
+  # Adaptive threshold settings
+  adaptiveThresholds:
+    enabled: true
+    learningPeriod: 86400000  # 24 hours
+    adjustmentFactor: 0.1
+    minThreshold: 1
+    maxThreshold: 50
+    
+  # Policy effectiveness monitoring
+  monitoring:
+    enabled: true
+    metricsRetention: 604800000  # 7 days
+    alertOnLowEffectiveness: true
+    effectivenessThreshold: 70  # percent
+    
+  # Emergency settings
+  emergency:
+    disableAllRetries: false
+    maxConcurrentRecoveries: 5
+    emergencyTimeout: 10000
+    failsafePolicy: "default-retry-policy"
+
+# Environment-specific overrides
+environments:
+  development:
+    defaults:
+      retryStrategy:
+        maxAttempts: 2
+        giveUpAfter: 30000
+    monitoring:
+      enabled: false
+      
+  production:
+    defaults:
+      retryStrategy:
+        maxAttempts: 5
+        giveUpAfter: 300000
+    monitoring:
+      enabled: true
+      alertOnLowEffectiveness: true
+      
+  testing:
+    defaults:
+      retryStrategy:
+        maxAttempts: 1
+        giveUpAfter: 5000
+    advanced:
+      emergency:
+        disableAllRetries: true

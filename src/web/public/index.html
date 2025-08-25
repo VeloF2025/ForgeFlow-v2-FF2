@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForgeFlow v2 - AI Orchestration Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8fafc;
+            --tertiary-bg: #f1f5f9;
+            --sidebar-bg: #1e293b;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            
+            /* Dark Theme Variables (will be toggled) */
+            --dark-primary-bg: #0f172a;
+            --dark-secondary-bg: #1e293b;
+            --dark-tertiary-bg: #334155;
+            --dark-sidebar-bg: #020617;
+            --dark-text-primary: #f8fafc;
+            --dark-text-secondary: #cbd5e1;
+            --dark-text-muted: #64748b;
+            --dark-border-color: #334155;
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: var(--dark-primary-bg);
+            --secondary-bg: var(--dark-secondary-bg);
+            --tertiary-bg: var(--dark-tertiary-bg);
+            --sidebar-bg: var(--dark-sidebar-bg);
+            --text-primary: var(--dark-text-primary);
+            --text-secondary: var(--dark-text-secondary);
+            --text-muted: var(--dark-text-muted);
+            --border-color: var(--dark-border-color);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 100;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 0 20px 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: white;
+            border-left-color: var(--accent-primary);
+        }
+
+        .nav-item-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .nav-item-count {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: white;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-email {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .top-bar {
+            height: 72px;
+            background: var(--primary-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 300px;
+            height: 40px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 16px 0 40px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--tertiary-bg);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .connection-status.connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .connection-status.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow: auto;
+            padding: 32px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: between;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .stat-change.positive {
+            color: var(--accent-success);
+        }
+
+        .stat-change.negative {
+            color: var(--accent-danger);
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 40px;
+            height: 40px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+        }
+
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .table tr:hover {
+            background: var(--secondary-bg);
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.running {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-warning);
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+        }
+
+        .status-badge.failed {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+        }
+
+        .status-badge.idle {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--tertiary-bg);
+        }
+
+        /* Progress bars */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--tertiary-bg);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Loading states */
+        .skeleton {
+            background: linear-gradient(90deg, var(--tertiary-bg), var(--secondary-bg), var(--tertiary-bg));
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            
+            .search-input {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .main-content {
+                width: 100%;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hide/Show content based on active view */
+        .view-content {
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <div class="logo-icon">🚀</div>
+                    <span>ForgeFlow v2</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="#" class="nav-item active" data-view="overview">
+                        <i data-lucide="layout-dashboard" class="nav-item-icon"></i>
+                        <span>Overview</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="executions">
+                        <i data-lucide="play-circle" class="nav-item-icon"></i>
+                        <span>Executions</span>
+                        <span class="nav-item-count" id="activeExecutionCount">0</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="agents">
+                        <i data-lucide="users" class="nav-item-icon"></i>
+                        <span>Agents</span>
+                        <span class="nav-item-count" id="activeAgentCount">0</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">GitHub</div>
+                    <a href="#" class="nav-item" data-view="repositories">
+                        <i data-lucide="folder-git-2" class="nav-item-icon"></i>
+                        <span>Repositories</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="issues">
+                        <i data-lucide="circle-dot" class="nav-item-icon"></i>
+                        <span>Issues</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="epics">
+                        <i data-lucide="flag" class="nav-item-icon"></i>
+                        <span>Epics</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <a href="#" class="nav-item" data-view="performance">
+                        <i data-lucide="trending-up" class="nav-item-icon"></i>
+                        <span>Performance</span>
+                    </a>
+                    <a href="#" class="nav-item" data-view="history">
+                        <i data-lucide="history" class="nav-item-icon"></i>
+                        <span>History</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Loading...</div>
+                        <div class="user-email" id="userEmail">Connecting...</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <h1 class="page-title" id="pageTitle">Overview</h1>
+                    <div class="breadcrumbs" id="breadcrumbs">
+                        <span>Dashboard</span>
+                        <span>›</span>
+                        <span>Overview</span>
+                    </div>
+                </div>
+                
+                <div class="top-bar-right">
+                    <div class="search-box">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search repositories, issues, executions..." id="globalSearch">
+                    </div>
+                    
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i data-lucide="sun" class="theme-icon"></i>
+                    </button>
+                    
+                    <div class="connection-status disconnected" id="connectionStatus">
+                        <div class="connection-dot"></div>
+                        <span>Disconnected</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Overview View -->
+                <div class="view-content active" id="overview-view">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="play-circle"></i>
+                            </div>
+                            <div class="stat-value" id="totalExecutions">0</div>
+                            <div class="stat-label">Total Executions</div>
+                            <div class="stat-change positive">
+                                <i data-lucide="trending-up"></i>
+                                <span>+12% from last week</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="users"></i>
+                            </div>
+                            <div class="stat-value" id="totalAgents">0</div>
+                            <div class="stat-label">Available Agents</div>
+                            <div class="stat-change positive">
+                                <i data-lucide="trending-up"></i>
+                                <span>All systems operational</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="folder-git-2"></i>
+                            </div>
+                            <div class="stat-value" id="totalRepositories">0</div>
+                            <div class="stat-label">GitHub Repositories</div>
+                            <div class="stat-change">
+                                <i data-lucide="refresh-cw"></i>
+                                <span id="repoLastUpdated">Fetching...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <div class="stat-value" id="uptime">0h 0m</div>
+                            <div class="stat-label">System Uptime</div>
+                            <div class="stat-change positive">
+                                <i data-lucide="check-circle"></i>
+                                <span>100% availability</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Activity</h3>
+                        </div>
+                        <div class="card-content">
+                            <div id="recentActivity">
+                                <p>Loading recent activity...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Repositories View -->
+                <div class="view-content" id="repositories-view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Your Repositories</h3>
+                            <button class="btn btn-primary" onclick="refreshRepositories()">
+                                <i data-lucide="refresh-cw"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div id="repositoriesTable">
+                                <p>Loading repositories...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Executions View -->
+                <div class="view-content" id="executions-view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Execution Management</h3>
+                            <button class="btn btn-primary" onclick="showStartExecutionModal()">
+                                <i data-lucide="play"></i>
+                                Start Execution
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div id="executionsTable">
+                                <p>No active executions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other views will be populated dynamically -->
+                <div class="view-content" id="agents-view">
+                    <div style="margin-bottom: 24px;">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="users"></i>
+                                </div>
+                                <div class="stat-value" id="totalAgentsDetail">0</div>
+                                <div class="stat-label">Total Agents</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="check-circle"></i>
+                                    <span>All systems ready</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="activity"></i>
+                                </div>
+                                <div class="stat-value" id="busyAgents">0</div>
+                                <div class="stat-label">Busy Agents</div>
+                                <div class="stat-change">
+                                    <i data-lucide="zap"></i>
+                                    <span>Currently working</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="pause-circle"></i>
+                                </div>
+                                <div class="stat-value" id="idleAgents">0</div>
+                                <div class="stat-label">Idle Agents</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="clock"></i>
+                                    <span>Available for work</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="alert-triangle"></i>
+                                </div>
+                                <div class="stat-value" id="errorAgents">0</div>
+                                <div class="stat-label">Error Agents</div>
+                                <div class="stat-change negative">
+                                    <i data-lucide="x-circle"></i>
+                                    <span>Need attention</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Agent Details</h3>
+                            <button class="btn btn-primary" onclick="refreshAgents()">
+                                <i data-lucide="refresh-cw"></i>
+                                Refresh
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div id="agentsTable">
+                                <p>Loading agents...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-content" id="issues-view">
+                    <div style="margin-bottom: 24px;">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="circle-dot"></i>
+                                </div>
+                                <div class="stat-value" id="totalIssues">0</div>
+                                <div class="stat-label">Total Issues</div>
+                                <div class="stat-change">
+                                    <i data-lucide="refresh-cw"></i>
+                                    <span>Across all repositories</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="alert-circle"></i>
+                                </div>
+                                <div class="stat-value" id="openIssues">0</div>
+                                <div class="stat-label">Open Issues</div>
+                                <div class="stat-change">
+                                    <i data-lucide="trending-up"></i>
+                                    <span>Need attention</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="check-circle"></i>
+                                </div>
+                                <div class="stat-value" id="closedIssues">0</div>
+                                <div class="stat-label">Closed Issues</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="check"></i>
+                                    <span>Resolved</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Repository Issues</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <select id="repositorySelect" class="search-input" style="width: 200px;">
+                                    <option value="">Select Repository</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="loadRepositoryIssues()">
+                                    <i data-lucide="refresh-cw"></i>
+                                    Load Issues
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div id="issuesTable">
+                                <p>Select a repository to view its issues</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-content" id="epics-view">
+                    <div style="margin-bottom: 24px;">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="flag"></i>
+                                </div>
+                                <div class="stat-value" id="totalEpics">0</div>
+                                <div class="stat-label">Total Epics</div>
+                                <div class="stat-change">
+                                    <i data-lucide="layers"></i>
+                                    <span>Across all projects</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="play-circle"></i>
+                                </div>
+                                <div class="stat-value" id="activeEpics">0</div>
+                                <div class="stat-label">Active Epics</div>
+                                <div class="stat-change">
+                                    <i data-lucide="trending-up"></i>
+                                    <span>In progress</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="target"></i>
+                                </div>
+                                <div class="stat-value" id="epicProgress">0%</div>
+                                <div class="stat-label">Average Progress</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="trending-up"></i>
+                                    <span>Overall completion</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Project Milestones (Epics)</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <select id="epicRepositorySelect" class="search-input" style="width: 200px;">
+                                    <option value="">Select Repository</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="loadRepositoryEpics()">
+                                    <i data-lucide="refresh-cw"></i>
+                                    Load Epics
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div id="epicsTable">
+                                <p>Select a repository to view its epics/milestones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-content" id="performance-view">
+                    <div style="margin-bottom: 24px;">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="zap"></i>
+                                </div>
+                                <div class="stat-value" id="avgExecutionTime">0s</div>
+                                <div class="stat-label">Avg Execution Time</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="trending-down"></i>
+                                    <span>12% faster</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="check-circle-2"></i>
+                                </div>
+                                <div class="stat-value" id="successRate">0%</div>
+                                <div class="stat-label">Success Rate</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="trending-up"></i>
+                                    <span>High reliability</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="cpu"></i>
+                                </div>
+                                <div class="stat-value" id="avgCpuUsage">0%</div>
+                                <div class="stat-label">Avg CPU Usage</div>
+                                <div class="stat-change">
+                                    <i data-lucide="activity"></i>
+                                    <span>Resource efficient</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i data-lucide="users"></i>
+                                </div>
+                                <div class="stat-value" id="agentEfficiency">0%</div>
+                                <div class="stat-label">Agent Efficiency</div>
+                                <div class="stat-change positive">
+                                    <i data-lucide="trending-up"></i>
+                                    <span>Optimized performance</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">System Performance</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <select id="chartTimeRange" class="search-input" style="width: 150px;">
+                                    <option value="1h">Last Hour</option>
+                                    <option value="24h" selected>Last 24 Hours</option>
+                                    <option value="7d">Last 7 Days</option>
+                                    <option value="30d">Last 30 Days</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="updatePerformanceChart()">
+                                    <i data-lucide="refresh-cw"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <canvas id="performanceChart" style="max-height: 400px;"></canvas>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Agent Performance</h3>
+                            </div>
+                            <div class="card-content">
+                                <canvas id="agentChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Execution Patterns</h3>
+                            </div>
+                            <div class="card-content">
+                                <canvas id="patternsChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="view-content" id="history-view">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Execution History</h3>
+                        </div>
+                        <div class="card-content">
+                            <p>Execution history interface coming soon...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Enhanced Lucide icon initialization with proper error handling
+        function initializeLucideIcons() {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                try {
+                    lucide.createIcons();
+                    console.log('✅ Lucide icons initialized successfully');
+                } catch (error) {
+                    console.error('❌ Error initializing Lucide icons:', error);
+                }
+            } else {
+                console.log('⏳ Waiting for Lucide to load...');
+                setTimeout(initializeLucideIcons, 100);
+            }
+        }
+        
+        // Add small button style for better UX
+        const style = document.createElement('style');
+        style.textContent = `
+            .btn-sm {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .btn + .btn {
+                margin-left: 4px;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Global state
+        let currentTheme = 'light';
+        let socket = null;
+        let currentView = 'overview';
+        let startTime = Date.now();
+        let userData = null;
+        let repositoriesData = null;
+        let executionsData = [];
+        let issuesData = [];
+        let epicsData = [];
+        let selectedRepository = null;
+        let performanceChart = null;
+        let agentChart = null;
+        let patternsChart = null;
+
+        // This block is replaced by the enhanced initialization above
+
+        // Enhanced Socket.IO initialization with robust reconnection
+        function initializeSocket() {
+            // Connect with explicit URL and enhanced reconnection settings
+            socket = io(window.location.origin, {
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                maxReconnectionAttempts: Infinity,
+                timeout: 20000,
+                forceNew: false,
+                autoConnect: true,
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                updateConnectionStatus(true);
+                console.log('✅ Connected to ForgeFlow v2 server - Socket ID:', socket.id);
+                showNotification('Connected to ForgeFlow v2 server', 'success');
+                
+                // Load fresh data on reconnection
+                loadUserData();
+                loadRepositories();
+                loadExecutions();
+                loadAgents();
+            });
+
+            socket.on('disconnect', (reason) => {
+                updateConnectionStatus(false);
+                console.log('❌ Disconnected from server:', reason);
+                showNotification(`Disconnected: ${reason}`, 'error');
+            });
+            
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('🔄 Reconnected after', attemptNumber, 'attempts');
+                showNotification('Reconnected to server', 'success');
+            });
+            
+            socket.on('reconnect_error', (error) => {
+                console.error('🔄 Reconnection error:', error);
+            });
+            
+            socket.on('reconnect_failed', () => {
+                console.error('❌ Failed to reconnect to server');
+                showNotification('Failed to reconnect to server', 'error');
+            });
+
+            // Execution events
+            socket.on('execution:started', (execution) => {
+                console.log('Execution started:', execution);
+                executionsData.push(execution);
+                updateExecutionsDisplay();
+                updateStats();
+                showNotification(`Execution ${execution.id} started`, 'success');
+            });
+
+            socket.on('execution:progress', (execution) => {
+                const index = executionsData.findIndex(e => e.id === execution.id);
+                if (index !== -1) {
+                    executionsData[index] = execution;
+                    updateExecutionsDisplay();
+                }
+            });
+
+            socket.on('execution:completed', (execution) => {
+                console.log('Execution completed:', execution);
+                const index = executionsData.findIndex(e => e.id === execution.id);
+                if (index !== -1) {
+                    executionsData[index] = execution;
+                    updateExecutionsDisplay();
+                    updateStats();
+                }
+                showNotification(`Execution ${execution.id} completed successfully`, 'success');
+            });
+
+            socket.on('execution:failed', (execution) => {
+                console.log('Execution failed:', execution);
+                const index = executionsData.findIndex(e => e.id === execution.id);
+                if (index !== -1) {
+                    executionsData[index] = execution;
+                    updateExecutionsDisplay();
+                    updateStats();
+                }
+                showNotification(`Execution ${execution.id} failed`, 'error');
+            });
+
+            // System metrics events
+            socket.on('system:metrics', (metrics) => {
+                updateSystemMetricsDisplay(metrics);
+            });
+
+            // Agent status events
+            socket.on('agents:status', (agentData) => {
+                console.log('Agent status update:', agentData);
+                updateAgentStatusDisplay(agentData);
+            });
+        }
+
+        // Navigation
+        function initializeNavigation() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const view = item.dataset.view;
+                    if (view) {
+                        switchView(view);
+                    }
+                });
+            });
+        }
+
+        function switchView(view) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+            // Update view content
+            document.querySelectorAll('.view-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${view}-view`).classList.add('active');
+
+            // Update page title and breadcrumbs
+            currentView = view;
+            updatePageTitle(view);
+        }
+
+        function updatePageTitle(view) {
+            const titles = {
+                overview: 'Overview',
+                executions: 'Executions',
+                agents: 'Agents',
+                repositories: 'Repositories',
+                issues: 'Issues',
+                epics: 'Epics',
+                performance: 'Performance',
+                history: 'History'
+            };
+
+            const title = titles[view] || 'Dashboard';
+            document.getElementById('pageTitle').textContent = title;
+            
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            breadcrumbs.innerHTML = `
+                <span>Dashboard</span>
+                <span>›</span>
+                <span>${title}</span>
+            `;
+        }
+
+        // Theme management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('forgeflow-theme') || 'light';
+            setTheme(savedTheme);
+
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        }
+
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('forgeflow-theme', theme);
+            
+            const themeIcon = document.querySelector('.theme-icon');
+            themeIcon.setAttribute('data-lucide', theme === 'light' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+
+        // Enhanced data loading functions with better error handling
+        async function loadUserData() {
+            try {
+                console.log('🔄 Loading user data...');
+                const response = await fetch('/api/github/user', {
+                    timeout: 10000,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    userData = await response.json();
+                    console.log('✅ User data loaded successfully:', userData.user?.login || 'Unknown user');
+                    updateUserProfile(userData.user);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load user data - Status:', response.status, 'Error:', errorText);
+                    
+                    if (response.status === 401) {
+                        updateUserProfile({ login: 'Auth', name: 'Authentication Required' });
+                        showNotification('GitHub authentication required', 'error');
+                    } else if (response.status === 500) {
+                        updateUserProfile({ login: 'Config', name: 'GitHub Token Required' });
+                        showNotification('GitHub token configuration needed', 'error');
+                    } else {
+                        updateUserProfile({ login: 'Error', name: 'API Error' });
+                        showNotification(`API Error: ${response.status}`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Network error loading user data:', error);
+                updateUserProfile({ login: 'Network', name: 'Connection Failed' });
+                showNotification('Network error loading user data', 'error');
+            }
+        }
+
+        function updateUserProfile(user) {
+            document.getElementById('userName').textContent = user.name || user.login;
+            document.getElementById('userEmail').textContent = user.email || 'GitHub User';
+            
+            const avatar = document.getElementById('userAvatar');
+            if (user.avatarUrl) {
+                avatar.style.backgroundImage = `url(${user.avatarUrl})`;
+                avatar.style.backgroundSize = 'cover';
+                avatar.textContent = '';
+            } else {
+                avatar.textContent = user.name ? user.name[0].toUpperCase() : '?';
+            }
+        }
+
+        async function loadRepositories() {
+            try {
+                console.log('🔄 Loading repositories...');
+                const response = await fetch('/api/github/repositories', {
+                    timeout: 15000,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    repositoriesData = await response.json();
+                    console.log('✅ Repositories loaded successfully:', repositoriesData.repositories?.length || 0, 'repos');
+                    updateRepositoriesDisplay();
+                    updateStats();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load repositories - Status:', response.status, 'Error:', errorText);
+                    
+                    const container = document.getElementById('repositoriesTable');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="padding: 20px; text-align: center; color: var(--accent-danger);">
+                                <p><strong>❌ Failed to load repositories</strong></p>
+                                <p>Status: ${response.status}</p>
+                                <p>${response.status === 401 ? 'Authentication required' : 
+                                     response.status === 500 ? 'Please check your GitHub token configuration' : 
+                                     'API error occurred'}</p>
+                                <button class="btn btn-primary" onclick="loadRepositories()" style="margin-top: 10px;">
+                                    <i data-lucide="refresh-cw"></i>
+                                    Retry
+                                </button>
+                            </div>
+                        `;
+                        setTimeout(() => lucide.createIcons(), 100);
+                    }
+                    showNotification(`Failed to load repositories: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Network error loading repositories:', error);
+                const container = document.getElementById('repositoriesTable');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--accent-danger);">
+                            <p><strong>🌐 Network Error</strong></p>
+                            <p>Unable to connect to GitHub API</p>
+                            <p>Check your internet connection and try again</p>
+                            <button class="btn btn-primary" onclick="loadRepositories()" style="margin-top: 10px;">
+                                <i data-lucide="refresh-cw"></i>
+                                Retry
+                            </button>
+                        </div>
+                    `;
+                    setTimeout(() => lucide.createIcons(), 100);
+                }
+                showNotification('Network error loading repositories', 'error');
+            }
+        }
+
+        function updateRepositoriesDisplay() {
+            if (!repositoriesData || !repositoriesData.repositories) {
+                console.log('⚠️ No repository data available');
+                return;
+            }
+
+            const container = document.getElementById('repositoriesTable');
+            if (repositoriesData.repositories.length === 0) {
+                container.innerHTML = '<p>No repositories found</p>';
+                return;
+            }
+
+            // Update repository selectors for issues and epics
+            updateRepositorySelectors();
+
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Repository</th>
+                            <th>Language</th>
+                            <th>Stars</th>
+                            <th>Issues</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${repositoriesData.repositories.map(repo => `
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>${repo.name}</strong>
+                                        <br>
+                                        <small style="color: var(--text-muted);">${repo.description || 'No description'}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    ${repo.language ? `<span class="status-badge idle">${repo.language}</span>` : '-'}
+                                </td>
+                                <td>${repo.stars || 0}</td>
+                                <td>${repo.issues || 0}</td>
+                                <td>${new Date(repo.updatedAt).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewRepository('${repo.fullName}')">
+                                        <i data-lucide="external-link"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = table;
+            lucide.createIcons();
+        }
+
+        function updateRepositorySelectors() {
+            if (!repositoriesData || !repositoriesData.repositories) {
+                console.log('⚠️ No repository data for selectors');
+                return;
+            }
+
+            const issueSelect = document.getElementById('repositorySelect');
+            const epicSelect = document.getElementById('epicRepositorySelect');
+
+            const options = `
+                <option value="">Select Repository</option>
+                ${repositoriesData.repositories.map(repo => 
+                    `<option value="${repo.fullName}">${repo.name}</option>`
+                ).join('')}
+            `;
+
+            if (issueSelect) issueSelect.innerHTML = options;
+            if (epicSelect) epicSelect.innerHTML = options;
+        }
+
+        async function loadRepositoryIssues() {
+            const select = document.getElementById('repositorySelect');
+            const selectedRepo = select.value;
+
+            if (!selectedRepo) {
+                alert('Please select a repository first');
+                return;
+            }
+
+            const [owner, repo] = selectedRepo.split('/');
+            const container = document.getElementById('issuesTable');
+            
+            try {
+                container.innerHTML = '<p>Loading issues...</p>';
+                
+                const response = await fetch(`/api/github/repositories/${owner}/${repo}/issues`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch issues');
+                }
+                
+                const data = await response.json();
+                issuesData = data.issues;
+                selectedRepository = selectedRepo;
+                
+                updateIssuesDisplay();
+                updateIssuesStats();
+            } catch (error) {
+                console.error('Error loading issues:', error);
+                container.innerHTML = '<p>Failed to load issues. Please check your GitHub token and repository access.</p>';
+            }
+        }
+
+        function updateIssuesDisplay() {
+            const container = document.getElementById('issuesTable');
+            
+            if (!issuesData || issuesData.length === 0) {
+                container.innerHTML = '<p>No issues found in this repository</p>';
+                return;
+            }
+
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>State</th>
+                            <th>Labels</th>
+                            <th>Assignee</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${issuesData.filter(issue => !issue.isPullRequest).map(issue => `
+                            <tr>
+                                <td><strong>#${issue.number}</strong></td>
+                                <td>
+                                    <div>
+                                        <strong>${issue.title}</strong>
+                                        <br>
+                                        <small style="color: var(--text-muted);">
+                                            ${issue.body ? issue.body.substring(0, 100) + '...' : 'No description'}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${issue.state === 'open' ? 'running' : 'completed'}">
+                                        ${issue.state}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${issue.labels ? issue.labels.slice(0, 3).map(label => 
+                                        `<span class="status-badge idle" style="font-size: 10px; margin: 1px;">${label}</span>`
+                                    ).join(' ') : '-'}
+                                </td>
+                                <td>${issue.assignee || 'Unassigned'}</td>
+                                <td>${new Date(issue.updatedAt).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewIssue('${selectedRepository}', ${issue.number})">
+                                        <i data-lucide="external-link"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+            lucide.createIcons();
+        }
+
+        function updateIssuesStats() {
+            if (!issuesData) return;
+
+            const realIssues = issuesData.filter(issue => !issue.isPullRequest);
+            const openIssues = realIssues.filter(issue => issue.state === 'open').length;
+            const closedIssues = realIssues.filter(issue => issue.state === 'closed').length;
+            const totalIssues = realIssues.length;
+
+            document.getElementById('totalIssues').textContent = totalIssues;
+            document.getElementById('openIssues').textContent = openIssues;
+            document.getElementById('closedIssues').textContent = closedIssues;
+        }
+
+        async function loadRepositoryEpics() {
+            const select = document.getElementById('epicRepositorySelect');
+            const selectedRepo = select.value;
+
+            if (!selectedRepo) {
+                alert('Please select a repository first');
+                return;
+            }
+
+            const [owner, repo] = selectedRepo.split('/');
+            const container = document.getElementById('epicsTable');
+            
+            try {
+                container.innerHTML = '<p>Loading epics/milestones...</p>';
+                
+                const response = await fetch(`/api/github/repositories/${owner}/${repo}/milestones`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch milestones');
+                }
+                
+                const data = await response.json();
+                epicsData = data.milestones;
+                selectedRepository = selectedRepo;
+                
+                updateEpicsDisplay();
+                updateEpicsStats();
+            } catch (error) {
+                console.error('Error loading epics:', error);
+                container.innerHTML = '<p>Failed to load epics/milestones. Please check your GitHub token and repository access.</p>';
+            }
+        }
+
+        function updateEpicsDisplay() {
+            const container = document.getElementById('epicsTable');
+            
+            if (!epicsData || epicsData.length === 0) {
+                container.innerHTML = '<p>No milestones/epics found in this repository</p>';
+                return;
+            }
+
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>State</th>
+                            <th>Progress</th>
+                            <th>Issues</th>
+                            <th>Due Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${epicsData.map(epic => `
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>${epic.title}</strong>
+                                        <br>
+                                        <small style="color: var(--text-muted);">
+                                            ${epic.description ? epic.description.substring(0, 100) + '...' : 'No description'}
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${epic.state === 'open' ? 'running' : 'completed'}">
+                                        ${epic.state}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="progress-bar" style="margin-bottom: 4px;">
+                                            <div class="progress-fill" style="width: ${epic.progress}%"></div>
+                                        </div>
+                                        <small>${Math.round(epic.progress)}%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <span style="color: var(--accent-success);">${epic.closedIssues} closed</span>
+                                        /
+                                        <span style="color: var(--accent-warning);">${epic.openIssues} open</span>
+                                    </div>
+                                </td>
+                                <td>${epic.dueOn ? new Date(epic.dueOn).toLocaleDateString() : 'No due date'}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewEpic('${selectedRepository}', ${epic.number})">
+                                        <i data-lucide="external-link"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = table;
+            lucide.createIcons();
+        }
+
+        function updateEpicsStats() {
+            if (!epicsData) return;
+
+            const activeEpics = epicsData.filter(epic => epic.state === 'open').length;
+            const totalEpics = epicsData.length;
+            const avgProgress = totalEpics > 0 ? 
+                Math.round(epicsData.reduce((sum, epic) => sum + epic.progress, 0) / totalEpics) : 0;
+
+            document.getElementById('totalEpics').textContent = totalEpics;
+            document.getElementById('activeEpics').textContent = activeEpics;
+            document.getElementById('epicProgress').textContent = `${avgProgress}%`;
+        }
+
+        function updateExecutionsDisplay() {
+            const container = document.getElementById('executionsTable');
+            if (executionsData.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i data-lucide="play-circle" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+                        <p><strong>No executions found</strong></p>
+                        <p>Start your first execution to see it here</p>
+                        <button class="btn btn-primary" onclick="showStartExecutionModal()" style="margin-top: 16px;">
+                            <i data-lucide="play"></i>
+                            Start Execution
+                        </button>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pattern</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                            <th>Duration</th>
+                            <th>Started</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${executionsData.map(execution => {
+                            const duration = execution.duration ?
+                                Math.round(execution.duration / 1000) + 's' :
+                                execution.startTime ?
+                                    Math.round((Date.now() - new Date(execution.startTime).getTime()) / 1000) + 's' :
+                                    '-';
+                            
+                            return `
+                            <tr>
+                                <td><strong>${execution.id.substring(0, 8)}</strong></td>
+                                <td><span class="status-badge idle">${execution.pattern || 'Unknown'}</span></td>
+                                <td>
+                                    <span class="status-badge ${execution.status}">${execution.status}</span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="progress-bar" style="margin-bottom: 4px;">
+                                            <div class="progress-fill" style="width: ${execution.progress || 0}%"></div>
+                                        </div>
+                                        <small>${Math.round(execution.progress || 0)}%</small>
+                                    </div>
+                                </td>
+                                <td>${duration}</td>
+                                <td>${execution.startTime ? new Date(execution.startTime).toLocaleString() : '-'}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewExecution('${execution.id}')" style="margin-right: 4px;">
+                                        <i data-lucide="eye"></i>
+                                        View
+                                    </button>
+                                    ${execution.status === 'running' ? 
+                                        `<button class="btn btn-secondary btn-sm" onclick="stopExecution('${execution.id}')" style="color: var(--accent-danger);">
+                                            <i data-lucide="stop-circle"></i>
+                                            Stop
+                                        </button>` : ''}
+                                </td>
+                            </tr>
+                        `}).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = table;
+            lucide.createIcons();
+        }
+
+        function updateStats() {
+            // Update execution counts
+            const activeExecutions = executionsData.filter(e => e.status === 'running').length;
+            const totalExecutions = executionsData.length;
+            
+            document.getElementById('activeExecutionCount').textContent = activeExecutions;
+            document.getElementById('totalExecutions').textContent = totalExecutions;
+
+            // Update repository count with null safety
+            if (repositoriesData && repositoriesData.repositories) {
+                document.getElementById('totalRepositories').textContent = repositoriesData.repositories.length;
+                document.getElementById('repoLastUpdated').textContent = 'Just now';
+            } else {
+                document.getElementById('totalRepositories').textContent = '0';
+                document.getElementById('repoLastUpdated').textContent = 'Not loaded';
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            status.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
+            status.querySelector('span').textContent = connected ? 'Connected' : 'Disconnected';
+        }
+
+        function updateUptime() {
+            const uptimeMs = Date.now() - startTime;
+            const hours = Math.floor(uptimeMs / (1000 * 60 * 60));
+            const minutes = Math.floor((uptimeMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('uptime').textContent = `${hours}h ${minutes}m`;
+        }
+
+        // Utility functions
+        function refreshRepositories() {
+            loadRepositories();
+        }
+
+        function viewRepository(fullName) {
+            window.open(`https://github.com/${fullName}`, '_blank');
+        }
+
+        function viewIssue(repoFullName, issueNumber) {
+            window.open(`https://github.com/${repoFullName}/issues/${issueNumber}`, '_blank');
+        }
+
+        function viewEpic(repoFullName, milestoneNumber) {
+            window.open(`https://github.com/${repoFullName}/milestone/${milestoneNumber}`, '_blank');
+        }
+
+        function viewExecution(executionId) {
+            console.log('Viewing execution:', executionId);
+            // Could implement a modal or redirect to detailed view
+            alert(`Execution details for ${executionId} - Coming soon!`);
+        }
+
+        async function stopExecution(executionId) {
+            if (!confirm(`Are you sure you want to stop execution ${executionId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/executions/${executionId}/stop`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: 'User requested stop' })
+                });
+
+                if (response.ok) {
+                    showNotification('Execution stopped successfully', 'success');
+                    loadExecutions(); // Refresh the list
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to stop execution: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error stopping execution:', error);
+                showNotification('Network error stopping execution', 'error');
+            }
+        }
+
+        function showStartExecutionModal() {
+            // For now, just show a simple prompt
+            const epicId = prompt('Enter Epic/Issue ID to execute (e.g., #123):');
+            if (epicId) {
+                startExecution(epicId.replace('#', ''));
+            }
+        }
+
+        async function startExecution(epicId) {
+            try {
+                const response = await fetch('/api/executions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        epicId: epicId,
+                        pattern: 'feature-development' // Default pattern
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification(`Execution started: ${result.execution.id}`, 'success');
+                    loadExecutions(); // Refresh the list
+                } else {
+                    const error = await response.json();
+                    showNotification(`Failed to start execution: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error starting execution:', error);
+                showNotification('Network error starting execution', 'error');
+            }
+        }
+
+        function refreshAgents() {
+            loadAgents();
+        }
+
+        // Chart initialization and management
+        function initializeCharts() {
+            initializePerformanceChart();
+            initializeAgentChart();
+            initializePatternsChart();
+        }
+
+        function initializePerformanceChart() {
+            const ctx = document.getElementById('performanceChart')?.getContext('2d');
+            if (!ctx) return;
+
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Active Executions',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'CPU Usage %',
+                        data: [],
+                        borderColor: 'rgb(139, 92, 246)',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Memory Usage %',
+                        data: [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeAgentChart() {
+            const ctx = document.getElementById('agentChart')?.getContext('2d');
+            if (!ctx) return;
+
+            const agentTypes = [
+                'strategic-planner',
+                'system-architect', 
+                'code-implementer',
+                'test-coverage-validator',
+                'security-auditor',
+                'performance-optimizer'
+            ];
+
+            agentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: agentTypes,
+                    datasets: [{
+                        data: [18, 22, 35, 15, 8, 12],
+                        backgroundColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(139, 92, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(239, 68, 68)',
+                            'rgb(168, 85, 247)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 8,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializePatternsChart() {
+            const ctx = document.getElementById('patternsChart')?.getContext('2d');
+            if (!ctx) return;
+
+            patternsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Feature Development', 'Bug Fix Sprint', 'Security Audit', 'Refactoring', 'Performance'],
+                    datasets: [{
+                        label: 'Executions',
+                        data: [23, 45, 8, 12, 15],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(139, 92, 246)',
+                            'rgb(239, 68, 68)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePerformanceChart() {
+            if (!performanceChart) return;
+
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString();
+            
+            // Simulate real data
+            const activeExecutions = executionsData.filter(e => e.status === 'running').length;
+            const cpuUsage = Math.random() * 30 + 20; // 20-50%
+            const memoryUsage = Math.random() * 20 + 40; // 40-60%
+
+            performanceChart.data.labels.push(timeLabel);
+            performanceChart.data.datasets[0].data.push(activeExecutions);
+            performanceChart.data.datasets[1].data.push(cpuUsage);
+            performanceChart.data.datasets[2].data.push(memoryUsage);
+
+            // Keep only last 20 data points
+            if (performanceChart.data.labels.length > 20) {
+                performanceChart.data.labels.shift();
+                performanceChart.data.datasets.forEach(dataset => {
+                    dataset.data.shift();
+                });
+            }
+
+            performanceChart.update('none');
+            
+            // Update performance stats
+            document.getElementById('avgCpuUsage').textContent = `${Math.round(cpuUsage)}%`;
+            document.getElementById('avgExecutionTime').textContent = `${Math.round(Math.random() * 30 + 15)}s`;
+            document.getElementById('successRate').textContent = `${Math.round(Math.random() * 10 + 90)}%`;
+            document.getElementById('agentEfficiency').textContent = `${Math.round(Math.random() * 15 + 80)}%`;
+        }
+
+        function updateAllCharts() {
+            updatePerformanceChart();
+        }
+
+        // Additional utility functions
+        function showNotification(message, type = 'info') {
+            // Create notification element if it doesn't exist
+            let notificationContainer = document.getElementById('notifications');
+            if (!notificationContainer) {
+                notificationContainer = document.createElement('div');
+                notificationContainer.id = 'notifications';
+                notificationContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                    max-width: 400px;
+                `;
+                document.body.appendChild(notificationContainer);
+            }
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                background: ${type === 'success' ? 'var(--accent-success)' : type === 'error' ? 'var(--accent-danger)' : 'var(--accent-primary)'};
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                box-shadow: var(--shadow-lg);
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            notification.textContent = message;
+
+            notificationContainer.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notificationContainer.removeChild(notification);
+                }, 300);
+            }, 5000);
+        }
+
+        function updateSystemMetricsDisplay(metrics) {
+            // Update real-time system metrics in the performance view
+            if (currentView === 'performance') {
+                if (metrics.memoryUsage) {
+                    const memoryPercent = (metrics.memoryUsage.heapUsed / metrics.memoryUsage.heapTotal) * 100;
+                    const avgMemoryElement = document.getElementById('avgMemoryUsage');
+                    if (avgMemoryElement) {
+                        avgMemoryElement.textContent = `${Math.round(memoryPercent)}%`;
+                    }
+                }
+            }
+        }
+
+        function updateAgentStatusDisplay(agentData) {
+            if (agentData.summary) {
+                document.getElementById('totalAgents').textContent = agentData.summary.total;
+                document.getElementById('activeAgentCount').textContent = agentData.summary.busy + agentData.summary.idle;
+                
+                // Update detailed agent stats
+                document.getElementById('totalAgentsDetail').textContent = agentData.summary.total;
+                document.getElementById('busyAgents').textContent = agentData.summary.busy;
+                document.getElementById('idleAgents').textContent = agentData.summary.idle;
+                document.getElementById('errorAgents').textContent = agentData.summary.error;
+                
+                // Update agent efficiency based on healthy agents
+                const efficiency = Math.round((agentData.summary.healthy / agentData.summary.total) * 100);
+                const efficiencyElement = document.getElementById('agentEfficiency');
+                if (efficiencyElement) {
+                    efficiencyElement.textContent = `${efficiency}%`;
+                }
+            }
+            
+            // Update agents table
+            updateAgentsTable(agentData.agents);
+        }
+        
+        function updateAgentsTable(agents) {
+            const container = document.getElementById('agentsTable');
+            if (!agents || agents.length === 0) {
+                container.innerHTML = '<p>No agents available</p>';
+                return;
+            }
+
+            const table = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Agent</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Current Task</th>
+                            <th>Success Rate</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${agents.map(agent => `
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>${agent.id.split('-')[0]}</strong>
+                                        <br>
+                                        <small style="color: var(--text-muted);">v${agent.version}</small>
+                                    </div>
+                                </td>
+                                <td><span class="status-badge idle">${agent.type}</span></td>
+                                <td>
+                                    <span class="status-badge ${agent.status}">
+                                        ${agent.status}
+                                        ${!agent.isHealthy ? ' (stale)' : ''}
+                                    </span>
+                                </td>
+                                <td>${agent.currentTask || 'None'}</td>
+                                <td>
+                                    ${agent.metrics ? Math.round(agent.metrics.successRate) + '%' : 'N/A'}
+                                </td>
+                                <td>${new Date(agent.lastActive).toLocaleString()}</td>
+                                <td>
+                                    <button class="btn btn-secondary btn-sm" onclick="viewAgent('${agent.id}')">
+                                        <i data-lucide="eye"></i>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            container.innerHTML = table;
+            lucide.createIcons();
+        }
+        
+        function viewAgent(agentId) {
+            console.log('Viewing agent:', agentId);
+            alert(`Agent details for ${agentId} - Coming soon!`);
+        }
+
+        async function loadExecutions() {
+            try {
+                console.log('🔄 Loading executions...');
+                const response = await fetch('/api/executions', {
+                    timeout: 10000,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    executionsData = data.executions || [];
+                    console.log('✅ Executions loaded successfully:', executionsData.length, 'executions');
+                    updateExecutionsDisplay();
+                    updateStats();
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load executions - Status:', response.status, 'Error:', errorText);
+                    showNotification(`Failed to load executions: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Network error loading executions:', error);
+                showNotification('Network error loading executions', 'error');
+            }
+        }
+
+        async function loadAgents() {
+            try {
+                console.log('🔄 Loading agents...');
+                const response = await fetch('/api/agents', {
+                    timeout: 10000,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Agents loaded successfully:', data.summary?.total || 0, 'agents');
+                    updateAgentStatusDisplay(data);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Failed to load agents - Status:', response.status, 'Error:', errorText);
+                    showNotification(`Failed to load agents: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                console.error('❌ Network error loading agents:', error);
+                showNotification('Network error loading agents', 'error');
+            }
+        }
+
+        // Enhanced initialization with error handling and retries
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 ForgeFlow v2 Dashboard initializing...');
+            
+            // Initialize Lucide icons first with delay to ensure CDN loads
+            setTimeout(initializeLucideIcons, 100);
+            
+            // Initialize core functionality
+            try {
+                initializeSocket();
+                initializeNavigation();
+                initializeTheme();
+                console.log('✅ Core functionality initialized');
+            } catch (error) {
+                console.error('❌ Error initializing core functionality:', error);
+                showNotification('Error initializing dashboard', 'error');
+            }
+            
+            // Load real data from APIs with retry logic
+            const loadAllData = async () => {
+                try {
+                    await Promise.all([
+                        loadUserData(),
+                        loadRepositories(),
+                        loadExecutions(),
+                        loadAgents()
+                    ]);
+                } catch (error) {
+                    console.error('❌ Error loading initial data:', error);
+                }
+            };
+            
+            // Load data after a short delay
+            setTimeout(loadAllData, 500);
+            
+            // Initialize UI updates
+            try {
+                updateUptime();
+                // Initialize charts after data loads
+                setTimeout(initializeCharts, 1000);
+                console.log('✅ UI updates initialized');
+            } catch (error) {
+                console.error('❌ Error initializing UI updates:', error);
+            }
+            
+            // Set up intervals
+            setInterval(updateUptime, 1000);
+            setInterval(updateAllCharts, 30000);
+            
+            // Load fresh data every 2 minutes
+            setInterval(() => {
+                console.log('🔄 Periodic data refresh...');
+                loadAllData();
+            }, 120000);
+            
+            console.log('✅ ForgeFlow v2 Dashboard initialization complete');
+        });
+
+        // Search functionality
+        document.getElementById('globalSearch').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            // Implementation for global search
+            console.log('Searching for:', query);
+        });
+    </script>
+</body>
+</html>

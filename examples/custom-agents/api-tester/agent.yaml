@@ -1,0 +1,170 @@
+name: api-tester
+type: api-tester
+version: 1.2.0
+displayName: API Tester Agent
+description: Automated API testing agent that generates comprehensive test suites for REST APIs
+
+author:
+  name: API Testing Team
+  email: api@forgeflow.dev
+  url: https://forgeflow.dev/agents/api-tester
+
+capabilities:
+  - api-testing
+  - test-generation
+  - endpoint-discovery
+  - schema-validation
+  - performance-testing
+  - security-testing
+  - documentation-testing
+
+dependencies:
+  agents:
+    - test-coverage-validator
+  tools:
+    - name: curl
+      version: "7.0.0"
+      optional: false
+    - name: newman
+      version: "5.0.0"
+      optional: true
+  npm:
+    axios: "^1.0.0"
+    jest: "^29.0.0"
+    supertest: "^6.0.0"
+    ajv: "^8.0.0"
+
+configuration:
+  schema:
+    type: object
+    properties:
+      baseUrl:
+        type: string
+        format: uri
+        description: Base URL of the API to test
+      timeout:
+        type: integer
+        minimum: 1000
+        maximum: 60000
+        default: 30000
+        description: Request timeout in milliseconds
+      authentication:
+        type: object
+        properties:
+          type:
+            type: string
+            enum: [bearer, basic, apikey, oauth2]
+          credentials:
+            type: object
+        description: Authentication configuration
+      testTypes:
+        type: array
+        items:
+          type: string
+          enum: [functional, performance, security, contract]
+        default: [functional]
+        description: Types of tests to generate
+      outputFormat:
+        type: string
+        enum: [jest, postman, newman, tap]
+        default: jest
+        description: Test output format
+  defaults:
+    timeout: 30000
+    testTypes: [functional]
+    outputFormat: jest
+  required:
+    - baseUrl
+
+implementation:
+  type: typescript
+  main: src/api-tester.ts
+  class: ApiTesterAgent
+  environment:
+    NODE_ENV: test
+    API_TEST_MODE: automated
+
+execution:
+  timeout: 600000  # 10 minutes
+  retries: 1
+  parallel: true
+  isolation: process
+  resources:
+    maxMemory: 512MB
+    maxCpu: 2.0
+
+quality:
+  gates:
+    - name: Test Generation Quality
+      criteria:
+        - All discovered endpoints have tests
+        - Tests cover success and error scenarios
+        - Generated tests are syntactically valid
+      blocking: true
+    - name: API Coverage
+      criteria:
+        - At least 80% endpoint coverage
+        - All HTTP methods tested
+        - Authentication scenarios covered
+      blocking: false
+  metrics:
+    - name: api_endpoints_discovered
+      type: counter
+      description: Number of API endpoints discovered
+      tags: [method, status_code]
+    - name: tests_generated
+      type: counter
+      description: Number of tests generated
+      tags: [test_type, endpoint]
+    - name: test_execution_time
+      type: timer
+      description: Time taken to execute generated tests
+      tags: [test_suite]
+
+testing:
+  unitTests:
+    framework: jest
+    pattern: "**/*.test.ts"
+    coverage:
+      minimum: 90
+  integrationTests:
+    enabled: true
+    pattern: "**/*.integration.test.ts"
+
+security:
+  permissions:
+    - network:http
+    - filesystem:read
+    - filesystem:write
+    - environment:read
+  sandbox: true
+  trustedSources:
+    - https://httpbin.org
+    - https://jsonplaceholder.typicode.com
+    - https://api.github.com
+
+compatibility:
+  forgeflowVersion: "^2.0.0"
+  platforms: [windows, linux, darwin]
+  nodeVersion: "^16.0.0"
+
+documentation:
+  readme: README.md
+  examples:
+    - name: Basic API Testing
+      description: Test a simple REST API
+      file: examples/basic-api-test.js
+    - name: Authenticated API Testing
+      description: Test APIs with authentication
+      file: examples/auth-api-test.js
+    - name: Performance Testing
+      description: Generate performance tests
+      file: examples/performance-test.js
+  changelog: CHANGELOG.md
+
+metadata:
+  tags: [api, testing, automation, rest, http]
+  category: testing
+  maturity: stable
+  license: MIT
+  repository: https://github.com/forgeflow/agents/api-tester

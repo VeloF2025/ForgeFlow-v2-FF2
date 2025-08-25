@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-08-25T07:45:10.331559",
+  "project_path": ".",
+  "rules_loaded": {
+    "C:\\Jarvis\\CLAUDE.md": {
+      "type": "GLOBAL",
+      "description": "Global Claude configuration",
+      "size": 16157,
+      "hash": "80c5775b",
+      "loaded": true
+    },
+    "C:\\Jarvis\\RULES.md": {
+      "type": "GLOBAL",
+      "description": "Global rules baseline",
+      "size": 9951,
+      "hash": "554e4961",
+      "loaded": true
+    },
+    "C:\\Jarvis\\PLAYWRIGHT_TESTING_PROTOCOL.md": {
+      "type": "GLOBAL",
+      "description": "Global testing protocol",
+      "size": 12453,
+      "hash": "642c1603",
+      "loaded": true
+    },
+    "C:\\Jarvis\\NLNH_GLOBAL_PROTOCOL.md": {
+      "type": "GLOBAL",
+      "description": "Truth protocol",
+      "size": 4459,
+      "hash": "0ff79716",
+      "loaded": true
+    }
+  },
+  "violations": [],
+  "warnings": [
+    "Playwright config missing",
+    "Missing script: type-check",
+    "Missing script: test:e2e",
+    "TypeScript strict mode not enabled",
+    "Design principles not documented",
+    "No accessibility tests found"
+  ],
+  "design_issues": [
+    "Design principles defined",
+    "Component library exists",
+    "Responsive breakpoints",
+    "Accessibility standards",
+    "Theme configuration",
+    "Design tokens"
+  ],
+  "status": "PASS",
+  "stats": {
+    "total_rules_loaded": 4,
+    "global_rules": 4,
+    "project_rules": 0,
+    "violations": 0,
+    "warnings": 6,
+    "design_issues": 6
+  }
+}

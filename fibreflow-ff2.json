@@ -1,0 +1,37 @@
+{
+  "github": {
+    "owner": "VeloF2025",
+    "repo": "FibreFlow-React",
+    "token": "configured"
+  },
+  "project": {
+    "path": "C:/Jarvis/AI Workspace/FibreFlow_React",
+    "name": "FibreFlow React"
+  },
+  "parallelExecution": {
+    "enabled": true,
+    "maxInstances": 6,
+    "useGitHubIssues": true,
+    "useWorktrees": true
+  },
+  "issues": [
+    {
+      "id": 1,
+      "title": "Fix TypeScript Errors in Services",
+      "agent": "code-implementer",
+      "instance": 1
+    },
+    {
+      "id": 2,
+      "title": "Fix TypeScript Errors in UI",
+      "agent": "code-implementer",
+      "instance": 2
+    },
+    {
+      "id": 3,
+      "title": "Fix ESLint Errors",
+      "agent": "code-quality-reviewer",
+      "instance": 3
+    }
+  ]
+}

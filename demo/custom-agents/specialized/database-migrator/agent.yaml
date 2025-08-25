@@ -1,0 +1,267 @@
+# Database Migration Specialist Agent
+# Specialized agent for handling database schema changes and data migrations
+
+name: "database-migrator"
+displayName: "Database Migration Specialist"
+description: "Expert in database schema changes, data migrations, and database operations"
+version: "1.0.0"
+category: "database"
+
+# Agent capabilities and specializations
+capabilities:
+  - "schema-migration"
+  - "data-migration" 
+  - "database-optimization"
+  - "rollback-planning"
+  - "migration-validation"
+  - "performance-analysis"
+
+# Supported database systems
+supportedSystems:
+  - "postgresql"
+  - "mysql"
+  - "sqlite"
+  - "mongodb"
+  - "redis"
+
+# Agent configuration
+config:
+  # Execution settings
+  timeout: 900000                 # 15 minutes for complex migrations
+  priority: "high"                # Database changes are high priority
+  retryAttempts: 1                # Migration failures require careful analysis
+  
+  # Database-specific settings
+  database:
+    maxConnections: 10            # Maximum concurrent database connections
+    queryTimeout: 30000           # SQL query timeout (30 seconds)
+    lockTimeout: 300000           # Database lock timeout (5 minutes)
+    backupBeforeMigration: true   # Always backup before migration
+    
+  # Safety settings
+  safety:
+    requireBackup: true           # Require backup before any migration
+    validateBeforeExecute: true   # Validate migration before execution
+    rollbackPlanRequired: true    # Require rollback plan for all changes
+    testOnCopy: true              # Test migrations on database copy first
+    
+  # Performance settings
+  performance:
+    batchSize: 1000               # Default batch size for data operations
+    maxMemoryUsage: "1GB"         # Memory limit for migration operations
+    parallelTasks: 4              # Number of parallel migration tasks
+
+# Agent behavior patterns
+patterns:
+  schema-migration:
+    description: "Handle database schema changes"
+    phases:
+      - name: "analysis"
+        description: "Analyze schema changes and dependencies"
+        timeout: 180000
+      - name: "planning"
+        description: "Create migration plan with rollback strategy"
+        timeout: 300000
+      - name: "validation"
+        description: "Validate migration on test environment"
+        timeout: 600000
+      - name: "execution"
+        description: "Execute migration with monitoring"
+        timeout: 1200000
+      - name: "verification"
+        description: "Verify migration success and data integrity"
+        timeout: 300000
+
+  data-migration:
+    description: "Handle large-scale data migrations"
+    phases:
+      - name: "assessment"
+        description: "Assess data volume and migration complexity"
+        timeout: 300000
+      - name: "strategy"
+        description: "Develop migration strategy and batching plan"
+        timeout: 300000
+      - name: "execution"
+        description: "Execute data migration in batches"
+        timeout: 3600000           # 1 hour for large data migrations
+      - name: "validation"
+        description: "Validate data integrity and completeness"
+        timeout: 600000
+
+# Tools and dependencies
+tools:
+  required:
+    - "database-cli"              # Database command-line tools
+    - "migration-framework"       # Migration framework (e.g., Flyway, Liquibase)
+    - "backup-tools"              # Database backup utilities
+    
+  optional:
+    - "performance-profiler"      # Database performance profiling
+    - "data-validation-tools"     # Data integrity validation tools
+    - "monitoring-tools"          # Database monitoring and alerting
+
+# Quality gates specific to database operations
+qualityGates:
+  preMigration:
+    - "backup-verification"       # Verify backup was created successfully
+    - "dependency-check"          # Check for dependent objects
+    - "rollback-plan-review"      # Review rollback plan
+    - "test-environment-validation" # Validate on test environment first
+    
+  postMigration:
+    - "data-integrity-check"      # Verify data integrity
+    - "performance-validation"    # Check performance impact
+    - "application-compatibility" # Verify application still works
+    - "monitoring-alerts"         # Check for any monitoring alerts
+
+# Error handling and recovery
+errorHandling:
+  onFailure:
+    - "immediate-rollback"        # Immediate rollback on critical failures
+    - "preserve-logs"             # Preserve all migration logs
+    - "notify-dba-team"           # Notify database team immediately
+    - "create-incident-ticket"    # Create incident ticket with details
+    
+  rollbackStrategy:
+    - "automated-rollback"        # Automated rollback for safe migrations
+    - "manual-rollback"           # Manual rollback for complex changes
+    - "data-recovery"             # Data recovery procedures
+    - "consistency-check"         # Post-rollback consistency check
+
+# Monitoring and observability
+monitoring:
+  metrics:
+    - "migration-duration"        # Track migration execution time
+    - "data-volume-migrated"      # Track amount of data migrated
+    - "error-rate"                # Track migration error rates
+    - "rollback-frequency"        # Track rollback frequency
+    - "performance-impact"        # Track performance impact on database
+    
+  alerts:
+    - "migration-timeout"         # Alert on migration timeout
+    - "high-error-rate"           # Alert on high error rate
+    - "performance-degradation"   # Alert on performance issues
+    - "lock-contention"           # Alert on database lock issues
+
+# Integration points
+integrations:
+  cicd:
+    - "migration-automation"      # Integrate with CI/CD pipelines
+    - "environment-promotion"     # Handle environment-specific migrations
+    - "deployment-gates"          # Database migration as deployment gate
+    
+  monitoring:
+    - "database-monitoring"       # Integration with database monitoring
+    - "application-monitoring"    # Integration with application monitoring
+    - "alerting-systems"          # Integration with alerting systems
+    
+  ticketing:
+    - "change-management"         # Integration with change management
+    - "incident-tracking"         # Integration with incident tracking
+
+# Execution context
+context:
+  workingDirectory: "migrations"  # Working directory for migration files
+  logDirectory: "logs/migrations" # Directory for migration logs
+  backupDirectory: "backups"      # Directory for database backups
+  
+  environmentVariables:
+    - "DATABASE_URL"              # Database connection URL
+    - "MIGRATION_USER"            # Database user for migrations
+    - "BACKUP_LOCATION"           # Backup storage location
+    - "ROLLBACK_TIMEOUT"          # Rollback timeout setting
+
+# Agent-specific commands and scripts
+commands:
+  analyze:
+    command: "npm run migrate:analyze"
+    description: "Analyze pending migrations and dependencies"
+    
+  plan:
+    command: "npm run migrate:plan"
+    description: "Create detailed migration execution plan"
+    
+  validate:
+    command: "npm run migrate:validate"
+    description: "Validate migrations on test environment"
+    
+  execute:
+    command: "npm run migrate:up"
+    description: "Execute pending migrations"
+    
+  rollback:
+    command: "npm run migrate:down"
+    description: "Rollback last migration"
+    
+  status:
+    command: "npm run migrate:status"
+    description: "Check migration status and database state"
+
+# Documentation and examples
+documentation:
+  usage: |
+    The Database Migration Specialist handles all database-related changes including:
+    - Schema migrations (tables, columns, indexes)
+    - Data migrations (data transformation and movement)
+    - Database optimization (performance tuning)
+    - Rollback planning and execution
+    
+    Example usage:
+    ```bash
+    forgeflow agent database-migrator --task="migrate-user-table-v2"
+    forgeflow agent database-migrator --pattern="schema-migration" --config="postgresql"
+    ```
+    
+  examples:
+    - name: "Add new table"
+      description: "Create new table with proper indexes and constraints"
+      config:
+        migrationFile: "001_create_users_table.sql"
+        rollbackFile: "001_create_users_table_rollback.sql"
+        
+    - name: "Column data type change" 
+      description: "Change column data type with data preservation"
+      config:
+        strategy: "dual-write"      # Use dual-write strategy for zero-downtime
+        batchSize: 5000             # Process in batches of 5000 records
+        
+    - name: "Large table migration"
+      description: "Migrate large table with minimal downtime"
+      config:
+        strategy: "online-migration" # Use online migration strategy
+        parallelWorkers: 8          # Use 8 parallel workers
+        
+# Security considerations
+security:
+  permissions:
+    required:
+      - "database-admin"            # Database admin permissions
+      - "backup-access"             # Access to backup systems
+      - "migration-execution"       # Permission to execute migrations
+      
+  encryption:
+    backups: true                   # Encrypt all database backups
+    connections: true               # Use encrypted database connections
+    logs: true                      # Encrypt migration logs
+    
+  auditing:
+    enabled: true                   # Enable audit logging
+    logLevel: "detailed"            # Detailed audit logging
+    retention: "7 years"            # Audit log retention period
+
+# Performance considerations  
+performance:
+  optimization:
+    indexManagement: true           # Automatically manage indexes
+    statisticsUpdate: true          # Update table statistics after migration
+    vacuumAnalyze: true            # Run vacuum analyze after large changes
+    
+  monitoring:
+    lockMonitoring: true           # Monitor database locks during migration
+    performanceImpact: true        # Monitor performance impact
+    resourceUsage: true            # Monitor resource usage
+    
+  tuning:
+    connectionPooling: true        # Use connection pooling
+    batchOptimization: true        # Optimize batch sizes
+    parallelization: true          # Use parallel processing where safe

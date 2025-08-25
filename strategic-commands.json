@@ -1,0 +1,17 @@
+{
+  "ff2-strategic-plan": {
+    "description": "Activate strategic planning for a task or epic",
+    "usage": "ff2-strategic-plan <task-description>",
+    "example": "ff2-strategic-plan \"Implement user authentication system\""
+  },
+  "ff2-parallel-execute": {
+    "description": "Execute strategic plan with parallel agents",
+    "usage": "ff2-parallel-execute <plan-id> [--pattern=<pattern-name>]",
+    "example": "ff2-parallel-execute plan-123 --pattern=feature-development"
+  },
+  "ff2-strategic-status": {
+    "description": "Show strategic planning and execution status",
+    "usage": "ff2-strategic-status [<plan-id>]",
+    "example": "ff2-strategic-status plan-123"
+  }
+}
