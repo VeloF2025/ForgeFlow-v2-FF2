@@ -370,7 +370,6 @@ export class ContentExtractor implements IContentExtractor {
             case 'gotcha':
               return await this.extractFromGotcha(parsed as GotchaFile);
           }
-          break;
           
         case 'config':
           return await this.extractFromConfigFile(filePath);

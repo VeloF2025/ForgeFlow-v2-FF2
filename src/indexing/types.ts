@@ -422,29 +422,195 @@ export enum IndexErrorCode {
   SCHEMA_MIGRATION_FAILED = 'SCHEMA_MIGRATION_FAILED'
 }
 
-// Vector search preparation (for future ML integration)
+// Enhanced Vector Search Support for ML Integration
 export interface VectorIndex {
   // Vector operations
   addVectors(entries: VectorEntry[]): Promise<void>;
-  searchVectors(vector: number[], limit: number): Promise<VectorSearchResult[]>;
+  updateVectors(entries: VectorEntry[]): Promise<void>;
+  removeVectors(ids: string[]): Promise<void>;
+  searchVectors(vector: number[], limit: number, threshold?: number): Promise<VectorSearchResult[]>;
   
-  // Hybrid search
+  // Hybrid search with advanced fusion
   hybridSearch(textQuery: string, vector?: number[], weights?: HybridSearchWeights): Promise<SearchResults>;
+  
+  // Vector index management
+  buildVectorIndex(dimension: number): Promise<void>;
+  optimizeVectorIndex(): Promise<void>;
+  getVectorStats(): Promise<VectorIndexStats>;
 }
 
 export interface VectorEntry {
   id: string;
   vector: number[];
   metadata: Record<string, unknown>;
+  timestamp?: Date;
 }
 
 export interface VectorSearchResult {
   id: string;
   similarity: number;
+  distance: number;
   metadata: Record<string, unknown>;
 }
 
 export interface HybridSearchWeights {
   textWeight: number; // 0-1, weight for FTS results
   vectorWeight: number; // 0-1, weight for vector similarity
+  fusionMethod: 'linear' | 'rrf' | 'weighted_sum'; // Rank fusion method
+}
+
+export interface VectorIndexStats {
+  totalVectors: number;
+  dimension: number;
+  indexSize: number; // bytes
+  buildTime: number; // milliseconds
+  lastOptimized: Date;
+}
+
+// Pluggable Index Provider System
+export interface IndexProvider {
+  name: string;
+  version: string;
+  capabilities: IndexCapabilities;
+  initialize(config: IndexProviderConfig): Promise<void>;
+  shutdown(): Promise<void>;
+  
+  // Core indexing operations
+  index(entries: IndexEntry[]): Promise<void>;
+  search(query: SearchQuery): Promise<SearchResults>;
+  delete(ids: string[]): Promise<void>;
+  
+  // Health and statistics
+  getHealth(): Promise<ProviderHealth>;
+  getStats(): Promise<ProviderStats>;
+}
+
+export interface IndexCapabilities {
+  fullTextSearch: boolean;
+  vectorSearch: boolean;
+  hybridSearch: boolean;
+  facetedSearch: boolean;
+  geospatialSearch: boolean;
+  maxContentLength: number;
+  supportedLanguages: string[];
+}
+
+export interface IndexProviderConfig {
+  databasePath?: string;
+  connectionString?: string;
+  apiKey?: string;
+  settings: Record<string, any>;
+}
+
+export interface ProviderHealth {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  latency: number; // milliseconds
+  errorRate: number; // percentage
+  uptime: number; // seconds
+  lastCheck: Date;
+}
+
+export interface ProviderStats {
+  totalDocuments: number;
+  indexSize: number;
+  queriesPerSecond: number;
+  averageLatency: number;
+  cacheHitRate: number;
+}
+
+// Enhanced Index Registry for Provider Management
+export interface IndexRegistry {
+  registerProvider(provider: IndexProvider): void;
+  unregisterProvider(name: string): void;
+  getProvider(name: string): IndexProvider | undefined;
+  getActiveProvider(): IndexProvider;
+  switchProvider(name: string): Promise<void>;
+  listProviders(): IndexProviderInfo[];
+}
+
+export interface IndexProviderInfo {
+  name: string;
+  version: string;
+  active: boolean;
+  capabilities: IndexCapabilities;
+  health: ProviderHealth;
+}
+
+// Real-time Index Updates
+export interface IndexUpdateStream {
+  subscribe(handler: IndexUpdateHandler): void;
+  unsubscribe(handler: IndexUpdateHandler): void;
+  push(update: IndexUpdateEvent): Promise<void>;
+}
+
+export interface IndexUpdateHandler {
+  (event: IndexUpdateEvent): Promise<void>;
+}
+
+export interface IndexUpdateEvent {
+  type: 'created' | 'updated' | 'deleted' | 'batch';
+  entries: IndexEntry[];
+  timestamp: Date;
+  source: string;
+}
+
+// Performance Optimization Interfaces
+export interface PerformanceOptimizer {
+  analyzeQueryPatterns(): Promise<QueryPatternAnalysis>;
+  suggestIndexOptimizations(): Promise<IndexOptimization[]>;
+  optimizeIndex(): Promise<OptimizationResult>;
+  scheduleOptimization(schedule: OptimizationSchedule): void;
+}
+
+export interface QueryPatternAnalysis {
+  mostFrequentQueries: string[];
+  slowestQueries: string[];
+  commonFilters: Record<string, number>;
+  peakUsageHours: number[];
+  recommendations: string[];
+}
+
+export interface IndexOptimization {
+  type: 'index_creation' | 'index_removal' | 'schema_change' | 'cache_tuning';
+  description: string;
+  expectedImprovement: number; // percentage
+  effort: 'low' | 'medium' | 'high';
+  script?: string;
+}
+
+export interface OptimizationResult {
+  optimizationsApplied: IndexOptimization[];
+  performanceImprovement: number; // percentage
+  duration: number; // milliseconds
+  errors: string[];
+}
+
+export interface OptimizationSchedule {
+  frequency: 'daily' | 'weekly' | 'monthly';
+  time: string; // HH:MM format
+  conditions?: OptimizationCondition[];
+}
+
+export interface OptimizationCondition {
+  metric: string;
+  threshold: number;
+  operator: 'gt' | 'lt' | 'eq';
+}
+
+// Statistics interfaces for optimizer and registry
+export interface OptimizerStats {
+  totalQueries: number;
+  averageLatency: number;
+  optimizationsPerformed: number;
+  lastOptimization: Date;
+  performanceImprovement: number;
+}
+
+export interface RegistryStats {
+  totalProviders: number;
+  activeProviders: number;
+  healthyProviders: number;
+  totalQueries: number;
+  averageLatency: number;
+  errorRate: number;
 }
