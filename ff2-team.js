@@ -22,7 +22,9 @@ try {
     red: (text) => text,
     yellow: (text) => text,
     white: (text) => text,
-    gray: (text) => text
+    gray: (text) => text,
+    cyan: (text) => text,
+    magenta: (text) => text
   };
 }
 
@@ -30,9 +32,9 @@ try {
 async function getRedisConnection() {
   const Redis = require('ioredis');
   const redis = new Redis({
-    host: 'localhost',
-    port: 6379,
-    password: 'ff2_team_redis_2024',
+    host: 'redis-13065.c92.us-east-1-3.ec2.redns.redis-cloud.com',
+    port: 13065,
+    password: 'lycNeaCgCZMo9i8fQgTiAlRPwxKQgaYV',
     db: 0,
     retryDelayOnFailover: 100,
     maxRetriesPerRequest: 3,
