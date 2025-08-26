@@ -308,10 +308,10 @@ export class SQLiteFTS5Engine extends EventEmitter {
       this.metrics.queryCacheMisses++;
 
       // 🟢 WORKING: Build FTS5 query with optimization
-      const { ftsQuery, filters } = this.buildOptimizedQuery(query);
+      const { ftsQuery, filters, useFTS } = this.buildOptimizedQuery(query);
 
-      // 🟢 WORKING: Execute search with BM25 ranking
-      const searchResults = await this.executeSearch(ftsQuery, filters, query);
+      // 🟢 WORKING: Execute search with BM25 ranking or fallback
+      const searchResults = await this.executeSearch(ftsQuery, filters, query, useFTS);
 
       // 🟢 WORKING: Generate snippets if requested
       if (query.includeSnippets) {
@@ -417,9 +417,10 @@ export class SQLiteFTS5Engine extends EventEmitter {
       suggestions.push(...recentSuggestions);
 
       // 🟢 WORKING: Get suggestions from indexed content terms
+      const searchTerm = `${partial}%`;
       const termSuggestions = this.preparedStatements
         .get('get_term_suggestions')
-        .all(`${partial}%`, 10) as any[];
+        .all(searchTerm, searchTerm, 10) as any[];
 
       suggestions.push(...termSuggestions.map((row: any) => row.term));
 
@@ -470,14 +471,16 @@ export class SQLiteFTS5Engine extends EventEmitter {
             created_at: Date.now(),
           });
 
-          // 🟢 WORKING: Insert into FTS5 index
-          insertFTSStmt.run({
-            id: entry.id,
-            title: entry.title,
-            content: entry.content.substring(0, this.config.maxContentLength),
-            tags: entry.metadata.tags.join(' '),
-            category: entry.metadata.category || '',
-          });
+          // 🟢 WORKING: Insert into FTS5 index (if available)
+          if (insertFTSStmt) {
+            insertFTSStmt.run({
+              id: entry.id,
+              title: entry.title,
+              content: entry.content.substring(0, this.config.maxContentLength),
+              tags: entry.metadata.tags.join(' '),
+              category: entry.metadata.category || '',
+            });
+          }
         }
       });
 
@@ -553,14 +556,16 @@ export class SQLiteFTS5Engine extends EventEmitter {
             id: entry.id,
           });
 
-          // 🟢 WORKING: Update FTS5 index
-          updateFTSStmt.run({
-            title: entry.title,
-            content: entry.content.substring(0, this.config.maxContentLength),
-            tags: entry.metadata.tags.join(' '),
-            category: entry.metadata.category || '',
-            id: entry.id,
-          });
+          // 🟢 WORKING: Update FTS5 index (if available)
+          if (updateFTSStmt) {
+            updateFTSStmt.run({
+              title: entry.title,
+              content: entry.content.substring(0, this.config.maxContentLength),
+              tags: entry.metadata.tags.join(' '),
+              category: entry.metadata.category || '',
+              id: entry.id,
+            });
+          }
         }
       });
 
@@ -596,7 +601,9 @@ export class SQLiteFTS5Engine extends EventEmitter {
 
         for (const id of deleteIds) {
           deleteStmt.run(id);
-          deleteFTSStmt.run(id);
+          if (deleteFTSStmt) {
+            deleteFTSStmt.run(id);
+          }
         }
       });
 
@@ -632,8 +639,14 @@ export class SQLiteFTS5Engine extends EventEmitter {
       console.log('🔧 Optimizing database...');
       const startTime = performance.now();
 
-      // 🟢 WORKING: Optimize FTS5 index
-      this.db.exec('INSERT INTO entries_fts(entries_fts) VALUES("optimize")');
+      // 🟢 WORKING: Optimize FTS5 index (if available)
+      if ((this as any).fts5Available !== false) {
+        try {
+          this.db.exec('INSERT INTO entries_fts(entries_fts) VALUES("optimize")');
+        } catch (error) {
+          console.warn('⚠️ FTS5 optimization skipped (FTS5 not available)');
+        }
+      }
 
       // 🟢 WORKING: Analyze tables for query planner
       this.db.exec('ANALYZE');
@@ -816,24 +829,58 @@ export class SQLiteFTS5Engine extends EventEmitter {
             cacheSize: 0,
           };
 
-      const ftsInfo = this.db
-        ? {
-            version: '5',
-            tokenizer: this.config.tokenizer,
-            contentRanking: this.config.contentRanking,
-            totalTerms:
-              (
-                this.db
-                  .prepare("SELECT COUNT(*) as count FROM entries_fts WHERE entries_fts MATCH '*'")
-                  .get() as any
-              )?.count || 0,
+      let ftsInfo;
+      if (this.db) {
+        // Test FTS5 availability in real-time for diagnostics
+        let fts5Available = (this as any).fts5Available !== false;
+        
+        // Additional real-time check
+        if (fts5Available) {
+          try {
+            this.db.prepare('SELECT fts5_version()').get();
+          } catch (error) {
+            fts5Available = false;
+            (this as any).fts5Available = false;
           }
-        : {
-            version: 'Unknown',
-            tokenizer: 'Unknown',
-            contentRanking: 'Unknown',
-            totalTerms: 0,
+        }
+
+        if (fts5Available) {
+          try {
+            ftsInfo = {
+              version: '5',
+              tokenizer: this.config.tokenizer,
+              contentRanking: this.config.contentRanking,
+              totalTerms:
+                (
+                  this.db
+                    .prepare("SELECT COUNT(*) as count FROM entries_fts WHERE entries_fts MATCH '*'")
+                    .get() as any
+                )?.count || 0,
+            };
+          } catch (error) {
+            ftsInfo = {
+              version: 'Fallback (FTS5 unavailable)',
+              tokenizer: this.config.tokenizer,
+              contentRanking: 'Basic',
+              totalTerms: (this.db.prepare("SELECT COUNT(*) as count FROM entries").get() as any)?.count || 0,
+            };
+          }
+        } else {
+          ftsInfo = {
+            version: 'Fallback (FTS5 unavailable)',
+            tokenizer: this.config.tokenizer || 'Basic',
+            contentRanking: 'Basic',
+            totalTerms: (this.db.prepare("SELECT COUNT(*) as count FROM entries").get() as any)?.count || 0,
           };
+        }
+      } else {
+        ftsInfo = {
+          version: 'Fallback (FTS5 unavailable)',
+          tokenizer: this.config.tokenizer || 'Basic',
+          contentRanking: 'Basic',
+          totalTerms: 0,
+        };
+      }
 
       return {
         databaseInfo: {
@@ -912,18 +959,28 @@ export class SQLiteFTS5Engine extends EventEmitter {
       )
     `);
 
-    // 🟢 WORKING: Create FTS5 virtual table with BM25 ranking
-    const tokenizerConfig = this.buildTokenizerConfig();
-    this.db.exec(`
-      CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(
-        entry_id UNINDEXED,
-        title,
-        content,
-        tags,
-        category,
-        tokenize='${tokenizerConfig}'
-      )
-    `);
+    // 🟢 WORKING: Create FTS5 virtual table with BM25 ranking (if available)
+    if ((this as any).fts5Available === true) {
+      try {
+        const tokenizerConfig = this.buildTokenizerConfig();
+        this.db.exec(`
+          CREATE VIRTUAL TABLE IF NOT EXISTS entries_fts USING fts5(
+            entry_id UNINDEXED,
+            title,
+            content,
+            tags,
+            category,
+            tokenize='${tokenizerConfig}'
+          )
+        `);
+        console.log('✅ FTS5 table created successfully');
+      } catch (error) {
+        console.warn('⚠️ Failed to create FTS5 table, using basic search');
+        (this as any).fts5Available = false;
+      }
+    } else {
+      console.log('⚠️ Skipping FTS5 table creation (FTS5 not available)');
+    }
 
     // 🟢 WORKING: Create indexes for optimal performance
     this.db.exec(`
@@ -941,12 +998,12 @@ export class SQLiteFTS5Engine extends EventEmitter {
     if (this.config.tokenizer === 'porter') {
       return 'porter';
     }
-    
+
     // 🟢 WORKING: Use basic unicode61 without complex options for compatibility
     if (this.config.tokenizer === 'unicode61') {
       return 'unicode61';
     }
-    
+
     // 🟢 WORKING: Default to simple ascii tokenizer for maximum compatibility
     return 'ascii';
   }
@@ -986,16 +1043,12 @@ export class SQLiteFTS5Engine extends EventEmitter {
     if (!this.db) return;
 
     // 🟢 WORKING: Prepare frequently used statements for optimal performance
-    const statements = {
+    const statements: Record<string, string> = {
       get_entry: 'SELECT * FROM entries WHERE id = ?',
       insert_entry: `
         INSERT OR REPLACE INTO entries 
         (id, type, title, content, path, metadata, last_modified, created_at)
         VALUES (@id, @type, @title, @content, @path, @metadata, @last_modified, @created_at)
-      `,
-      insert_fts: `
-        INSERT INTO entries_fts(entry_id, title, content, tags, category)
-        VALUES (@id, @title, @content, @tags, @category)
       `,
       update_entry: `
         UPDATE entries SET 
@@ -1003,13 +1056,7 @@ export class SQLiteFTS5Engine extends EventEmitter {
         metadata = @metadata, last_modified = @last_modified, updated_at = @updated_at
         WHERE id = @id
       `,
-      update_fts: `
-        UPDATE entries_fts SET
-        title = @title, content = @content, tags = @tags, category = @category
-        WHERE entry_id = @id
-      `,
       delete_entry: 'DELETE FROM entries WHERE id = ?',
-      delete_fts: 'DELETE FROM entries_fts WHERE entry_id = ?',
       get_term_suggestions: `
         SELECT term FROM (
           SELECT title as term FROM entries WHERE title LIKE ? 
@@ -1018,6 +1065,20 @@ export class SQLiteFTS5Engine extends EventEmitter {
         ) WHERE term IS NOT NULL LIMIT ?
       `,
     };
+
+    // Only add FTS5 statements if FTS5 is available
+    if ((this as any).fts5Available === true) {
+      statements.insert_fts = `
+        INSERT INTO entries_fts(entry_id, title, content, tags, category)
+        VALUES (@id, @title, @content, @tags, @category)
+      `;
+      statements.update_fts = `
+        UPDATE entries_fts SET
+        title = @title, content = @content, tags = @tags, category = @category
+        WHERE entry_id = @id
+      `;
+      statements.delete_fts = 'DELETE FROM entries_fts WHERE entry_id = ?';
+    }
 
     for (const [name, sql] of Object.entries(statements)) {
       this.preparedStatements.set(name, this.db.prepare(sql));
@@ -1028,17 +1089,21 @@ export class SQLiteFTS5Engine extends EventEmitter {
     if (!this.db) return;
 
     try {
-      const result = this.db.prepare('SELECT fts5_version()').get();
-      if (!result) {
-        throw new Error('FTS5 extension not available');
-      }
+      // Test FTS5 availability by trying to get version
+      this.db.prepare('SELECT fts5_version()').get();
       console.log('✅ FTS5 support verified');
+      (this as any).fts5Available = true;
     } catch (error) {
-      throw new IndexError(
-        'SQLite FTS5 extension not available',
-        IndexErrorCode.DATABASE_CONNECTION_FAILED,
-        { error },
-      );
+      console.warn('⚠️ FTS5 extension not available, falling back to basic search');
+      // Set flag to disable FTS5 features
+      (this as any).fts5Available = false;
+      
+      // Don't throw error - allow graceful degradation
+      // throw new IndexError(
+      //   'SQLite FTS5 extension not available',
+      //   IndexErrorCode.DATABASE_CONNECTION_FAILED,
+      //   { error },
+      // );
     }
   }
 
@@ -1068,26 +1133,37 @@ export class SQLiteFTS5Engine extends EventEmitter {
     });
   }
 
-  private buildOptimizedQuery(query: SearchQuery): { ftsQuery: string; filters: IndexFilters } {
+  private buildOptimizedQuery(query: SearchQuery): { ftsQuery: string; filters: IndexFilters; useFTS: boolean } {
     let ftsQuery = query.query;
+
+    // 🟢 WORKING: Handle empty queries gracefully
+    if (!ftsQuery || ftsQuery.trim() === '') {
+      // Empty queries should return no results
+      ftsQuery = '';
+    }
+
+    // 🟢 WORKING: Sanitize query to prevent FTS5 syntax errors
+    const sanitizedQuery = this.sanitizeQuery(ftsQuery);
 
     // 🟢 WORKING: Apply query type optimizations
     switch (query.queryType) {
       case 'phrase':
-        ftsQuery = `"${ftsQuery}"`;
+        ftsQuery = `"${sanitizedQuery}"`;
         break;
       case 'fuzzy':
-        ftsQuery = ftsQuery
+        const fuzzyTerms = sanitizedQuery
           .split(' ')
-          .map((term) => `${term}*`)
-          .join(' OR ');
+          .filter(term => term.length > 0)
+          .map((term) => `${term}*`);
+        ftsQuery = fuzzyTerms.length > 0 ? fuzzyTerms.join(' OR ') : '*';
         break;
       case 'boolean':
-        // Keep as-is for boolean queries
+        // Keep as-is for boolean queries but sanitized
+        ftsQuery = sanitizedQuery;
         break;
       default:
         // Apply intelligent query expansion for better results
-        ftsQuery = this.expandQuery(ftsQuery);
+        ftsQuery = this.expandQuery(sanitizedQuery);
     }
 
     const filters: IndexFilters = {
@@ -1108,12 +1184,37 @@ export class SQLiteFTS5Engine extends EventEmitter {
       createdBefore: query.createdBefore,
     };
 
-    return { ftsQuery, filters };
+    return { ftsQuery, filters, useFTS: (this as any).fts5Available !== false };
+  }
+
+  private sanitizeQuery(query: string): string {
+    // 🟢 WORKING: Sanitize query to prevent FTS5 syntax errors
+    if (!query || query.trim() === '') {
+      return '';
+    }
+
+    // Remove or escape problematic FTS5 characters
+    let sanitized = query
+      .replace(/[^\w\s\-_'"*()]/g, ' ')  // Remove special chars except quotes, wildcards, parentheses
+      .replace(/\s+/g, ' ')              // Normalize whitespace
+      .trim();
+
+    // If query becomes empty after sanitization, return empty (will be handled in executeSearch)
+    if (sanitized === '') {
+      return '';
+    }
+
+    return sanitized;
   }
 
   private expandQuery(query: string): string {
     // 🟢 WORKING: Basic query expansion - can be enhanced with ML in the future
-    const terms = query.toLowerCase().split(/\s+/);
+    const terms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+    
+    if (terms.length === 0) {
+      return '';
+    }
+
     const expandedTerms: string[] = [];
 
     for (const term of terms) {
@@ -1132,41 +1233,105 @@ export class SQLiteFTS5Engine extends EventEmitter {
     ftsQuery: string,
     filters: IndexFilters,
     originalQuery: SearchQuery,
+    useFTS: boolean = true,
   ): Promise<SearchResult[]> {
     if (!this.db) return [];
 
-    // 🟢 WORKING: Build comprehensive search query with BM25 ranking
-    let sql = `
-      SELECT 
-        e.id, e.type, e.title, e.content, e.path, e.metadata, e.last_modified,
-        bm25(entries_fts) as bm25_score,
-        snippet(entries_fts, 2, '<mark>', '</mark>', '...', 32) as content_snippet,
-        highlight(entries_fts, 1, '<mark>', '</mark>') as title_highlight
-      FROM entries_fts
-      JOIN entries e ON e.id = entries_fts.entry_id
-      WHERE entries_fts MATCH ?
-    `;
+    // 🟢 WORKING: Build search query (FTS5 or fallback)
+    let sql: string;
+    let params: any[];
 
-    const params: any[] = [ftsQuery];
+    if (useFTS && (this as any).fts5Available !== false) {
+      // Handle empty queries for FTS5 too
+      if (!ftsQuery || ftsQuery.trim() === '') {
+        return [];
+      }
+
+      try {
+        // Use FTS5 with BM25 ranking
+        sql = `
+          SELECT 
+            e.id, e.type, e.title, e.content, e.path, e.metadata, e.last_modified,
+            bm25(entries_fts) as bm25_score,
+            snippet(entries_fts, 2, '<mark>', '</mark>', '...', 32) as content_snippet,
+            highlight(entries_fts, 1, '<mark>', '</mark>') as title_highlight
+          FROM entries_fts
+          JOIN entries e ON e.id = entries_fts.entry_id
+          WHERE entries_fts MATCH ?
+        `;
+        params = [ftsQuery];
+      } catch (error) {
+        console.warn('🔍 FTS5 query failed, falling back to basic search');
+        (this as any).fts5Available = false;
+        useFTS = false;
+      }
+    }
+    
+    if (!useFTS || (this as any).fts5Available === false) {
+      // Fallback to basic LIKE search
+      console.warn('🔍 Using basic search fallback (FTS5 unavailable)');
+      
+      // Handle empty or invalid queries - return empty results
+      if (!ftsQuery || ftsQuery.trim() === '') {
+        return [];
+      } else if (originalQuery.queryType === 'fuzzy') {
+        // For fuzzy search, create OR conditions for each term
+        const terms = ftsQuery.replace(/\*/g, '').split(' OR ').map(term => term.trim()).filter(Boolean);
+        if (terms.length === 0) {
+          // Fallback for malformed fuzzy query - return empty results
+          return [];
+        } else {
+          const conditions = terms.map(() => '(e.title LIKE ? OR e.content LIKE ?)').join(' OR ');
+          sql = `
+            SELECT 
+              e.id, e.type, e.title, e.content, e.path, e.metadata, e.last_modified,
+              0 as bm25_score,
+              '' as content_snippet,
+              e.title as title_highlight
+            FROM entries e
+            WHERE ${conditions}
+          `;
+          params = [];
+          for (const term of terms) {
+            const searchTerm = `%${term.replace(/["%*]/g, '')}%`;
+            params.push(searchTerm, searchTerm);
+          }
+        }
+      } else {
+        sql = `
+          SELECT 
+            e.id, e.type, e.title, e.content, e.path, e.metadata, e.last_modified,
+            0 as bm25_score,
+            '' as content_snippet,
+            e.title as title_highlight
+          FROM entries e
+          WHERE (e.title LIKE ? OR e.content LIKE ?)
+        `;
+        const searchTerm = `%${ftsQuery.replace(/["%*]/g, '')}%`;
+        params = [searchTerm, searchTerm];
+      }
+    }
 
     // 🟢 WORKING: Apply filters
+    const whereClausePresent = sql.includes('WHERE');
+    
     if (filters.types?.length) {
-      sql += ` AND e.type IN (${filters.types.map(() => '?').join(',')})`;
+      sql += whereClausePresent ? ` AND e.type IN (${filters.types.map(() => '?').join(',')})` : 
+                                   ` WHERE e.type IN (${filters.types.map(() => '?').join(',')})`;
       params.push(...filters.types);
     }
 
     if (filters.createdAfter) {
-      sql += ` AND e.created_at >= ?`;
+      sql += (whereClausePresent || sql.includes('WHERE')) ? ` AND e.created_at >= ?` : ` WHERE e.created_at >= ?`;
       params.push(filters.createdAfter.getTime());
     }
 
     if (filters.createdBefore) {
-      sql += ` AND e.created_at <= ?`;
+      sql += (whereClausePresent || sql.includes('WHERE')) ? ` AND e.created_at <= ?` : ` WHERE e.created_at <= ?`;
       params.push(filters.createdBefore.getTime());
     }
 
     // 🟢 WORKING: Apply custom ranking with boosts
-    sql += ` ORDER BY `;
     const orderParts: string[] = [];
 
     if (originalQuery.boostRecent) {
@@ -1178,8 +1343,9 @@ export class SQLiteFTS5Engine extends EventEmitter {
     }
 
     orderParts.push(`bm25_score ASC`); // BM25 lower is better
+    orderParts.push(`e.last_modified DESC`); // Fallback ordering
 
-    sql += orderParts.join(', ');
+    sql += ` ORDER BY ${orderParts.join(', ')}`;
 
     // 🟢 WORKING: Apply pagination
     if (originalQuery.limit) {
@@ -1211,6 +1377,7 @@ export class SQLiteFTS5Engine extends EventEmitter {
       title: row.title,
       content: row.content,
       path: row.path,
+      hash: (row as any).hash || '',
       metadata,
       lastModified: new Date(row.lastModified),
     };
@@ -1228,7 +1395,7 @@ export class SQLiteFTS5Engine extends EventEmitter {
 
     return {
       entry,
-      score: Math.max(0, 1 - Math.abs(row.score || 0)), // Normalize BM25 score
+      score: Math.max(0, 1 - Math.abs((row as any).bm25_score || 0)), // Normalize BM25 score
       rank,
       titleSnippet: (row as any).title_highlight || row.title,
       contentSnippets,
@@ -1241,7 +1408,7 @@ export class SQLiteFTS5Engine extends EventEmitter {
         categoryMatch: 0,
         recencyBoost: this.calculateRecencyBoost(entry.lastModified),
         effectivenessBoost: metadata.effectiveness || 0,
-        usageBoost: Math.min(metadata.usageCount / 100, 1),
+        usageBoost: Math.min((metadata.usageCount || 0) / 100, 1),
       },
     };
   }
@@ -1354,17 +1521,35 @@ export class SQLiteFTS5Engine extends EventEmitter {
     if (!this.db) return [];
 
     try {
-      const sql = `
-        SELECT e.type, COUNT(*) as count
-        FROM entries_fts
-        JOIN entries e ON e.id = entries_fts.entry_id
-        WHERE entries_fts MATCH ?
-        GROUP BY e.type
-        ORDER BY count DESC
-        LIMIT 10
-      `;
+      let sql: string;
+      let params: any[];
 
-      const rows = this.db.prepare(sql).all(query.query) as any[];
+      if ((this as any).fts5Available === true && query.query) {
+        sql = `
+          SELECT e.type, COUNT(*) as count
+          FROM entries_fts
+          JOIN entries e ON e.id = entries_fts.entry_id
+          WHERE entries_fts MATCH ?
+          GROUP BY e.type
+          ORDER BY count DESC
+          LIMIT 10
+        `;
+        params = [query.query];
+      } else {
+        // Fallback for non-FTS5 or empty queries
+        sql = `
+          SELECT e.type, COUNT(*) as count
+          FROM entries e
+          WHERE e.title LIKE ? OR e.content LIKE ?
+          GROUP BY e.type
+          ORDER BY count DESC
+          LIMIT 10
+        `;
+        const searchTerm = `%${query.query || ''}%`;
+        params = [searchTerm, searchTerm];
+      }
+
+      const rows = this.db.prepare(sql).all(...params) as any[];
 
       return rows.map((row) => ({
         value: row.type,
@@ -1383,17 +1568,36 @@ export class SQLiteFTS5Engine extends EventEmitter {
     if (!this.db) return [];
 
     try {
-      const sql = `
-        SELECT json_extract(e.metadata, '$.category') as category, COUNT(*) as count
-        FROM entries_fts
-        JOIN entries e ON e.id = entries_fts.entry_id
-        WHERE entries_fts MATCH ? AND json_extract(e.metadata, '$.category') IS NOT NULL
-        GROUP BY category
-        ORDER BY count DESC
-        LIMIT 10
-      `;
+      let sql: string;
+      let params: any[];
 
-      const rows = this.db.prepare(sql).all(query.query) as any[];
+      if ((this as any).fts5Available === true && query.query) {
+        sql = `
+          SELECT json_extract(e.metadata, '$.category') as category, COUNT(*) as count
+          FROM entries_fts
+          JOIN entries e ON e.id = entries_fts.entry_id
+          WHERE entries_fts MATCH ? AND json_extract(e.metadata, '$.category') IS NOT NULL
+          GROUP BY category
+          ORDER BY count DESC
+          LIMIT 10
+        `;
+        params = [query.query];
+      } else {
+        // Fallback for non-FTS5 or empty queries
+        sql = `
+          SELECT json_extract(e.metadata, '$.category') as category, COUNT(*) as count
+          FROM entries e
+          WHERE (e.title LIKE ? OR e.content LIKE ?) 
+            AND json_extract(e.metadata, '$.category') IS NOT NULL
+          GROUP BY category
+          ORDER BY count DESC
+          LIMIT 10
+        `;
+        const searchTerm = `%${query.query || ''}%`;
+        params = [searchTerm, searchTerm];
+      }
+
+      const rows = this.db.prepare(sql).all(...params) as any[];
 
       return rows.map((row) => ({
         value: row.category,

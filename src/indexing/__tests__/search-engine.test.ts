@@ -7,7 +7,8 @@ import { join } from 'path';
 import { rmSync, existsSync } from 'fs';
 import { ForgeFlowSearchEngine } from '../search-engine.js';
 import { SQLiteFTS5Index } from '../sqlite-index.js';
-import { IndexConfig, IndexEntry, SearchQuery, SearchResults } from '../types.js';
+import type { IndexConfig, IndexEntry, SearchQuery } from '../types.js';
+import { SearchResults } from '../types.js';
 
 describe('ForgeFlowSearchEngine', () => {
   let searchEngine: ForgeFlowSearchEngine;
@@ -40,7 +41,7 @@ describe('ForgeFlowSearchEngine', () => {
       defaultLimit: 20,
       maxLimit: 1000,
       snippetLength: 150,
-      maxSnippets: 5
+      maxSnippets: 5,
     };
 
     sqliteIndex = new SQLiteFTS5Index(config);
@@ -74,7 +75,7 @@ describe('ForgeFlowSearchEngine', () => {
       // Perform search
       const query: SearchQuery = {
         query: 'authentication error',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -92,7 +93,7 @@ describe('ForgeFlowSearchEngine', () => {
       const query: SearchQuery = {
         query: '"database connection timeout"',
         queryType: 'phrase',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -109,7 +110,7 @@ describe('ForgeFlowSearchEngine', () => {
       const query: SearchQuery = {
         query: 'authentication AND (login OR signin)',
         queryType: 'boolean',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -123,11 +124,11 @@ describe('ForgeFlowSearchEngine', () => {
       const query: SearchQuery = {
         query: 'error',
         type: 'knowledge',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
-      results.results.forEach(result => {
+      results.results.forEach((result) => {
         expect(result.entry.type).toBe('knowledge');
       });
     });
@@ -139,11 +140,11 @@ describe('ForgeFlowSearchEngine', () => {
       const query: SearchQuery = {
         query: 'error',
         tags: 'authentication',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
-      results.results.forEach(result => {
+      results.results.forEach((result) => {
         expect(result.entry.metadata.tags).toContain('authentication');
       });
     });
@@ -152,16 +153,31 @@ describe('ForgeFlowSearchEngine', () => {
   describe('Search Ranking and Relevance', () => {
     it('should rank results by relevance', async () => {
       const entries = [
-        createTestEntry('high-relevance', 'Authentication Error Handling', 'authentication error handling best practices', ['authentication', 'error']),
-        createTestEntry('medium-relevance', 'Error Logging', 'general error logging and authentication mentions', ['error', 'logging']),
-        createTestEntry('low-relevance', 'User Interface', 'UI components with some authentication text buried deep in content', ['ui'])
+        createTestEntry(
+          'high-relevance',
+          'Authentication Error Handling',
+          'authentication error handling best practices',
+          ['authentication', 'error'],
+        ),
+        createTestEntry(
+          'medium-relevance',
+          'Error Logging',
+          'general error logging and authentication mentions',
+          ['error', 'logging'],
+        ),
+        createTestEntry(
+          'low-relevance',
+          'User Interface',
+          'UI components with some authentication text buried deep in content',
+          ['ui'],
+        ),
       ];
-      
+
       await sqliteIndex.insert(entries);
 
       const query: SearchQuery = {
         query: 'authentication error',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -175,20 +191,32 @@ describe('ForgeFlowSearchEngine', () => {
 
     it('should boost results with effectiveness scores', async () => {
       const entries = [
-        createTestEntry('low-effectiveness', 'Error Solution A', 'authentication error solution A', ['error'], 0.3),
-        createTestEntry('high-effectiveness', 'Error Solution B', 'authentication error solution B', ['error'], 0.9)
+        createTestEntry(
+          'low-effectiveness',
+          'Error Solution A',
+          'authentication error solution A',
+          ['error'],
+          0.3,
+        ),
+        createTestEntry(
+          'high-effectiveness',
+          'Error Solution B',
+          'authentication error solution B',
+          ['error'],
+          0.9,
+        ),
       ];
-      
+
       await sqliteIndex.insert(entries);
 
       const query: SearchQuery = {
         query: 'authentication error',
         boostEffective: true,
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
-      
+
       // High effectiveness should rank higher
       expect(results.results[0].entry.id).toBe('high-effectiveness');
     });
@@ -198,20 +226,34 @@ describe('ForgeFlowSearchEngine', () => {
       const recentDate = new Date();
 
       const entries = [
-        createTestEntry('old-content', 'Old Error Solution', 'authentication error solution', ['error'], 0.8, oldDate),
-        createTestEntry('recent-content', 'Recent Error Solution', 'authentication error solution', ['error'], 0.8, recentDate)
+        createTestEntry(
+          'old-content',
+          'Old Error Solution',
+          'authentication error solution',
+          ['error'],
+          0.8,
+          oldDate,
+        ),
+        createTestEntry(
+          'recent-content',
+          'Recent Error Solution',
+          'authentication error solution',
+          ['error'],
+          0.8,
+          recentDate,
+        ),
       ];
-      
+
       await sqliteIndex.insert(entries);
 
       const query: SearchQuery = {
         query: 'authentication error',
         boostRecent: true,
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
-      
+
       // Recent content should rank higher when boost is enabled
       expect(results.results[0].entry.id).toBe('recent-content');
     });
@@ -226,7 +268,7 @@ describe('ForgeFlowSearchEngine', () => {
         query: 'authentication error',
         includeSnippets: true,
         snippetLength: 100,
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -243,7 +285,7 @@ describe('ForgeFlowSearchEngine', () => {
       const query: SearchQuery = {
         query: 'authentication error',
         highlightResults: true,
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -258,7 +300,7 @@ describe('ForgeFlowSearchEngine', () => {
 
       const query: SearchQuery = {
         query: 'error',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -275,7 +317,7 @@ describe('ForgeFlowSearchEngine', () => {
 
       const query: SearchQuery = {
         query: 'auth',
-        limit: 10
+        limit: 10,
       };
 
       const results = await searchEngine.search(query);
@@ -297,7 +339,7 @@ describe('ForgeFlowSearchEngine', () => {
         'database connection',
         'api integration',
         'performance optimization',
-        'security best practices'
+        'security best practices',
       ];
 
       let totalTime = 0;
@@ -306,16 +348,16 @@ describe('ForgeFlowSearchEngine', () => {
       for (let i = 0; i < iterations; i++) {
         for (const queryText of searchQueries) {
           const startTime = Date.now();
-          
+
           const results = await searchEngine.search({
             query: queryText,
             limit: 20,
             includeSnippets: true,
-            highlightResults: true
+            highlightResults: true,
           });
-          
+
           const endTime = Date.now();
-          totalTime += (endTime - startTime);
+          totalTime += endTime - startTime;
 
           // Each search should be reasonably fast
           expect(results.executionTime).toBeLessThan(500); // 500ms target
@@ -332,11 +374,11 @@ describe('ForgeFlowSearchEngine', () => {
       const entries = createLargeTestDataset(500);
       await sqliteIndex.insert(entries);
 
-      const concurrentQueries = Array.from({ length: 10 }, (_, i) => 
+      const concurrentQueries = Array.from({ length: 10 }, (_, i) =>
         searchEngine.search({
           query: `test query ${i}`,
-          limit: 20
-        })
+          limit: 20,
+        }),
       );
 
       const startTime = Date.now();
@@ -348,7 +390,7 @@ describe('ForgeFlowSearchEngine', () => {
 
       // All searches should complete within reasonable time
       expect(totalTime).toBeLessThan(2000); // 2 seconds for 10 concurrent queries
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.results.length).toBeGreaterThan(0);
       });
     });
@@ -369,14 +411,14 @@ describe('ForgeFlowSearchEngine', () => {
 
         for (let i = 0; i < iterations; i++) {
           const startTime = Date.now();
-          
+
           await searchEngine.search({
             query: 'test query performance',
             limit: 20,
-            includeSnippets: true
+            includeSnippets: true,
           });
-          
-          totalTime += (Date.now() - startTime);
+
+          totalTime += Date.now() - startTime;
         }
 
         const avgTime = totalTime / iterations;
@@ -399,10 +441,10 @@ describe('ForgeFlowSearchEngine', () => {
       await sqliteIndex.insert(entries);
 
       await searchEngine.recordQuery('test query', 5, 250);
-      
+
       const analytics = await searchEngine.getAnalytics(
         new Date(Date.now() - 24 * 60 * 60 * 1000),
-        new Date()
+        new Date(),
       );
 
       expect(analytics.totalQueries).toBeGreaterThan(0);
@@ -432,34 +474,34 @@ describe('ForgeFlowSearchEngine', () => {
 
       // This would need the entry to exist first
       // For now, test the error case
-      await expect(
-        searchEngine.searchSimilar('non-existent-id')
-      ).rejects.toThrow('Entry not found');
+      await expect(searchEngine.searchSimilar('non-existent-id')).rejects.toThrow(
+        'Entry not found',
+      );
     });
   });
 
   describe('Edge Cases and Error Handling', () => {
     it('should handle empty queries gracefully', async () => {
-      await expect(
-        searchEngine.search({ query: '', limit: 10 })
-      ).rejects.toThrow('Query cannot be empty');
+      await expect(searchEngine.search({ query: '', limit: 10 })).rejects.toThrow(
+        'Query cannot be empty',
+      );
     });
 
     it('should handle very long queries', async () => {
       const longQuery = 'a'.repeat(1000);
-      
-      await expect(
-        searchEngine.search({ query: longQuery, limit: 10 })
-      ).rejects.toThrow('Query too long');
+
+      await expect(searchEngine.search({ query: longQuery, limit: 10 })).rejects.toThrow(
+        'Query too long',
+      );
     });
 
     it('should handle excessive limit values', async () => {
       const entries = createTestEntries();
       await sqliteIndex.insert(entries);
 
-      await expect(
-        searchEngine.search({ query: 'test', limit: 2000 })
-      ).rejects.toThrow('Limit too high');
+      await expect(searchEngine.search({ query: 'test', limit: 2000 })).rejects.toThrow(
+        'Limit too high',
+      );
     });
 
     it('should return empty results for no matches', async () => {
@@ -468,7 +510,7 @@ describe('ForgeFlowSearchEngine', () => {
 
       const results = await searchEngine.search({
         query: 'nonexistenttermlkjhgfdsa',
-        limit: 10
+        limit: 10,
       });
 
       expect(results.results.length).toBe(0);
@@ -478,19 +520,27 @@ describe('ForgeFlowSearchEngine', () => {
 
   // Helper functions
   function createTestEntry(
-    id: string, 
-    title: string, 
-    content: string, 
+    id: string,
+    title: string,
+    content: string,
     tags: string[] = [],
     effectiveness = 0.8,
-    lastModified = new Date()
+    lastModified = new Date(),
   ): IndexEntry {
+    const crypto = require('crypto');
+    const hash = crypto
+      .createHash('sha256')
+      .update(content + title + id)
+      .digest('hex')
+      .substring(0, 8);
+
     return {
       id,
       type: 'knowledge',
       title,
       content,
       path: `test/${id}`,
+      hash,
       metadata: {
         tags,
         category: 'test',
@@ -502,9 +552,9 @@ describe('ForgeFlowSearchEngine', () => {
         fileSize: content.length,
         relatedIds: [],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       },
-      lastModified
+      lastModified,
     };
   }
 
@@ -514,50 +564,68 @@ describe('ForgeFlowSearchEngine', () => {
         'auth-error-1',
         'Authentication Error Handling',
         'How to handle authentication errors in web applications. Common patterns include token refresh, redirect to login, and user notification.',
-        ['authentication', 'error', 'web']
+        ['authentication', 'error', 'web'],
       ),
       createTestEntry(
         'db-connection-1',
         'Database Connection Timeout',
         'Troubleshooting database connection timeout issues. Check network connectivity, connection pool settings, and database server status.',
-        ['database', 'connection', 'timeout']
+        ['database', 'connection', 'timeout'],
       ),
       createTestEntry(
         'api-integration-1',
         'API Integration Best Practices',
         'Best practices for API integration including error handling, retry logic, and rate limiting.',
-        ['api', 'integration', 'best-practices']
+        ['api', 'integration', 'best-practices'],
       ),
       createTestEntry(
         'performance-1',
         'Performance Optimization',
         'Performance optimization techniques for web applications including caching, compression, and code splitting.',
-        ['performance', 'optimization', 'web']
+        ['performance', 'optimization', 'web'],
       ),
       createTestEntry(
         'security-1',
         'Security Best Practices',
         'Security best practices including input validation, authentication, and secure communication.',
-        ['security', 'authentication', 'validation']
-      )
+        ['security', 'authentication', 'validation'],
+      ),
     ];
   }
 
   function createLargeTestDataset(size: number): IndexEntry[] {
     const entries: IndexEntry[] = [];
-    const categories = ['authentication', 'database', 'api', 'performance', 'security', 'ui', 'testing'];
+    const categories = [
+      'authentication',
+      'database',
+      'api',
+      'performance',
+      'security',
+      'ui',
+      'testing',
+    ];
     const types = ['knowledge', 'gotcha', 'adr'] as const;
-    
+
     for (let i = 0; i < size; i++) {
       const category = categories[i % categories.length];
       const type = types[i % types.length];
-      
+
+      const content = `This is test content for entry ${i} about ${category}. It contains various keywords like error, solution, implementation, and best practices. The content is designed to test search performance and ranking algorithms.`;
+      const title = `Test Entry ${i}: ${category} example`;
+      const crypto = require('crypto');
+      const hash = crypto
+        .createHash('sha256')
+        .update(content + title + `test-entry-${i}`)
+        .digest('hex')
+        .substring(0, 8);
+
       entries.push({
         id: `test-entry-${i}`,
         type,
-        title: `Test Entry ${i}: ${category} example`,
-        content: `This is test content for entry ${i} about ${category}. It contains various keywords like error, solution, implementation, and best practices. The content is designed to test search performance and ranking algorithms.`,
+        title,
+        content,
         path: `test/entry-${i}`,
+        hash,
         metadata: {
           tags: [category, 'test', `tag-${i % 10}`],
           category,
@@ -569,12 +637,12 @@ describe('ForgeFlowSearchEngine', () => {
           fileSize: 100 + Math.floor(Math.random() * 1000),
           relatedIds: [],
           parentId: undefined,
-          childIds: []
+          childIds: [],
         },
-        lastModified: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000) // Last year
+        lastModified: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000), // Last year
       });
     }
-    
+
     return entries;
   }
 

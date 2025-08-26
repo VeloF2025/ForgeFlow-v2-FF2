@@ -1,0 +1,191 @@
+
+> @forgeflow/orchestrator-v2@2.0.0 build
+> tsc && tsc-alias
+
+src/evaluation/__tests__/integration.test.ts(167,19): error TS2554: Expected 3 arguments, but got 2.
+src/indexing/__tests__/index-manager.test.ts(76,43): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/indexing/__tests__/index-manager.test.ts(124,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/indexing/__tests__/index-manager.test.ts(235,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/indexing/__tests__/index-manager.test.ts(307,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/indexing/__tests__/index-manager.test.ts(335,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/indexing/__tests__/index-manager.test.ts(358,9): error TS2349: This expression is not callable.
+  Type 'TaskContext<Test<{}>> & TestContext' has no call signatures.
+src/installation/__tests__/config-validator.test.ts(19,43): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(21,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(22,40): error TS2345: Argument of type 'undefined[]' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(52,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(199,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(208,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(218,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(232,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(247,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(263,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(301,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(324,16): error TS2540: Cannot assign to 'readJson' because it is a read-only property.
+src/installation/__tests__/config-validator.test.ts(337,16): error TS2540: Cannot assign to 'readJson' because it is a read-only property.
+src/installation/__tests__/config-validator.test.ts(365,16): error TS2540: Cannot assign to 'readJson' because it is a read-only property.
+src/installation/__tests__/config-validator.test.ts(383,42): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(397,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(398,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(412,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(445,47): error TS2339: Property 'getAvailableChecks' does not exist on type 'ConfigValidator'.
+src/installation/__tests__/config-validator.test.ts(477,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(486,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/config-validator.test.ts(521,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(23,43): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(26,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(39,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(66,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(67,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(78,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(79,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/feature-flag-engine.test.ts(167,9): error TS2739: Type '{ development: true; production: false; }' is missing the following properties from type 'Record<Environment, boolean>': staging, testing
+src/installation/__tests__/health-checker.test.ts(21,43): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(26,41): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(224,42): error TS2345: Argument of type '(path: string, mode: number) => Promise<void>' is not assignable to parameter of type '(path: PathLike, callback: NoParamCallback) => void'.
+  Types of parameters 'mode' and 'callback' are incompatible.
+    Type 'NoParamCallback' is not assignable to type 'number'.
+src/installation/__tests__/health-checker.test.ts(279,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(307,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(320,45): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(337,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'void'.
+src/installation/__tests__/health-checker.test.ts(352,32): error TS2339: Property 'toBeOneOf' does not exist on type 'Assertion<"warning" | "pass" | "fail">'.
+src/installation/__tests__/health-checker.test.ts(380,33): error TS2339: Property 'toBeOneOf' does not exist on type 'Assertion<"warning" | "pass" | "fail">'.
+src/installation/__tests__/installation-manager.test.ts(36,43): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/installation-manager.test.ts(42,53): error TS2339: Property 'mockResolvedValue' does not exist on type '(options: InstallationOptions) => Promise<{ security?: { inputValidation?: boolean; outputSanitization?: boolean; auditLogging?: boolean; accessControl?: { enabled?: boolean; allowedIps?: string[]; rateLimiting?: boolean; }; }; ... 9 more ...; backup?: { ...; }; }>'.
+src/installation/__tests__/installation-manager.test.ts(43,51): error TS2339: Property 'mockResolvedValue' does not exist on type '(projectPath: string) => Promise<HealthCheckResult>'.
+src/installation/__tests__/installation-manager.test.ts(50,51): error TS2339: Property 'mockResolvedValue' does not exist on type '(environment?: Environment) => Promise<void>'.
+src/installation/__tests__/installation-manager.test.ts(51,55): error TS2339: Property 'mockResolvedValue' does not exist on type '(projectPath: string) => Promise<BackupResult>'.
+src/installation/__tests__/installation-manager.test.ts(99,53): error TS2339: Property 'mockResolvedValue' does not exist on type '(projectPath: string) => Promise<HealthCheckResult>'.
+src/installation/__tests__/installation-manager.test.ts(185,55): error TS2339: Property 'mockRejectedValue' does not exist on type '(options: InstallationOptions) => Promise<{ security?: { inputValidation?: boolean; outputSanitization?: boolean; auditLogging?: boolean; accessControl?: { enabled?: boolean; allowedIps?: string[]; rateLimiting?: boolean; }; }; ... 9 more ...; backup?: { ...; }; }>'.
+src/installation/__tests__/installation-manager.test.ts(249,49): error TS2345: Argument of type 'boolean' is not assignable to parameter of type 'void'.
+src/installation/__tests__/installation-manager.test.ts(393,55): error TS2339: Property 'mockRejectedValue' does not exist on type '(options: InstallationOptions) => Promise<{ security?: { inputValidation?: boolean; outputSanitization?: boolean; auditLogging?: boolean; accessControl?: { enabled?: boolean; allowedIps?: string[]; rateLimiting?: boolean; }; }; ... 9 more ...; backup?: { ...; }; }>'.
+src/installation/installation-manager.ts(90,73): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'string[]'.
+src/installation/installation-manager.ts(278,17): error TS2554: Expected 3-4 arguments, but got 1.
+src/installation/installation-manager.ts(287,15): error TS2554: Expected 3-4 arguments, but got 1.
+src/installation/installation-manager.ts(295,13): error TS2554: Expected 3-4 arguments, but got 1.
+src/intelligence/__tests__/content-prioritizer.test.ts(4,67): error TS2307: Cannot find module '@jest/globals' or its corresponding type declarations.
+src/intelligence/__tests__/context-pack-assembler.test.ts(4,67): error TS2307: Cannot find module '@jest/globals' or its corresponding type declarations.
+src/intelligence/__tests__/context-pack-assembler.test.ts(339,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(353,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(379,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(394,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(415,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(428,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/context-pack-assembler.test.ts(444,23): error TS2304: Cannot find name 'createTestRequest'.
+src/intelligence/__tests__/token-budget-manager.test.ts(4,67): error TS2307: Cannot find module '@jest/globals' or its corresponding type declarations.
+src/intelligence/context-pack-assembler.ts(13,15): error TS2305: Module '"../retrieval/hybrid-retriever"' has no exported member 'HybridRetriever'.
+src/intelligence/context-pack-assembler.ts(529,13): error TS2322: Type '{ id: string; content: string; priority: number; type: "memory" | "knowledge" | "realtime" | "agent_specific"; essential: boolean; compressible: boolean; metadata: ContentItemMetadata; }[]' is not assignable to type 'ContentSection[]'.
+  Type '{ id: string; content: string; priority: number; type: "memory" | "knowledge" | "realtime" | "agent_specific"; essential: boolean; compressible: boolean; metadata: ContentItemMetadata; }' is not assignable to type 'ContentSection'.
+    Types of property 'metadata' are incompatible.
+      Type 'ContentItemMetadata' is not assignable to type 'Record<string, unknown>'.
+        Index signature for type 'string' is missing in type 'ContentItemMetadata'.
+src/intelligence/context-pack-assembler.ts(564,13): error TS2322: Type '{ id: string; content: string; priority: number; type: "memory" | "knowledge" | "realtime" | "agent_specific"; essential: boolean; compressible: true; metadata: ContentItemMetadata; }[]' is not assignable to type 'ContentSection[]'.
+  Type '{ id: string; content: string; priority: number; type: "memory" | "knowledge" | "realtime" | "agent_specific"; essential: boolean; compressible: true; metadata: ContentItemMetadata; }' is not assignable to type 'ContentSection'.
+    Types of property 'metadata' are incompatible.
+      Type 'ContentItemMetadata' is not assignable to type 'Record<string, unknown>'.
+        Index signature for type 'string' is missing in type 'ContentItemMetadata'.
+src/intelligence/ff2-transparency-integration.ts(300,9): error TS2322: Type 'TokenBreakdown' is not assignable to type 'Record<string, number>'.
+  Index signature for type 'string' is missing in type 'TokenBreakdown'.
+src/intelligence/index.ts(18,15): error TS2305: Module '"../retrieval/hybrid-retriever"' has no exported member 'HybridRetriever'.
+src/intelligence/token-budget-manager.ts(129,48): error TS2345: Argument of type '(total: never, block: never) => number' is not assignable to parameter of type '(previousValue: never, currentValue: never, currentIndex: number, array: never[]) => never'.
+  Type 'number' is not assignable to type 'never'.
+src/intelligence/token-budget-manager.ts(130,38): error TS2339: Property 'length' does not exist on type 'never'.
+src/intelligence/token-budget-manager.ts(139,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/intelligence/token-budget-manager.ts(142,22): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+src/intelligence/types.ts(261,16): error TS2304: Cannot find name 'PipelinePerformance'.
+src/policies/__tests__/circuit-breaker.test.ts(612,9): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/policies/__tests__/circuit-breaker.test.ts(612,10): error TS1270: Decorator function return type 'TypedPropertyDescriptor<(...args: any[]) => Promise<any>>' is not assignable to type 'void | (() => Promise<string>)'.
+src/policies/__tests__/circuit-breaker.test.ts(628,9): error TS1241: Unable to resolve signature of method decorator when called as an expression.
+  The runtime will invoke the decorator with 2 arguments, but the decorator expects 3.
+src/policies/__tests__/circuit-breaker.test.ts(628,10): error TS1270: Decorator function return type 'TypedPropertyDescriptor<(...args: any[]) => Promise<any>>' is not assignable to type 'void | (() => Promise<string>)'.
+src/policies/failure-policy-manager.ts(170,9): error TS2353: Object literal may only specify known properties, and 'error' does not exist in type 'ForgeFlowError | Error'.
+src/policies/failure-policy-manager.ts(246,9): error TS2353: Object literal may only specify known properties, and 'operationName' does not exist in type 'ForgeFlowError | Error'.
+src/policies/failure-policy-manager.ts(696,9): error TS2353: Object literal may only specify known properties, and 'error' does not exist in type 'ForgeFlowError | Error'.
+src/policies/retry-strategies.ts(333,9): error TS2353: Object literal may only specify known properties, and 'error' does not exist in type 'ForgeFlowError | Error'.
+src/retrieval/__tests__/feature-extractor.test.ts(429,41): error TS2341: Property 'extractContextFeatures' is private and only accessible within class 'SmartFeatureExtractor'.
+src/retrieval/__tests__/feature-extractor.test.ts(439,41): error TS2341: Property 'extractContextFeatures' is private and only accessible within class 'SmartFeatureExtractor'.
+src/retrieval/__tests__/feature-extractor.test.ts(465,41): error TS2341: Property 'extractContextFeatures' is private and only accessible within class 'SmartFeatureExtractor'.
+src/retrieval/__tests__/feature-extractor.test.ts(475,41): error TS2341: Property 'extractContextFeatures' is private and only accessible within class 'SmartFeatureExtractor'.
+src/retrieval/__tests__/hybrid-retriever.test.ts(18,9): error TS2322: Type '(query: any) => Promise<{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; ... 5 more ...; lastUsed: string; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ... 5 more ...' is not assignable to type '(query: SearchQuery) => Promise<SearchResults>'.
+  Type 'Promise<{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; ... 4 more ...; lastUsed: string; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ... 5 mo...' is not assignable to type 'Promise<SearchResults>'.
+    Type '{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; ... 4 more ...; lastUsed: string; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ... 5 more ...; ...' is not assignable to type 'SearchResults'.
+      Types of property 'results' are incompatible.
+        Type '({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; usageCount: number; effectiveness: number; lastUsed: string; }; }; ... 4 more ...; conten...' is not assignable to type 'SearchResult[]'.
+          Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; usageCount: number; effectiveness: number; lastUsed: string; }; }; ... 4 more ...; content...' is not assignable to type 'SearchResult'.
+            Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; usageCount: number; effectiveness: number; lastUsed: string; }; }; ... 4 more ...; content...' is missing the following properties from type 'SearchResult': totalMatches, relevanceFactors
+src/retrieval/__tests__/hybrid-retriever.test.ts(217,13): error TS2739: Type '{ search(): Promise<{ results: any[]; totalMatches: number; totalPages: number; currentPage: number; executionTime: number; facets: { types: any[]; categories: any[]; tags: any[]; projects: any[]; agents: any[]; languages: any[]; }; suggestions: any[]; }>; }' is missing the following properties from type 'ISearchEngine': searchSimilar, getSuggestions, getPopularQueries, recordQuery, getAnalytics
+src/retrieval/__tests__/hybrid-retriever.test.ts(334,13): error TS2739: Type '{ search(): Promise<never>; }' is missing the following properties from type 'ISearchEngine': searchSimilar, getSuggestions, getPopularQueries, recordQuery, getAnalytics
+src/retrieval/__tests__/hybrid-retriever.test.ts(373,9): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: true; relevanceRating: number; thumbsUp: true; thumbsDown: false; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/hybrid-retriever.test.ts(396,9): error TS2739: Type '{ clicked: false; dwellTime: number; usedInSolution: false; relevanceRating: number; thumbsUp: false; thumbsDown: true; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/hybrid-retriever.test.ts(613,55): error TS2304: Cannot find name 'semanticQuery'.
+src/retrieval/__tests__/integration-e2e.test.ts(22,9): error TS2322: Type '(query: any) => Promise<{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; ... 7 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ......' is not assignable to type '(query: SearchQuery) => Promise<SearchResults>'.
+  Type 'Promise<{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; ... 6 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ...' is not assignable to type 'Promise<SearchResults>'.
+    Type '{ results: ({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; ... 6 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]; ... 5 mo...' is not assignable to type 'SearchResults'.
+      Types of property 'results' are incompatible.
+        Type '({ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; ... 5 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; })[]' is not assignable to type 'SearchResult[]'.
+          Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; ... 5 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; } | { ...; }' is not assignable to type 'SearchResult'.
+            Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; ... 5 more ...; readabilityScore: number; }; }; ... 4 more ...; contentSnippets: { ...; }[]; }' is missing the following properties from type 'SearchResult': totalMatches, relevanceFactors
+src/retrieval/__tests__/integration-e2e.test.ts(399,15): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: boolean; relevanceRating: number; thumbsUp: boolean; thumbsDown: false; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/integration-e2e.test.ts(449,9): error TS2322: Type '"expert"' is not assignable to type '"advanced" | "intermediate" | "beginner"'.
+src/retrieval/__tests__/integration-e2e.test.ts(682,13): error TS2739: Type '{ search(): Promise<never>; }' is missing the following properties from type 'ISearchEngine': searchSimilar, getSuggestions, getPopularQueries, recordQuery, getAnalytics
+src/retrieval/__tests__/integration-e2e.test.ts(720,11): error TS2322: Type '"expert"' is not assignable to type '"advanced" | "intermediate" | "beginner"'.
+src/retrieval/__tests__/integration-e2e.test.ts(772,9): error TS2322: Type '"expert"' is not assignable to type '"advanced" | "intermediate" | "beginner"'.
+src/retrieval/__tests__/integration-e2e.test.ts(842,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; usedInSolution: boolean; relevanceRating: number; thumbsUp: boolean; thumbsDown: false; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(268,13): error TS2739: Type '{ clicked: false; dwellTime: number; thumbsDown: true; usedInSolution: false; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(311,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; thumbsUp: boolean; usedInSolution: boolean; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(358,15): error TS2739: Type '{ clicked: true; dwellTime: number; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(394,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(482,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(577,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/integration.test.ts(671,17): error TS2739: Type '{ clicked: boolean; dwellTime: number; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(57,9): error TS2353: Object literal may only specify known properties, and 'hash' does not exist in type 'IndexEntry'.
+src/retrieval/__tests__/learning-analytics.test.ts(154,13): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: true; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(297,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; usedInSolution: boolean; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(342,15): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: true; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(377,17): error TS2739: Type '{ clicked: boolean; dwellTime: number; usedInSolution: boolean; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(516,15): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: boolean; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(527,51): error TS2345: Argument of type '{ strategyUsed: string; experimentId: string; results: RetrievalResult[]; explorationPerformed: boolean; adaptiveLearningActive: boolean; featureExtractionTime: number; ... 9 more ...; correctedQuery?: string; }' is not assignable to parameter of type 'RetrievalResults'.
+  Types of property 'strategyUsed' are incompatible.
+    Type 'string' is not assignable to type 'RetrievalStrategy'.
+src/retrieval/__tests__/learning-analytics.test.ts(575,15): error TS2739: Type '{ clicked: true; dwellTime: number; usedInSolution: true; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(586,51): error TS2345: Argument of type '{ strategyUsed: string; experimentId: string; results: RetrievalResult[]; explorationPerformed: boolean; adaptiveLearningActive: boolean; featureExtractionTime: number; ... 9 more ...; correctedQuery?: string; }' is not assignable to parameter of type 'RetrievalResults'.
+  Types of property 'strategyUsed' are incompatible.
+    Type 'string' is not assignable to type 'RetrievalStrategy'.
+src/retrieval/__tests__/learning-analytics.test.ts(603,15): error TS2739: Type '{ clicked: boolean; dwellTime: number; usedInSolution: boolean; relevanceRating: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': copiedContent, bookmarked
+src/retrieval/__tests__/learning-analytics.test.ts(756,69): error TS2345: Argument of type '{ clicked: any; dwellTime: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is not assignable to parameter of type 'UserFeedback'.
+  Type '{ clicked: any; dwellTime: number; timestamp: Date; sessionId: string; queryId: string; resultRank: number; }' is missing the following properties from type 'UserFeedback': usedInSolution, copiedContent, bookmarked
+src/retrieval/__tests__/performance.test.ts(91,7): error TS2739: Type '{ search(query: any): Promise<{ results: SearchResult[]; totalMatches: any; totalPages: number; currentPage: number; executionTime: number; facets: { types: any[]; categories: any[]; tags: any[]; projects: any[]; agents: any[]; languages: any[]; }; suggestions: any[]; }>; }' is missing the following properties from type 'ISearchEngine': searchSimilar, getSuggestions, getPopularQueries, recordQuery, getAnalytics
+src/retrieval/__tests__/performance.test.ts(117,13): error TS2322: Type 'string' is not assignable to type 'Date'.
+src/retrieval/__tests__/performance.test.ts(128,13): error TS2353: Object literal may only specify known properties, and 'score' does not exist in type 'ContentSnippet'.
+src/retrieval/__tests__/performance.test.ts(299,75): error TS2345: Argument of type '{ id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }[]' is not assignable to parameter of type 'IndexEntry[]'.
+  Type '{ id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }' is not assignable to type 'IndexEntry'.
+    Types of property 'metadata' are incompatible.
+      Type '{ category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }' is missing the following properties from type 'IndexMetadata': usageCount, lastUsed, fileSize, relatedIds, childIds
+src/retrieval/__tests__/performance.test.ts(342,60): error TS2345: Argument of type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }; ... 4 more ...; contentSnippets: any[]; }[]' is not assignable to parameter of type 'SearchResult[]'.
+  Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }; ... 4 more ...; contentSnippets: any[]; }' is missing the following properties from type 'SearchResult': totalMatches, relevanceFactors
+src/retrieval/__tests__/performance.test.ts(410,63): error TS2322: Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }; }; ... 6 more ...; relevanceFactors: { ...; }; }[]' is not assignable to type 'SearchResult[]'.
+  Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }; }; ... 6 more ...; relevanceFactors: { ...; }; }' is not assignable to type 'SearchResult'.
+    The types of 'entry.metadata' are incompatible between these types.
+      Type '{ category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }' is missing the following properties from type 'IndexMetadata': usageCount, lastUsed, fileSize, relatedIds, childIds
+src/retrieval/__tests__/performance.test.ts(410,70): error TS2322: Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }; }; ... 6 more ...; relevanceFactors: { ...; }; }[]' is not assignable to type 'SearchResult[]'.
+  Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }; }; ... 6 more ...; relevanceFactors: { ...; }; }' is not assignable to type 'SearchResult'.
+    The types of 'entry.metadata' are incompatible between these types.
+      Type '{ category: string; tags: any[]; projectId: string; agentTypes: any[]; language: string; }' is missing the following properties from type 'IndexMetadata': usageCount, lastUsed, fileSize, relatedIds, childIds
+src/retrieval/__tests__/performance.test.ts(534,11): error TS2345: Argument of type '{ results: { entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }; ... 10 more ...; rankerUsed: "base"; }[]; ... 11 more ...; totalMLTime: n...' is not assignable to parameter of type 'RetrievalResults'.
+  Types of property 'results' are incompatible.
+    Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }; ... 10 more ...; rankerUsed: "base"; }[]' is not assignable to type 'RetrievalResult[]'.
+      Type '{ entry: { id: string; title: string; content: string; path: string; type: "knowledge"; lastModified: Date; hash: string; metadata: { category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }; }; ... 10 more ...; rankerUsed: "base"; }' is not assignable to type 'RetrievalResult'.
+        The types of 'entry.metadata' are incompatible between these types.
+          Type '{ category: string; tags: string[]; projectId: string; agentTypes: string[]; language: string; }' is missing the following properties from type 'IndexMetadata': usageCount, lastUsed, fileSize, relatedIds, childIds
+src/retrieval/__tests__/performance.test.ts(796,13): error TS2739: Type '{ search(query: any): Promise<SearchResults>; }' is missing the following properties from type 'ISearchEngine': searchSimilar, getSuggestions, getPopularQueries, recordQuery, getAnalytics
+src/retrieval/__tests__/rank-fusion.test.ts(104,5): error TS2353: Object literal may only specify known properties, and 'hash' does not exist in type 'IndexEntry'.
+src/retrieval/__tests__/rank-fusion.test.ts(813,9): error TS2739: Type '{ entry: any; score: number; rank: number; matchedFields: undefined[]; titleSnippet: string; contentSnippets: undefined[]; features: FeatureVector; confidenceScore: number; retrievalStrategy: "fts-heavy"; rankerUsed: "base"; }' is missing the following properties from type 'RetrievalResult': totalMatches, relevanceFactors
+src/retrieval/__tests__/re-ranker.test.ts(53,5): error TS2353: Object literal may only specify known properties, and 'hash' does not exist in type 'IndexEntry'.

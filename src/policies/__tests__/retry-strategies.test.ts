@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { JitterType } from '../retry-strategies';
 import {
   RetryStrategy,
   ExponentialBackoffStrategy,
@@ -11,8 +12,7 @@ import {
   FibonacciBackoffStrategy,
   AdaptiveBackoffStrategy,
   CustomStrategyRegistry,
-  JitterType,
-  exponentialBackoffWithJitter
+  exponentialBackoffWithJitter,
 } from '../retry-strategies';
 import { ErrorCategory } from '../../utils/errors';
 
@@ -22,8 +22,8 @@ vi.mock('../../utils/enhanced-logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
-  }
+    debug: vi.fn(),
+  },
 }));
 
 describe('Retry Strategies', () => {
@@ -49,7 +49,7 @@ describe('Retry Strategies', () => {
     it('should apply full jitter correctly', () => {
       const baseDelay = 5000;
       const jitteredDelay = strategy.addJitter(baseDelay, 'full');
-      
+
       expect(jitteredDelay).toBeGreaterThanOrEqual(0);
       expect(jitteredDelay).toBeLessThanOrEqual(baseDelay);
     });
@@ -57,7 +57,7 @@ describe('Retry Strategies', () => {
     it('should apply equal jitter correctly', () => {
       const baseDelay = 5000;
       const jitteredDelay = strategy.addJitter(baseDelay, 'equal');
-      
+
       expect(jitteredDelay).toBeGreaterThanOrEqual(2500);
       expect(jitteredDelay).toBeLessThanOrEqual(7500);
     });
@@ -65,7 +65,7 @@ describe('Retry Strategies', () => {
     it('should apply decorrelated jitter correctly', () => {
       const baseDelay = 5000;
       const jitteredDelay = strategy.addJitter(baseDelay, 'decorrelated');
-      
+
       expect(jitteredDelay).toBeGreaterThanOrEqual(500);
       expect(jitteredDelay).toBeLessThanOrEqual(15000);
     });
@@ -155,14 +155,14 @@ describe('Retry Strategies', () => {
       strategy.recordAttempt('test-operation', false, 3000);
       strategy.recordAttempt('test-operation', false, 4000);
       strategy.recordAttempt('test-operation', false, 5000);
-      
+
       // Record some successes to get above minimum attempts threshold
       for (let i = 0; i < 15; i++) {
         strategy.recordAttempt('test-operation', i % 3 === 0, 1000);
       }
 
       const initialDelay = strategy.calculateDelay(2, 1000, 60000, 2);
-      
+
       // Should adapt the delay based on poor success rate
       expect(typeof initialDelay).toBe('number');
       expect(initialDelay).toBeGreaterThan(0);
@@ -174,8 +174,8 @@ describe('Retry Strategies', () => {
 
       const metrics = strategy.getMetrics('test-op');
       expect(metrics).toBeDefined();
-      expect(metrics!.attempts).toBe(2);
-      expect(metrics!.successes).toBe(1);
+      expect(metrics.attempts).toBe(2);
+      expect(metrics.successes).toBe(1);
     });
   });
 
@@ -183,24 +183,24 @@ describe('Retry Strategies', () => {
     beforeEach(() => {
       // Clear any existing strategies
       const strategies = CustomStrategyRegistry.list();
-      strategies.forEach(name => CustomStrategyRegistry.unregister(name));
+      strategies.forEach((name) => CustomStrategyRegistry.unregister(name));
     });
 
     it('should register custom strategy', () => {
       const customStrategy = new ExponentialBackoffStrategy();
-      
+
       CustomStrategyRegistry.register('my-custom', customStrategy);
-      
+
       expect(CustomStrategyRegistry.list()).toContain('my-custom');
       expect(CustomStrategyRegistry.get('my-custom')).toBe(customStrategy);
     });
 
     it('should unregister strategy', () => {
       const customStrategy = new ExponentialBackoffStrategy();
-      
+
       CustomStrategyRegistry.register('temp-strategy', customStrategy);
       const removed = CustomStrategyRegistry.unregister('temp-strategy');
-      
+
       expect(removed).toBe(true);
       expect(CustomStrategyRegistry.list()).not.toContain('temp-strategy');
     });
@@ -229,7 +229,7 @@ describe('Retry Strategies', () => {
         initialDelay: 1000,
         maxDelay: 30000,
         backoffMultiplier: 2,
-        jitter: false
+        jitter: false,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 2, new Error('test'));
@@ -242,7 +242,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 5,
         initialDelay: 1000,
         maxDelay: 30000,
-        backoffMultiplier: 500
+        backoffMultiplier: 500,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 2, new Error('test'));
@@ -254,7 +254,7 @@ describe('Retry Strategies', () => {
         strategyType: 'fixed' as const,
         maxAttempts: 5,
         initialDelay: 2000,
-        maxDelay: 30000
+        maxDelay: 30000,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 3, new Error('test'));
@@ -269,7 +269,7 @@ describe('Retry Strategies', () => {
         maxDelay: 30000,
         backoffMultiplier: 2,
         jitter: true,
-        jitterType: 'full' as JitterType
+        jitterType: 'full' as JitterType,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 2, new Error('test'));
@@ -284,7 +284,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 5,
         initialDelay: 1000,
         maxDelay: 30000,
-        backoffMultiplier: 2
+        backoffMultiplier: 2,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 1, new Error('test'));
@@ -297,8 +297,8 @@ describe('Retry Strategies', () => {
 
       const metrics = retryStrategy.getStrategyMetrics('exponential');
       expect(metrics).toBeDefined();
-      expect(metrics!.totalAttempts).toBe(2);
-      expect(metrics!.successRate).toBe(50);
+      expect(metrics.totalAttempts).toBe(2);
+      expect(metrics.successRate).toBe(50);
     });
 
     it('should validate configuration correctly', () => {
@@ -307,7 +307,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 3,
         initialDelay: 1000,
         maxDelay: 10000,
-        backoffMultiplier: 2
+        backoffMultiplier: 2,
       };
 
       const errors = retryStrategy.validateConfiguration(validConfig);
@@ -320,7 +320,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 0, // Invalid
         initialDelay: -1000, // Invalid
         maxDelay: 500, // Less than initialDelay
-        backoffMultiplier: -1 // Invalid
+        backoffMultiplier: -1, // Invalid
       };
 
       const errors = retryStrategy.validateConfiguration(invalidConfig);
@@ -348,11 +348,11 @@ describe('Retry Strategies', () => {
         maxAttempts: 3,
         initialDelay: 1000,
         maxDelay: 10000,
-        backoffMultiplier: 2
+        backoffMultiplier: 2,
       };
 
       const testResult = await retryStrategy.testStrategy(config, 3);
-      
+
       expect(testResult.delays).toHaveLength(3);
       expect(testResult.totalTime).toBeGreaterThan(0);
       expect(testResult.averageDelay).toBeGreaterThan(0);
@@ -361,7 +361,7 @@ describe('Retry Strategies', () => {
 
     it('should get available strategies', () => {
       const strategies = retryStrategy.getAvailableStrategies();
-      
+
       expect(strategies.builtin).toContain('exponential');
       expect(strategies.builtin).toContain('linear');
       expect(strategies.builtin).toContain('fixed');
@@ -374,7 +374,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 3,
         initialDelay: 1000,
         maxDelay: 10000,
-        backoffMultiplier: 2
+        backoffMultiplier: 2,
       };
 
       // This should not throw even with invalid attempt number
@@ -394,7 +394,7 @@ describe('Retry Strategies', () => {
         });
 
         const result = await exponentialBackoffWithJitter(operation, 3, 100, 1000);
-        
+
         expect(result).toBe('success');
         expect(attempts).toBe(1);
         expect(operation).toHaveBeenCalledTimes(1);
@@ -411,7 +411,7 @@ describe('Retry Strategies', () => {
         });
 
         const result = await exponentialBackoffWithJitter(operation, 5, 10, 100);
-        
+
         expect(result).toBe('success');
         expect(attempts).toBe(3);
         expect(operation).toHaveBeenCalledTimes(3);
@@ -420,9 +420,10 @@ describe('Retry Strategies', () => {
       it('should throw last error after all retries exhausted', async () => {
         const operation = vi.fn().mockRejectedValue(new Error('persistent failure'));
 
-        await expect(exponentialBackoffWithJitter(operation, 2, 10, 100))
-          .rejects.toThrow('persistent failure');
-        
+        await expect(exponentialBackoffWithJitter(operation, 2, 10, 100)).rejects.toThrow(
+          'persistent failure',
+        );
+
         expect(operation).toHaveBeenCalledTimes(2);
       });
 
@@ -439,7 +440,7 @@ describe('Retry Strategies', () => {
             delays.push(currentTime - lastTime);
           }
           lastTime = currentTime;
-          
+
           if (attempts < 3) {
             return Promise.reject(new Error('failure'));
           }
@@ -447,10 +448,10 @@ describe('Retry Strategies', () => {
         });
 
         await exponentialBackoffWithJitter(operation, 3, 100, 1000, 'full');
-        
+
         expect(delays).toHaveLength(2);
         // With jitter, delays should vary
-        expect(delays.every(delay => delay >= 0)).toBe(true);
+        expect(delays.every((delay) => delay >= 0)).toBe(true);
       }, 10000);
     });
   });
@@ -468,7 +469,7 @@ describe('Retry Strategies', () => {
         maxAttempts: 1000,
         initialDelay: 1000,
         maxDelay: 60000,
-        backoffMultiplier: 2
+        backoffMultiplier: 2,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 100, new Error('test'));
@@ -480,7 +481,7 @@ describe('Retry Strategies', () => {
         strategyType: 'fixed' as const,
         maxAttempts: 3,
         initialDelay: 0,
-        maxDelay: 0
+        maxDelay: 0,
       };
 
       const delay = await retryStrategy.calculateDelay(config, 1, new Error('test'));
@@ -489,32 +490,32 @@ describe('Retry Strategies', () => {
 
     it('should perform well with many strategy instances', () => {
       const strategies = [];
-      
+
       for (let i = 0; i < 1000; i++) {
         strategies.push(new ExponentialBackoffStrategy());
       }
-      
+
       // Test that creating many instances doesn't cause performance issues
       expect(strategies).toHaveLength(1000);
-      
+
       // Test that they all calculate delays correctly
-      const delays = strategies.map(s => s.calculateDelay(2, 1000, 10000, 2));
-      expect(delays.every(d => d === 2000)).toBe(true);
+      const delays = strategies.map((s) => s.calculateDelay(2, 1000, 10000, 2));
+      expect(delays.every((d) => d === 2000)).toBe(true);
     });
 
     it('should handle concurrent metric updates safely', async () => {
       const promises = [];
-      
+
       for (let i = 0; i < 100; i++) {
         promises.push(
-          retryStrategy.recordRetryOutcome('exponential', `operation-${i % 10}`, i % 2 === 0, 1000)
+          retryStrategy.recordRetryOutcome('exponential', `operation-${i % 10}`, i % 2 === 0, 1000),
         );
       }
-      
+
       await Promise.all(promises);
-      
+
       const metrics = retryStrategy.getStrategyMetrics('exponential');
-      expect(metrics!.totalAttempts).toBe(100);
+      expect(metrics.totalAttempts).toBe(100);
     });
   });
 });

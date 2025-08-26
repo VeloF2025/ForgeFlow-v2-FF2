@@ -3,7 +3,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import {
+import type {
   JobMemory,
   JobAnalytics,
   MemoryInsights,
@@ -19,21 +19,21 @@ import {
   EfficiencyMetrics,
   TimeRange,
   MemoryConfig,
-  IMemoryAnalytics
+  IMemoryAnalytics,
 } from './types';
 import { JobMemoryManager } from './job-memory';
 import { logger } from '../utils/logger';
 
 /**
  * Memory Analytics Engine
- * 
+ *
  * Advanced analytics and pattern recognition for job memories:
  * - Success/failure pattern identification
- * - Context effectiveness analysis  
+ * - Context effectiveness analysis
  * - Decision outcome correlation
  * - Learning trend identification
  * - Agent performance comparison
- * 
+ *
  * Performance Target: <200ms for analytics calculations
  */
 export class MemoryAnalytics implements IMemoryAnalytics {
@@ -75,9 +75,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
    */
   async calculateJobAnalytics(jobId: string): Promise<JobAnalytics> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       const jobMemory = await this.jobMemoryManager.getJobMemory(jobId);
       if (!jobMemory) {
@@ -86,10 +86,10 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Calculate efficiency metrics
       const efficiencyMetrics = await this.calculateEfficiencyMetrics(jobMemory);
-      
+
       // Find pattern matches
       const patternMatches = await this.findJobPatterns(jobMemory);
-      
+
       // Calculate learning scores
       const learningScore = await this.calculateLearningScore(jobId);
       const reuseScore = await this.calculateReuseScore(jobId);
@@ -100,7 +100,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         efficiencyMetrics,
         learningScore,
         reuseScore,
-        innovationScore
+        innovationScore,
       };
 
       // Update job memory with analytics
@@ -112,7 +112,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return analytics;
     } catch (error) {
       logger.error(`Failed to calculate job analytics for ${jobId}:`, error);
-      throw new Error(`Failed to calculate job analytics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to calculate job analytics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -129,34 +131,36 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       const metrics = await this.calculateEfficiencyMetrics(jobMemory);
-      
+
       // Weighted efficiency score
       const weights = {
-        decisionTime: 0.25,     // Fast decision making
-        gotchaResolution: 0.30, // Quick problem resolution
+        decisionTime: 0.25, // Fast decision making
+        gotchaResolution: 0.3, // Quick problem resolution
         contextRetrieval: 0.15, // Efficient information access
-        knowledgeReuse: 0.20,   // Leveraging existing knowledge
-        errorRate: 0.10         // Low error frequency
+        knowledgeReuse: 0.2, // Leveraging existing knowledge
+        errorRate: 0.1, // Low error frequency
       };
 
       // Normalize metrics to 0-1 scale
-      const normalizedDecisionTime = Math.max(0, 1 - (metrics.decisionTime / 60)); // 60 min = 0 score
-      const normalizedGotchaTime = Math.max(0, 1 - (metrics.gotchaResolutionTime / 120)); // 2 hours = 0 score
-      const normalizedContextTime = Math.max(0, 1 - (metrics.contextRetrievalTime / 30)); // 30 sec = 0 score
+      const normalizedDecisionTime = Math.max(0, 1 - metrics.decisionTime / 60); // 60 min = 0 score
+      const normalizedGotchaTime = Math.max(0, 1 - metrics.gotchaResolutionTime / 120); // 2 hours = 0 score
+      const normalizedContextTime = Math.max(0, 1 - metrics.contextRetrievalTime / 30); // 30 sec = 0 score
       const normalizedKnowledgeReuse = metrics.knowledgeReuseRate; // Already 0-1
       const normalizedErrorRate = Math.max(0, 1 - metrics.errorRate); // Lower error rate = higher score
 
-      const efficiency = 
-        (normalizedDecisionTime * weights.decisionTime) +
-        (normalizedGotchaTime * weights.gotchaResolution) +
-        (normalizedContextTime * weights.contextRetrieval) +
-        (normalizedKnowledgeReuse * weights.knowledgeReuse) +
-        (normalizedErrorRate * weights.errorRate);
+      const efficiency =
+        normalizedDecisionTime * weights.decisionTime +
+        normalizedGotchaTime * weights.gotchaResolution +
+        normalizedContextTime * weights.contextRetrieval +
+        normalizedKnowledgeReuse * weights.knowledgeReuse +
+        normalizedErrorRate * weights.errorRate;
 
       return Math.round(efficiency * 100) / 100; // Round to 2 decimal places
     } catch (error) {
       logger.error(`Failed to calculate job efficiency for ${jobId}:`, error);
-      throw new Error(`Failed to calculate efficiency: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to calculate efficiency: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -173,28 +177,26 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       let learningScore = 0;
-      
+
       // Points for discovering new gotchas
-      const newGotchas = jobMemory.gotchas.filter(g => g.resolution?.resolved === true);
+      const newGotchas = jobMemory.gotchas.filter((g) => g.resolution?.resolved === true);
       learningScore += newGotchas.length * 0.3;
 
       // Points for making novel decisions
-      const novelDecisions = jobMemory.decisions.filter(d => 
-        d.outcome?.success === true && 
-        d.category === 'architectural'
+      const novelDecisions = jobMemory.decisions.filter(
+        (d) => d.outcome?.success === true && d.category === 'architectural',
       );
       learningScore += novelDecisions.length * 0.2;
 
       // Points for creating valuable context
-      const highValueContext = jobMemory.context.filter(c => 
-        c.effectiveness && c.effectiveness > 0.8
+      const highValueContext = jobMemory.context.filter(
+        (c) => c.effectiveness && c.effectiveness > 0.8,
       );
       learningScore += highValueContext.length * 0.1;
 
       // Points for successful outcomes with lessons
-      const learningOutcomes = jobMemory.outcomes.filter(o => 
-        o.type === 'success' && 
-        o.lessons.length > 0
+      const learningOutcomes = jobMemory.outcomes.filter(
+        (o) => o.type === 'success' && o.lessons.length > 0,
       );
       learningScore += learningOutcomes.length * 0.15;
 
@@ -202,7 +204,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return Math.min(1.0, learningScore);
     } catch (error) {
       logger.error(`Failed to calculate learning score for ${jobId}:`, error);
-      throw new Error(`Failed to calculate learning score: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to calculate learning score: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -219,15 +223,13 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       // Count context entries that came from knowledge retrieval
-      const knowledgeContext = jobMemory.context.filter(c => 
-        c.type === 'knowledge-retrieval' || 
-        c.type === 'pattern-match'
+      const knowledgeContext = jobMemory.context.filter(
+        (c) => c.type === 'knowledge-retrieval' || c.type === 'pattern-match',
       );
 
       // Count successful decisions that referenced existing context
-      const reuseDecisions = jobMemory.decisions.filter(d => 
-        d.relatedContext.length > 0 && 
-        d.outcome?.success === true
+      const reuseDecisions = jobMemory.decisions.filter(
+        (d) => d.relatedContext.length > 0 && d.outcome?.success === true,
       );
 
       const totalDecisions = jobMemory.decisions.length;
@@ -242,7 +244,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return Math.round((contextReuseRatio * 0.4 + decisionReuseRatio * 0.6) * 100) / 100;
     } catch (error) {
       logger.error(`Failed to calculate reuse score for ${jobId}:`, error);
-      throw new Error(`Failed to calculate reuse score: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to calculate reuse score: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -255,10 +259,11 @@ export class MemoryAnalytics implements IMemoryAnalytics {
    */
   async identifySuccessPatterns(jobs: JobMemory[]): Promise<SuccessPattern[]> {
     try {
-      const successfulJobs = jobs.filter(job => 
-        job.status === 'completed' && 
-        job.outcomes.filter(o => o.type === 'success').length > 
-        job.outcomes.filter(o => o.type === 'failure').length
+      const successfulJobs = jobs.filter(
+        (job) =>
+          job.status === 'completed' &&
+          job.outcomes.filter((o) => o.type === 'success').length >
+            job.outcomes.filter((o) => o.type === 'failure').length,
       );
 
       if (successfulJobs.length < MemoryAnalytics.MIN_PATTERN_OCCURRENCES) {
@@ -266,38 +271,41 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       // Group jobs by similar characteristics
-      const patterns = new Map<string, {
-        jobs: JobMemory[];
-        conditions: string[];
-        outcomes: string[];
-        agents: Set<string>;
-      }>();
+      const patterns = new Map<
+        string,
+        {
+          jobs: JobMemory[];
+          conditions: string[];
+          outcomes: string[];
+          agents: Set<string>;
+        }
+      >();
 
       for (const job of successfulJobs) {
         // Create pattern signature based on key characteristics
         const signature = this.createJobSignature(job);
-        
+
         if (!patterns.has(signature)) {
           patterns.set(signature, {
             jobs: [],
             conditions: [],
             outcomes: [],
-            agents: new Set()
+            agents: new Set(),
           });
         }
 
-        const pattern = patterns.get(signature)!;
+        const pattern = patterns.get(signature);
         pattern.jobs.push(job);
-        
+
         // Collect conditions (context types, decision categories)
-        job.context.forEach(c => pattern.conditions.push(c.type));
-        job.decisions.forEach(d => pattern.conditions.push(d.category));
-        
+        job.context.forEach((c) => pattern.conditions.push(c.type));
+        job.decisions.forEach((d) => pattern.conditions.push(d.category));
+
         // Collect outcomes
-        job.outcomes.forEach(o => pattern.outcomes.push(o.description));
-        
+        job.outcomes.forEach((o) => pattern.outcomes.push(o.description));
+
         // Track agents
-        job.metadata.agentTypes.forEach(agent => pattern.agents.add(agent));
+        job.metadata.agentTypes.forEach((agent) => pattern.agents.add(agent));
       }
 
       // Convert to success patterns
@@ -307,8 +315,8 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       for (const [signature, data] of patterns.entries()) {
         if (data.jobs.length >= MemoryAnalytics.MIN_PATTERN_OCCURRENCES) {
           // Calculate confidence based on consistency and frequency
-          const confidence = Math.min(1.0, data.jobs.length / successfulJobs.length * 2);
-          
+          const confidence = Math.min(1.0, (data.jobs.length / successfulJobs.length) * 2);
+
           if (confidence >= MemoryAnalytics.MIN_CONFIDENCE_SCORE) {
             successPatterns.push({
               id: `success-${patternId++}`,
@@ -317,7 +325,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
               confidence,
               conditions: [...new Set(data.conditions)].slice(0, 10),
               outcomes: [...new Set(data.outcomes)].slice(0, 10),
-              applicableAgents: Array.from(data.agents)
+              applicableAgents: Array.from(data.agents),
             });
           }
         }
@@ -326,7 +334,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return successPatterns.sort((a, b) => b.confidence - a.confidence);
     } catch (error) {
       logger.error('Failed to identify success patterns:', error);
-      throw new Error(`Failed to identify success patterns: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to identify success patterns: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -337,10 +347,11 @@ export class MemoryAnalytics implements IMemoryAnalytics {
    */
   async identifyFailurePatterns(jobs: JobMemory[]): Promise<FailurePattern[]> {
     try {
-      const failedJobs = jobs.filter(job => 
-        job.status === 'failed' || 
-        job.outcomes.filter(o => o.type === 'failure').length > 
-        job.outcomes.filter(o => o.type === 'success').length
+      const failedJobs = jobs.filter(
+        (job) =>
+          job.status === 'failed' ||
+          job.outcomes.filter((o) => o.type === 'failure').length >
+            job.outcomes.filter((o) => o.type === 'success').length,
       );
 
       if (failedJobs.length < MemoryAnalytics.MIN_PATTERN_OCCURRENCES) {
@@ -348,28 +359,31 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       // Group failures by gotcha patterns and decision failures
-      const patterns = new Map<string, {
-        jobs: JobMemory[];
-        triggers: string[];
-        preventionSteps: string[];
-        agents: Set<string>;
-      }>();
+      const patterns = new Map<
+        string,
+        {
+          jobs: JobMemory[];
+          triggers: string[];
+          preventionSteps: string[];
+          agents: Set<string>;
+        }
+      >();
 
       for (const job of failedJobs) {
         // Analyze gotcha patterns
         for (const gotcha of job.gotchas) {
           const key = `${gotcha.category}-${gotcha.severity}`;
-          
+
           if (!patterns.has(key)) {
             patterns.set(key, {
               jobs: [],
               triggers: [],
               preventionSteps: [],
-              agents: new Set()
+              agents: new Set(),
             });
           }
 
-          const pattern = patterns.get(key)!;
+          const pattern = patterns.get(key);
           pattern.jobs.push(job);
           pattern.triggers.push(gotcha.description);
           pattern.preventionSteps.push(...gotcha.preventionNotes);
@@ -377,20 +391,20 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         }
 
         // Analyze failed decisions
-        const failedDecisions = job.decisions.filter(d => d.outcome?.success === false);
+        const failedDecisions = job.decisions.filter((d) => d.outcome?.success === false);
         for (const decision of failedDecisions) {
           const key = `decision-${decision.category}`;
-          
+
           if (!patterns.has(key)) {
             patterns.set(key, {
               jobs: [],
               triggers: [],
               preventionSteps: [],
-              agents: new Set()
+              agents: new Set(),
             });
           }
 
-          const pattern = patterns.get(key)!;
+          const pattern = patterns.get(key);
           pattern.jobs.push(job);
           pattern.triggers.push(decision.description);
           if (decision.outcome?.lessons) {
@@ -406,8 +420,8 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       for (const [key, data] of patterns.entries()) {
         if (data.jobs.length >= MemoryAnalytics.MIN_PATTERN_OCCURRENCES) {
-          const confidence = Math.min(1.0, data.jobs.length / failedJobs.length * 2);
-          
+          const confidence = Math.min(1.0, (data.jobs.length / failedJobs.length) * 2);
+
           if (confidence >= MemoryAnalytics.MIN_CONFIDENCE_SCORE) {
             failurePatterns.push({
               id: `failure-${patternId++}`,
@@ -416,7 +430,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
               confidence,
               triggers: [...new Set(data.triggers)].slice(0, 10),
               preventionSteps: [...new Set(data.preventionSteps)].slice(0, 10),
-              affectedAgents: Array.from(data.agents)
+              affectedAgents: Array.from(data.agents),
             });
           }
         }
@@ -425,7 +439,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return failurePatterns.sort((a, b) => b.confidence - a.confidence);
     } catch (error) {
       logger.error('Failed to identify failure patterns:', error);
-      throw new Error(`Failed to identify failure patterns: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to identify failure patterns: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -451,7 +467,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         if (!otherJob) continue;
 
         const similarity = this.calculateJobSimilarity(targetJob, otherJob);
-        
+
         if (similarity >= MemoryAnalytics.SIMILARITY_THRESHOLD) {
           const commonPatterns = this.findCommonPatterns(targetJob, otherJob);
           const differences = this.findJobDifferences(targetJob, otherJob);
@@ -462,7 +478,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
             similarity,
             commonPatterns,
             differences,
-            applicableLearnings
+            applicableLearnings,
           });
         }
       }
@@ -470,7 +486,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       return similarJobs.sort((a, b) => b.similarity - a.similarity);
     } catch (error) {
       logger.error(`Failed to find similar jobs for ${jobId}:`, error);
-      throw new Error(`Failed to find similar jobs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to find similar jobs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -500,13 +518,15 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Filter by confidence and limit results
       const filteredMatches = matches
-        .filter(match => match.confidence >= (pattern.minConfidence || 0))
+        .filter((match) => match.confidence >= (pattern.minConfidence || 0))
         .sort((a, b) => b.confidence - a.confidence);
 
       return pattern.maxResults ? filteredMatches.slice(0, pattern.maxResults) : filteredMatches;
     } catch (error) {
       logger.error('Failed to search similar patterns:', error);
-      throw new Error(`Failed to search patterns: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to search patterns: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -527,22 +547,28 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Calculate summary metrics
       const totalDecisions = jobMemory.decisions.length;
-      const avgDecisionTime = totalDecisions > 0 
-        ? jobMemory.decisions.reduce((sum, d) => sum + (d.outcome?.metrics.implementationTime || 0), 0) / totalDecisions
-        : 0;
+      const avgDecisionTime =
+        totalDecisions > 0
+          ? jobMemory.decisions.reduce(
+              (sum, d) => sum + (d.outcome?.metrics.implementationTime || 0),
+              0,
+            ) / totalDecisions
+          : 0;
 
       const totalGotchas = jobMemory.gotchas.length;
-      const avgGotchaResolutionTime = totalGotchas > 0
-        ? jobMemory.gotchas
-            .filter(g => g.resolution?.resolutionTime)
-            .reduce((sum, g) => sum + (g.resolution!.resolutionTime), 0) / totalGotchas
-        : 0;
+      const avgGotchaResolutionTime =
+        totalGotchas > 0
+          ? jobMemory.gotchas
+              .filter((g) => g.resolution?.resolutionTime)
+              .reduce((sum, g) => sum + g.resolution.resolutionTime, 0) / totalGotchas
+          : 0;
 
-      const contextEffectiveness = jobMemory.context.length > 0
-        ? jobMemory.context
-            .filter(c => c.effectiveness !== undefined)
-            .reduce((sum, c) => sum + (c.effectiveness || 0), 0) / jobMemory.context.length
-        : 0;
+      const contextEffectiveness =
+        jobMemory.context.length > 0
+          ? jobMemory.context
+              .filter((c) => c.effectiveness !== undefined)
+              .reduce((sum, c) => sum + (c.effectiveness || 0), 0) / jobMemory.context.length
+          : 0;
 
       // Get pattern analysis
       const allJobs = await this.getAllJobMemories();
@@ -550,7 +576,12 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       const failurePatterns = await this.identifyFailurePatterns(allJobs);
 
       // Generate recommendations
-      const recommendations = this.generateRecommendations(jobMemory, analytics, successPatterns, failurePatterns);
+      const recommendations = this.generateRecommendations(
+        jobMemory,
+        analytics,
+        successPatterns,
+        failurePatterns,
+      );
 
       return {
         jobId,
@@ -558,12 +589,14 @@ export class MemoryAnalytics implements IMemoryAnalytics {
           overallSuccess: jobMemory.status === 'completed',
           efficiency,
           learningValue: analytics.learningScore,
-          reuseRate: analytics.reuseScore
+          reuseRate: analytics.reuseScore,
         },
         patterns: {
-          successPatterns: successPatterns.map(p => p.description).slice(0, 5),
-          failurePatterns: failurePatterns.map(p => p.description).slice(0, 5),
-          decisionPatterns: jobMemory.decisions.map(d => `${d.category}: ${d.description.substring(0, 50)}...`).slice(0, 5)
+          successPatterns: successPatterns.map((p) => p.description).slice(0, 5),
+          failurePatterns: failurePatterns.map((p) => p.description).slice(0, 5),
+          decisionPatterns: jobMemory.decisions
+            .map((d) => `${d.category}: ${d.description.substring(0, 50)}...`)
+            .slice(0, 5),
         },
         recommendations,
         keyMetrics: {
@@ -571,12 +604,14 @@ export class MemoryAnalytics implements IMemoryAnalytics {
           avgDecisionTime,
           totalGotchas,
           avgGotchaResolutionTime,
-          contextEffectiveness
-        }
+          contextEffectiveness,
+        },
       };
     } catch (error) {
       logger.error(`Failed to get memory insights for ${jobId}:`, error);
-      throw new Error(`Failed to get memory insights: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get memory insights: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -590,8 +625,8 @@ export class MemoryAnalytics implements IMemoryAnalytics {
   async analyzeTrends(timeRange: TimeRange): Promise<TrendAnalysis> {
     try {
       const allJobs = await this.jobMemoryManager.getGlobalJobLog();
-      const jobsInRange = allJobs.filter(job => 
-        job.startTime >= timeRange.start && job.startTime <= timeRange.end
+      const jobsInRange = allJobs.filter(
+        (job) => job.startTime >= timeRange.start && job.startTime <= timeRange.end,
       );
 
       if (jobsInRange.length === 0) {
@@ -599,31 +634,32 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       const totalJobs = jobsInRange.length;
-      const successfulJobs = jobsInRange.filter(job => job.success).length;
+      const successfulJobs = jobsInRange.filter((job) => job.success).length;
       const successRate = successfulJobs / totalJobs;
 
-      const avgJobDuration = jobsInRange
-        .filter(job => job.duration)
-        .reduce((sum, job) => sum + (job.duration || 0), 0) / totalJobs;
+      const avgJobDuration =
+        jobsInRange
+          .filter((job) => job.duration)
+          .reduce((sum, job) => sum + (job.duration || 0), 0) / totalJobs;
 
       // Analyze trends (simplified - would need more sophisticated time series analysis)
       const trends = {
         efficiency: 'stable' as const,
         learningRate: 'stable' as const,
-        gotchaFrequency: 'stable' as const
+        gotchaFrequency: 'stable' as const,
       };
 
       // Get top gotchas and success factors (simplified)
       const topGotchas = [
         { description: 'Configuration errors', frequency: 12 },
         { description: 'Integration failures', frequency: 8 },
-        { description: 'Build issues', frequency: 6 }
+        { description: 'Build issues', frequency: 6 },
       ];
 
       const topSuccessFactors = [
         { factor: 'Good test coverage', correlation: 0.85 },
         { factor: 'Clear requirements', correlation: 0.78 },
-        { factor: 'Knowledge reuse', correlation: 0.72 }
+        { factor: 'Knowledge reuse', correlation: 0.72 },
       ];
 
       return {
@@ -633,11 +669,13 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         avgJobDuration,
         trends,
         topGotchas,
-        topSuccessFactors
+        topSuccessFactors,
       };
     } catch (error) {
       logger.error('Failed to analyze trends:', error);
-      throw new Error(`Failed to analyze trends: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to analyze trends: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -658,7 +696,9 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Analyze decisions
       if (jobMemory.decisions && jobMemory.decisions.length > 0) {
-        const architecturalDecisions = jobMemory.decisions.filter(d => d.category === 'architectural');
+        const architecturalDecisions = jobMemory.decisions.filter(
+          (d) => d.category === 'architectural',
+        );
         if (architecturalDecisions.length > 2) {
           riskFactors.push('High number of architectural decisions');
           successProbability -= 0.1;
@@ -667,13 +707,13 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Analyze gotchas
       if (jobMemory.gotchas && jobMemory.gotchas.length > 0) {
-        const criticalGotchas = jobMemory.gotchas.filter(g => g.severity === 'critical');
+        const criticalGotchas = jobMemory.gotchas.filter((g) => g.severity === 'critical');
         if (criticalGotchas.length > 0) {
           riskFactors.push('Critical gotchas encountered');
           successProbability -= 0.2;
         }
 
-        const resolvedGotchas = jobMemory.gotchas.filter(g => g.resolution?.resolved);
+        const resolvedGotchas = jobMemory.gotchas.filter((g) => g.resolution?.resolved);
         if (resolvedGotchas.length > 0) {
           successFactors.push('Gotchas being resolved');
           successProbability += 0.1;
@@ -682,7 +722,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
       // Analyze context
       if (jobMemory.context && jobMemory.context.length > 0) {
-        const knowledgeContext = jobMemory.context.filter(c => c.type === 'knowledge-retrieval');
+        const knowledgeContext = jobMemory.context.filter((c) => c.type === 'knowledge-retrieval');
         if (knowledgeContext.length > 0) {
           successFactors.push('Leveraging existing knowledge');
           successProbability += 0.15;
@@ -698,7 +738,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       successProbability = Math.max(0, Math.min(1, successProbability));
-      confidence = Math.min(1, confidence + (Math.abs(successProbability - 0.5) * 2));
+      confidence = Math.min(1, confidence + Math.abs(successProbability - 0.5) * 2);
 
       // Estimate duration based on complexity
       let estimatedDuration = 60; // Base 1 hour
@@ -726,11 +766,13 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         riskFactors,
         successFactors,
         estimatedDuration,
-        recommendations
+        recommendations,
       };
     } catch (error) {
       logger.error('Failed to predict job outcome:', error);
-      throw new Error(`Failed to predict outcome: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to predict outcome: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -742,14 +784,17 @@ export class MemoryAnalytics implements IMemoryAnalytics {
    * @param timeRange Optional time range filter
    * @returns Promise resolving to agent performance analysis
    */
-  async analyzeAgentPerformance(agentType: string, timeRange?: TimeRange): Promise<AgentPerformanceAnalysis> {
+  async analyzeAgentPerformance(
+    agentType: string,
+    timeRange?: TimeRange,
+  ): Promise<AgentPerformanceAnalysis> {
     try {
       const allJobs = await this.jobMemoryManager.getJobsByAgent(agentType);
-      
+
       let filteredJobs = allJobs;
       if (timeRange) {
-        filteredJobs = allJobs.filter(job => 
-          job.startTime >= timeRange.start && job.startTime <= timeRange.end
+        filteredJobs = allJobs.filter(
+          (job) => job.startTime >= timeRange.start && job.startTime <= timeRange.end,
         );
       }
 
@@ -758,17 +803,18 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       }
 
       const totalJobs = filteredJobs.length;
-      const successfulJobs = filteredJobs.filter(job => job.success).length;
+      const successfulJobs = filteredJobs.filter((job) => job.success).length;
       const successRate = successfulJobs / totalJobs;
 
-      const avgJobDuration = filteredJobs
-        .filter(job => job.duration)
-        .reduce((sum, job) => sum + (job.duration || 0), 0) / totalJobs;
+      const avgJobDuration =
+        filteredJobs
+          .filter((job) => job.duration)
+          .reduce((sum, job) => sum + (job.duration || 0), 0) / totalJobs;
 
       // Analyze common gotchas
       const commonGotchas = [
         { description: 'Configuration issues', frequency: 5 },
-        { description: 'Integration problems', frequency: 3 }
+        { description: 'Integration problems', frequency: 3 },
       ];
 
       const strengths: string[] = [];
@@ -798,11 +844,13 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         strengths,
         weaknesses,
         commonGotchas,
-        improvementSuggestions
+        improvementSuggestions,
       };
     } catch (error) {
       logger.error(`Failed to analyze agent performance for ${agentType}:`, error);
-      throw new Error(`Failed to analyze agent performance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to analyze agent performance: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -813,12 +861,15 @@ export class MemoryAnalytics implements IMemoryAnalytics {
   async compareAgentEffectiveness(): Promise<AgentComparison[]> {
     try {
       const allJobs = await this.jobMemoryManager.getGlobalJobLog();
-      const agentStats = new Map<string, {
-        totalJobs: number;
-        successfulJobs: number;
-        totalDuration: number;
-        totalGotchas: number;
-      }>();
+      const agentStats = new Map<
+        string,
+        {
+          totalJobs: number;
+          successfulJobs: number;
+          totalDuration: number;
+          totalGotchas: number;
+        }
+      >();
 
       // Collect stats for each agent type
       for (const job of allJobs) {
@@ -828,11 +879,11 @@ export class MemoryAnalytics implements IMemoryAnalytics {
               totalJobs: 0,
               successfulJobs: 0,
               totalDuration: 0,
-              totalGotchas: 0
+              totalGotchas: 0,
             });
           }
 
-          const stats = agentStats.get(agentType)!;
+          const stats = agentStats.get(agentType);
           stats.totalJobs++;
           if (job.success) stats.successfulJobs++;
           stats.totalDuration += job.duration || 0;
@@ -856,23 +907,30 @@ export class MemoryAnalytics implements IMemoryAnalytics {
             successRate,
             avgDuration,
             gotchaRate,
-            learningRate
+            learningRate,
           },
           ranking: 0, // Will be set after sorting
-          strengths: this.getAgentStrengths(agentType, { successRate, avgDuration, gotchaRate, learningRate }),
-          bestUseCases: this.getAgentBestUseCases(agentType)
+          strengths: this.getAgentStrengths(agentType, {
+            successRate,
+            avgDuration,
+            gotchaRate,
+            learningRate,
+          }),
+          bestUseCases: this.getAgentBestUseCases(agentType),
         });
       }
 
       // Rank agents based on overall performance score
-      comparisons.forEach(comp => {
+      comparisons.forEach((comp) => {
         comp.ranking = this.calculateAgentRank(comp.metrics);
       });
 
       return comparisons.sort((a, b) => a.ranking - b.ranking);
     } catch (error) {
       logger.error('Failed to compare agent effectiveness:', error);
-      throw new Error(`Failed to compare agents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to compare agents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -891,31 +949,33 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
     // Calculate average decision time
     const decisionTimes = decisions
-      .map(d => d.outcome?.metrics.implementationTime || 0)
-      .filter(time => time > 0);
-    const decisionTime = decisionTimes.length > 0 
-      ? decisionTimes.reduce((sum, time) => sum + time, 0) / decisionTimes.length
-      : 0;
+      .map((d) => d.outcome?.metrics.implementationTime || 0)
+      .filter((time) => time > 0);
+    const decisionTime =
+      decisionTimes.length > 0
+        ? decisionTimes.reduce((sum, time) => sum + time, 0) / decisionTimes.length
+        : 0;
 
     // Calculate average gotcha resolution time
     const resolutionTimes = gotchas
-      .map(g => g.resolution?.resolutionTime || 0)
-      .filter(time => time > 0);
-    const gotchaResolutionTime = resolutionTimes.length > 0
-      ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
-      : 0;
+      .map((g) => g.resolution?.resolutionTime || 0)
+      .filter((time) => time > 0);
+    const gotchaResolutionTime =
+      resolutionTimes.length > 0
+        ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
+        : 0;
 
     // Calculate context retrieval time (simulated)
     const contextRetrievalTime = context.length * 2; // Assume 2 seconds per context entry
 
     // Calculate knowledge reuse rate
-    const knowledgeContext = context.filter(c => 
-      c.type === 'knowledge-retrieval' || c.type === 'pattern-match'
+    const knowledgeContext = context.filter(
+      (c) => c.type === 'knowledge-retrieval' || c.type === 'pattern-match',
     );
     const knowledgeReuseRate = context.length > 0 ? knowledgeContext.length / context.length : 0;
 
     // Calculate error rate
-    const failedDecisions = decisions.filter(d => d.outcome?.success === false);
+    const failedDecisions = decisions.filter((d) => d.outcome?.success === false);
     const errorRate = decisions.length > 0 ? failedDecisions.length / decisions.length : 0;
 
     return {
@@ -923,7 +983,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       gotchaResolutionTime,
       contextRetrievalTime,
       knowledgeReuseRate,
-      errorRate
+      errorRate,
     };
   }
 
@@ -938,7 +998,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         patternType: 'success',
         confidence: 0.9,
         context: ['completed', 'success'],
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
 
@@ -949,7 +1009,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
         patternType: 'gotcha',
         confidence: 0.8,
         context: [gotcha.category, gotcha.severity, gotcha.description],
-        timestamp: gotcha.timestamp
+        timestamp: gotcha.timestamp,
       });
     }
 
@@ -960,20 +1020,21 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     let innovationScore = 0;
 
     // Check for novel decision patterns
-    const novelDecisions = jobMemory.decisions.filter(d => 
-      d.category === 'architectural' && d.options.length > 2
+    const novelDecisions = jobMemory.decisions.filter(
+      (d) => d.category === 'architectural' && d.options.length > 2,
     );
     innovationScore += novelDecisions.length * 0.2;
 
     // Check for creative gotcha solutions
-    const creativeResolutions = jobMemory.gotchas.filter(g => 
-      g.resolution && g.resolution.confidence > 0.8 && g.resolution.preventionSteps.length > 2
+    const creativeResolutions = jobMemory.gotchas.filter(
+      (g) =>
+        g.resolution && g.resolution.confidence > 0.8 && g.resolution.preventionSteps.length > 2,
     );
     innovationScore += creativeResolutions.length * 0.3;
 
     // Check for new context discovery
-    const novelContext = jobMemory.context.filter(c => 
-      c.type === 'code-analysis' && c.relevanceScore > 0.8
+    const novelContext = jobMemory.context.filter(
+      (c) => c.type === 'code-analysis' && c.relevanceScore > 0.8,
     );
     innovationScore += novelContext.length * 0.1;
 
@@ -984,8 +1045,8 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     // Create a signature based on key job characteristics
     const agentTypes = job.metadata.agentTypes.sort().join(',');
     const complexity = job.metadata.complexity;
-    const decisionCategories = [...new Set(job.decisions.map(d => d.category))].sort().join(',');
-    const gotchaCategories = [...new Set(job.gotchas.map(g => g.category))].sort().join(',');
+    const decisionCategories = [...new Set(job.decisions.map((d) => d.category))].sort().join(',');
+    const gotchaCategories = [...new Set(job.gotchas.map((g) => g.category))].sort().join(',');
 
     return `${agentTypes}-${complexity}-${decisionCategories}-${gotchaCategories}`;
   }
@@ -995,8 +1056,8 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     let factors = 0;
 
     // Compare agent types
-    const commonAgents = job1.metadata.agentTypes.filter(agent => 
-      job2.metadata.agentTypes.includes(agent)
+    const commonAgents = job1.metadata.agentTypes.filter((agent) =>
+      job2.metadata.agentTypes.includes(agent),
     ).length;
     const totalAgents = new Set([...job1.metadata.agentTypes, ...job2.metadata.agentTypes]).size;
     similarity += commonAgents / totalAgents;
@@ -1009,9 +1070,11 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     factors++;
 
     // Compare decision patterns
-    const job1DecisionTypes = new Set(job1.decisions.map(d => d.category));
-    const job2DecisionTypes = new Set(job2.decisions.map(d => d.category));
-    const commonDecisionTypes = [...job1DecisionTypes].filter(type => job2DecisionTypes.has(type)).length;
+    const job1DecisionTypes = new Set(job1.decisions.map((d) => d.category));
+    const job2DecisionTypes = new Set(job2.decisions.map((d) => d.category));
+    const commonDecisionTypes = [...job1DecisionTypes].filter((type) =>
+      job2DecisionTypes.has(type),
+    ).length;
     const totalDecisionTypes = new Set([...job1DecisionTypes, ...job2DecisionTypes]).size;
     if (totalDecisionTypes > 0) {
       similarity += commonDecisionTypes / totalDecisionTypes;
@@ -1025,16 +1088,16 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     const patterns: string[] = [];
 
     // Common agent types
-    const commonAgents = job1.metadata.agentTypes.filter(agent => 
-      job2.metadata.agentTypes.includes(agent)
+    const commonAgents = job1.metadata.agentTypes.filter((agent) =>
+      job2.metadata.agentTypes.includes(agent),
     );
-    patterns.push(...commonAgents.map(agent => `Common agent: ${agent}`));
+    patterns.push(...commonAgents.map((agent) => `Common agent: ${agent}`));
 
     // Common decision categories
     const commonDecisions = job1.decisions
-      .map(d => d.category)
-      .filter(category => job2.decisions.some(d => d.category === category));
-    patterns.push(...[...new Set(commonDecisions)].map(cat => `Common decision: ${cat}`));
+      .map((d) => d.category)
+      .filter((category) => job2.decisions.some((d) => d.category === category));
+    patterns.push(...[...new Set(commonDecisions)].map((cat) => `Common decision: ${cat}`));
 
     return patterns.slice(0, 5);
   }
@@ -1057,14 +1120,12 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     const learnings: string[] = [];
 
     // Extract from successful outcomes
-    job.outcomes
-      .filter(o => o.type === 'success')
-      .forEach(o => learnings.push(...o.lessons));
+    job.outcomes.filter((o) => o.type === 'success').forEach((o) => learnings.push(...o.lessons));
 
     // Extract from resolved gotchas
     job.gotchas
-      .filter(g => g.resolution?.resolved)
-      .forEach(g => learnings.push(...(g.resolution!.preventionSteps || [])));
+      .filter((g) => g.resolution?.resolved)
+      .forEach((g) => learnings.push(...(g.resolution.preventionSteps || [])));
 
     return [...new Set(learnings)].slice(0, 5);
   }
@@ -1081,7 +1142,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
             patternType: 'decision',
             confidence: 0.8,
             context: [decision.category, decision.description],
-            timestamp: decision.timestamp
+            timestamp: decision.timestamp,
           });
         }
       }
@@ -1096,7 +1157,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
             patternType: 'gotcha',
             confidence: 0.9,
             context: [gotcha.category, gotcha.severity, gotcha.description],
-            timestamp: gotcha.timestamp
+            timestamp: gotcha.timestamp,
           });
         }
       }
@@ -1114,7 +1175,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     jobMemory: JobMemory,
     analytics: JobAnalytics,
     successPatterns: SuccessPattern[],
-    failurePatterns: FailurePattern[]
+    failurePatterns: FailurePattern[],
   ): {
     forFutureJobs: string[];
     forKnowledgeBase: string[];
@@ -1123,7 +1184,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     const recommendations = {
       forFutureJobs: [] as string[],
       forKnowledgeBase: [] as string[],
-      forProcessImprovement: [] as string[]
+      forProcessImprovement: [] as string[],
     };
 
     // Analyze efficiency and suggest improvements
@@ -1140,12 +1201,12 @@ export class MemoryAnalytics implements IMemoryAnalytics {
     }
 
     // Suggest knowledge base additions
-    const resolvedGotchas = jobMemory.gotchas.filter(g => g.resolution?.resolved);
+    const resolvedGotchas = jobMemory.gotchas.filter((g) => g.resolution?.resolved);
     if (resolvedGotchas.length > 0) {
       recommendations.forKnowledgeBase.push('Promote resolved gotchas to knowledge base');
     }
 
-    if (jobMemory.decisions.filter(d => d.outcome?.success).length > 2) {
+    if (jobMemory.decisions.filter((d) => d.outcome?.success).length > 2) {
       recommendations.forKnowledgeBase.push('Document successful decision patterns');
     }
 
@@ -1183,7 +1244,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
       'strategic-planner': ['Project planning', 'Task breakdown', 'Risk assessment'],
       'code-implementer': ['Feature development', 'Bug fixes', 'Code optimization'],
       'test-coverage-validator': ['Test coverage analysis', 'Quality assurance', 'Test strategy'],
-      'security-auditor': ['Security reviews', 'Vulnerability scanning', 'Compliance checks']
+      'security-auditor': ['Security reviews', 'Vulnerability scanning', 'Compliance checks'],
     };
 
     return useCases[agentType] || ['General development tasks'];
@@ -1191,7 +1252,7 @@ export class MemoryAnalytics implements IMemoryAnalytics {
 
   private calculateAgentRank(metrics: any): number {
     // Simple ranking algorithm - lower is better
-    const score = 
+    const score =
       (1 - metrics.successRate) * 0.4 +
       (metrics.avgDuration / 180) * 0.3 +
       metrics.gotchaRate * 0.2 +

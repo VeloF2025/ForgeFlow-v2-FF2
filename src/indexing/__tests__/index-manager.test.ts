@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { rmSync, existsSync } from 'fs';
 import { ForgeFlowIndexManager } from '../index-manager.js';
-import { IndexConfig, IndexEntry, IndexBatch, IndexUpdateOperation } from '../types.js';
+import type { IndexConfig, IndexEntry, IndexBatch, IndexUpdateOperation } from '../types.js';
 
 describe('ForgeFlowIndexManager', () => {
   let indexManager: ForgeFlowIndexManager;
@@ -37,7 +37,7 @@ describe('ForgeFlowIndexManager', () => {
       defaultLimit: 20,
       maxLimit: 1000,
       snippetLength: 150,
-      maxSnippets: 5
+      maxSnippets: 5,
     };
 
     indexManager = new ForgeFlowIndexManager(config);
@@ -68,31 +68,35 @@ describe('ForgeFlowIndexManager', () => {
       expect(stats.databaseSize).toBeGreaterThan(0);
     });
 
-    it('should emit initialization event', (done) => {
+    it('should emit initialization event', async () => {
       const tempManager = new ForgeFlowIndexManager(config);
-      
-      tempManager.on('initialized', (event) => {
-        expect(event.stats).toBeDefined();
-        tempManager.shutdown().then(() => done());
+
+      const eventPromise = new Promise<void>((resolve) => {
+        tempManager.on('initialized', (event) => {
+          expect(event.stats).toBeDefined();
+          resolve();
+        });
       });
 
-      tempManager.initialize();
+      await tempManager.initialize();
+      await eventPromise;
+      await tempManager.shutdown();
     });
   });
 
   describe('Content Indexing', () => {
     it('should index content successfully', async () => {
       const entries = createTestEntries(10);
-      
+
       await indexManager.indexContent(entries);
-      
+
       const stats = await indexManager.getStats();
       expect(stats.totalEntries).toBe(10);
     });
 
     it('should handle large batch indexing', async () => {
       const entries = createTestEntries(500);
-      
+
       const startTime = Date.now();
       await indexManager.indexContent(entries);
       const endTime = Date.now();
@@ -107,24 +111,31 @@ describe('ForgeFlowIndexManager', () => {
       expect(stats.totalEntries).toBe(500);
     });
 
-    it('should emit batch indexing events', (done) => {
+    it('should emit batch indexing events', async () => {
       const entries = createTestEntries(10);
       let batchCount = 0;
 
-      indexManager.on('batch_indexed', (event) => {
-        batchCount++;
-        expect(event.batchSize).toBeGreaterThan(0);
-        expect(event.totalIndexed).toBeGreaterThan(0);
-      });
+      const eventPromises = [
+        new Promise<void>((resolve) => {
+          indexManager.on('batch_indexed', (event) => {
+            batchCount++;
+            expect(event.batchSize).toBeGreaterThan(0);
+            expect(event.totalIndexed).toBeGreaterThan(0);
+            resolve();
+          });
+        }),
+        new Promise<void>((resolve) => {
+          indexManager.on('content_indexed', (event) => {
+            expect(event.entriesCount).toBe(10);
+            expect(event.duration).toBeGreaterThan(0);
+            expect(batchCount).toBeGreaterThan(0);
+            resolve();
+          });
+        }),
+      ];
 
-      indexManager.on('content_indexed', (event) => {
-        expect(event.entriesCount).toBe(10);
-        expect(event.duration).toBeGreaterThan(0);
-        expect(batchCount).toBeGreaterThan(0);
-        done();
-      });
-
-      indexManager.indexContent(entries);
+      await indexManager.indexContent(entries);
+      await Promise.all(eventPromises);
     });
 
     it('should validate entries before indexing', async () => {
@@ -144,38 +155,38 @@ describe('ForgeFlowIndexManager', () => {
             fileSize: 0,
             relatedIds: [],
             parentId: undefined,
-            childIds: []
+            childIds: [],
           },
-          lastModified: new Date()
-        }
+          lastModified: new Date(),
+        },
       ] as IndexEntry[];
 
-      await expect(indexManager.indexContent(invalidEntries))
-        .rejects.toThrow('Invalid entry: missing required fields');
+      await expect(indexManager.indexContent(invalidEntries)).rejects.toThrow(
+        'Invalid entry: missing required fields',
+      );
     });
 
     it('should reject overly large content', async () => {
       const largeContent = 'a'.repeat(config.maxContentLength + 1);
       const entries = [createTestEntry('large-1', 'Large Entry', largeContent)];
 
-      await expect(indexManager.indexContent(entries))
-        .rejects.toThrow('Entry content too long');
+      await expect(indexManager.indexContent(entries)).rejects.toThrow('Entry content too long');
     });
   });
 
   describe('Batch Operations', () => {
     it('should process batch operations', async () => {
       const entries = createTestEntries(5);
-      
-      const operations: IndexUpdateOperation[] = entries.map(entry => ({
+
+      const operations: IndexUpdateOperation[] = entries.map((entry) => ({
         type: 'insert',
-        entry
+        entry,
       }));
 
       const batch: IndexBatch = {
         operations,
         timestamp: new Date(),
-        source: 'test-batch'
+        source: 'test-batch',
       };
 
       await indexManager.indexBatch(batch);
@@ -198,13 +209,13 @@ describe('ForgeFlowIndexManager', () => {
       const operations: IndexUpdateOperation[] = [
         { type: 'insert', entry: newEntry },
         { type: 'update', entry: updatedEntry },
-        { type: 'delete', entry: initialEntries[1] }
+        { type: 'delete', entry: initialEntries[1] },
       ];
 
       const batch: IndexBatch = {
         operations,
         timestamp: new Date(),
-        source: 'mixed-batch'
+        source: 'mixed-batch',
       };
 
       await indexManager.indexBatch(batch);
@@ -213,29 +224,32 @@ describe('ForgeFlowIndexManager', () => {
       expect(stats.totalEntries).toBe(3); // 3 initial - 1 deleted + 1 new = 3
     });
 
-    it('should emit batch processing events', (done) => {
+    it('should emit batch processing events', async () => {
       const entries = createTestEntries(3);
-      const operations: IndexUpdateOperation[] = entries.map(entry => ({
+      const operations: IndexUpdateOperation[] = entries.map((entry) => ({
         type: 'insert',
-        entry
+        entry,
       }));
 
       const batch: IndexBatch = {
         operations,
         timestamp: new Date(),
-        source: 'event-test'
+        source: 'event-test',
       };
 
-      indexManager.on('batch_processed', (event) => {
-        expect(event.source).toBe('event-test');
-        expect(event.operationsCount).toBe(3);
-        expect(event.inserts).toBe(3);
-        expect(event.updates).toBe(0);
-        expect(event.deletes).toBe(0);
-        done();
+      const eventPromise = new Promise<void>((resolve) => {
+        indexManager.on('batch_processed', (event) => {
+          expect(event.source).toBe('event-test');
+          expect(event.operationsCount).toBe(3);
+          expect(event.inserts).toBe(3);
+          expect(event.updates).toBe(0);
+          expect(event.deletes).toBe(0);
+          resolve();
+        });
       });
 
-      indexManager.indexBatch(batch);
+      await indexManager.indexBatch(batch);
+      await eventPromise;
     });
   });
 
@@ -258,7 +272,7 @@ describe('ForgeFlowIndexManager', () => {
       await indexManager.indexContent(entries);
 
       // Delete half the entries to create fragmentation
-      const toDelete = entries.slice(0, 25).map(e => e.id);
+      const toDelete = entries.slice(0, 25).map((e) => e.id);
       await indexManager.removeFromIndex(toDelete);
 
       const result = await indexManager.vacuum();
@@ -283,31 +297,36 @@ describe('ForgeFlowIndexManager', () => {
     it('should rebuild index successfully', async () => {
       // This test would require mocked components since we don't have
       // actual Knowledge/Memory managers in test environment
-      
+
       await expect(indexManager.rebuildIndex()).resolves.not.toThrow();
     });
 
     it('should rebuild partial index by type', async () => {
-      await expect(
-        indexManager.rebuildPartialIndex('knowledge')
-      ).resolves.not.toThrow();
+      await expect(indexManager.rebuildPartialIndex('knowledge')).resolves.not.toThrow();
     });
 
-    it('should emit rebuild events', (done) => {
+    it('should emit rebuild events', async () => {
       let startEventReceived = false;
 
-      indexManager.on('rebuild_started', () => {
-        startEventReceived = true;
-      });
+      const eventPromises = [
+        new Promise<void>((resolve) => {
+          indexManager.on('rebuild_started', () => {
+            startEventReceived = true;
+            resolve();
+          });
+        }),
+        new Promise<void>((resolve) => {
+          indexManager.on('rebuild_completed', (event) => {
+            expect(startEventReceived).toBe(true);
+            expect(event.totalEntries).toBeGreaterThanOrEqual(0);
+            expect(event.duration).toBeGreaterThan(0);
+            resolve();
+          });
+        }),
+      ];
 
-      indexManager.on('rebuild_completed', (event) => {
-        expect(startEventReceived).toBe(true);
-        expect(event.totalEntries).toBeGreaterThanOrEqual(0);
-        expect(event.duration).toBeGreaterThan(0);
-        done();
-      });
-
-      indexManager.rebuildIndex();
+      await indexManager.rebuildIndex();
+      await Promise.all(eventPromises);
     });
   });
 
@@ -316,58 +335,69 @@ describe('ForgeFlowIndexManager', () => {
       const invalidEntry = {
         // Missing required fields
         id: 'invalid',
-        type: 'knowledge'
+        type: 'knowledge',
       } as IndexEntry;
 
-      await expect(indexManager.indexContent([invalidEntry]))
-        .rejects.toThrow();
+      await expect(indexManager.indexContent([invalidEntry])).rejects.toThrow();
     });
 
-    it('should emit error events', (done) => {
+    it('should emit error events', async () => {
       const invalidEntry = {
         id: 'invalid',
-        type: 'knowledge'
+        type: 'knowledge',
       } as IndexEntry;
 
-      indexManager.on('indexing_error', (event) => {
-        expect(event.error).toBeDefined();
-        expect(event.entriesCount).toBe(1);
-        done();
+      const eventPromise = new Promise<void>((resolve) => {
+        indexManager.on('indexing_error', (event) => {
+          expect(event.error).toBeDefined();
+          expect(event.entriesCount).toBe(1);
+          resolve();
+        });
       });
 
-      indexManager.indexContent([invalidEntry]).catch(() => {
+      try {
+        await indexManager.indexContent([invalidEntry]);
+      } catch {
         // Expected to fail
-      });
+      }
+
+      await eventPromise;
     });
 
-    it('should handle batch errors gracefully', (done) => {
+    it('should handle batch errors gracefully', async () => {
       const invalidOperation: IndexUpdateOperation = {
         type: 'insert',
-        entry: {} as IndexEntry // Invalid entry
+        entry: {} as IndexEntry, // Invalid entry
       };
 
       const batch: IndexBatch = {
         operations: [invalidOperation],
         timestamp: new Date(),
-        source: 'error-test'
+        source: 'error-test',
       };
 
-      indexManager.on('batch_error', (event) => {
-        expect(event.error).toBeDefined();
-        expect(event.batch.source).toBe('error-test');
-        done();
+      const eventPromise = new Promise<void>((resolve) => {
+        indexManager.on('batch_error', (event) => {
+          expect(event.error).toBeDefined();
+          expect(event.batch.source).toBe('error-test');
+          resolve();
+        });
       });
 
-      indexManager.indexBatch(batch).catch(() => {
+      try {
+        await indexManager.indexBatch(batch);
+      } catch {
         // Expected to fail
-      });
+      }
+
+      await eventPromise;
     });
   });
 
   describe('Performance Monitoring', () => {
     it('should track indexing performance', async () => {
       const entries = createTestEntries(100);
-      
+
       const startTime = Date.now();
       await indexManager.indexContent(entries);
       const endTime = Date.now();
@@ -387,20 +417,20 @@ describe('ForgeFlowIndexManager', () => {
     it('should handle concurrent operations', async () => {
       const batches = Array.from({ length: 5 }, (_, i) => {
         const entries = createTestEntries(10, `batch-${i}`);
-        const operations: IndexUpdateOperation[] = entries.map(entry => ({
+        const operations: IndexUpdateOperation[] = entries.map((entry) => ({
           type: 'insert',
-          entry
+          entry,
         }));
 
         return {
           operations,
           timestamp: new Date(),
-          source: `concurrent-batch-${i}`
+          source: `concurrent-batch-${i}`,
         } as IndexBatch;
       });
 
       const startTime = Date.now();
-      await Promise.all(batches.map(batch => indexManager.indexBatch(batch)));
+      await Promise.all(batches.map((batch) => indexManager.indexBatch(batch)));
       const endTime = Date.now();
 
       const totalTime = endTime - startTime;
@@ -428,7 +458,7 @@ describe('ForgeFlowIndexManager', () => {
       const searchEngine = indexManager.getSearchEngine();
       const results = await searchEngine.search({
         query: 'test content',
-        limit: 5
+        limit: 5,
       });
 
       expect(results.results.length).toBeGreaterThan(0);
@@ -438,10 +468,10 @@ describe('ForgeFlowIndexManager', () => {
 
   // Helper functions
   function createTestEntry(
-    id: string, 
-    title: string, 
+    id: string,
+    title: string,
     content: string,
-    tags: string[] = ['test']
+    tags: string[] = ['test'],
   ): IndexEntry {
     return {
       id,
@@ -449,6 +479,7 @@ describe('ForgeFlowIndexManager', () => {
       title,
       content,
       path: `test/${id}`,
+      hash: `hash-${id}`,
       metadata: {
         tags,
         category: 'test',
@@ -460,20 +491,20 @@ describe('ForgeFlowIndexManager', () => {
         fileSize: content.length,
         relatedIds: [],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       },
-      lastModified: new Date()
+      lastModified: new Date(),
     };
   }
 
   function createTestEntries(count: number, prefix = 'test'): IndexEntry[] {
-    return Array.from({ length: count }, (_, i) => 
+    return Array.from({ length: count }, (_, i) =>
       createTestEntry(
         `${prefix}-entry-${i}`,
         `Test Entry ${i}`,
         `This is test content for entry ${i}. It contains searchable text and various keywords for testing indexing functionality.`,
-        ['test', `tag-${i % 3}`]
-      )
+        ['test', `tag-${i % 3}`],
+      ),
     );
   }
 });

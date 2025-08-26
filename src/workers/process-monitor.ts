@@ -1,6 +1,6 @@
 /**
  * ProcessMonitor - Advanced Process Health Monitoring
- * 
+ *
  * Provides real-time process monitoring, resource tracking, and health assessment
  * with cross-platform support, alerting, and automatic remediation capabilities.
  */
@@ -23,7 +23,7 @@ export interface ProcessResourceLimits {
 export interface ProcessMonitoringData {
   processId: string;
   pid: number;
-  
+
   // Resource usage
   memoryMB: number;
   cpuPercent: number;
@@ -32,23 +32,23 @@ export interface ProcessMonitoringData {
   diskWriteMB: number;
   networkRxMB: number;
   networkTxMB: number;
-  
+
   // System metrics
   threadCount: number;
   handleCount: number;
-  
+
   // Timing
   executionTimeMs: number;
   lastUpdate: Date;
-  
+
   // Health indicators
   responsiveness: number; // 0-100 scale
   stability: number; // 0-100 scale
-  
+
   // Resource trends (last 5 minutes)
   memoryTrend: number[]; // MB values
   cpuTrend: number[]; // Percentage values
-  
+
   // Violation tracking
   violations: {
     memory: number;
@@ -63,7 +63,7 @@ export interface ProcessHealthReport {
   pid: number;
   healthScore: number; // 0-100, 100 being perfect health
   status: 'healthy' | 'warning' | 'critical' | 'failing';
-  
+
   issues: Array<{
     type: 'memory' | 'cpu' | 'time' | 'handles' | 'disk' | 'network' | 'responsiveness';
     severity: 'low' | 'medium' | 'high' | 'critical';
@@ -72,7 +72,7 @@ export interface ProcessHealthReport {
     threshold: number;
     trend: 'improving' | 'stable' | 'deteriorating';
   }>;
-  
+
   recommendations: string[];
   timestamp: Date;
 }
@@ -95,16 +95,16 @@ export class ProcessMonitor extends EventEmitter {
   private logger: LogContext;
   private limits: ProcessResourceLimits;
   private config: ProcessMonitorConfig;
-  
+
   // Monitoring data
   private monitoredProcesses: Map<string, ProcessMonitoringData>;
   private pidToProcessId: Map<number, string>;
   private monitoringIntervals: Map<string, NodeJS.Timeout>;
-  
+
   // Health assessment
   private healthReports: Map<string, ProcessHealthReport>;
   private alertHistory: Map<string, Date[]>;
-  
+
   // System monitoring
   private systemMonitoringInterval: NodeJS.Timeout | null = null;
   private systemMetrics: {
@@ -119,7 +119,7 @@ export class ProcessMonitor extends EventEmitter {
     super();
     this.logger = new LogContext('ProcessMonitor');
     this.limits = limits;
-    
+
     this.config = {
       monitoringInterval: 1000, // 1 second
       trendHistoryLength: 300, // 5 minutes at 1-second intervals
@@ -132,9 +132,9 @@ export class ProcessMonitor extends EventEmitter {
         responsivenessWarning: 70,
         responsivenessCritical: 50,
       },
-      ...config
+      ...config,
     };
-    
+
     this.monitoredProcesses = new Map();
     this.pidToProcessId = new Map();
     this.monitoringIntervals = new Map();
@@ -153,10 +153,10 @@ export class ProcessMonitor extends EventEmitter {
         async () => {
           // Collect initial system metrics
           await this.updateSystemMetrics();
-          
+
           // Start system monitoring
           this.startSystemMonitoring();
-          
+
           // Setup cleanup handlers
           this.setupCleanupHandlers();
         },
@@ -165,12 +165,11 @@ export class ProcessMonitor extends EventEmitter {
           category: ErrorCategory.CONFIGURATION,
           retries: 2,
           timeoutMs: 10000,
-        }
+        },
       );
 
       this.logger.info('Process Monitor initialized successfully');
       this.emit('monitor:initialized', this.systemMetrics);
-
     } catch (error) {
       this.logger.error('Failed to initialize Process Monitor', error);
       throw error;
@@ -204,12 +203,12 @@ export class ProcessMonitor extends EventEmitter {
         cpu: 0,
         execution: 0,
         handles: 0,
-      }
+      },
     };
 
     this.monitoredProcesses.set(processId, monitoringData);
     this.pidToProcessId.set(pid, processId);
-    
+
     this.logger.debug(`Registered process for monitoring: ${processId} (PID: ${pid})`);
     this.emit('process:registered', { processId, pid });
   }
@@ -225,7 +224,7 @@ export class ProcessMonitor extends EventEmitter {
 
     // Stop existing monitoring if any
     this.stopMonitoring(processId);
-    
+
     // Start periodic monitoring
     const interval = setInterval(async () => {
       try {
@@ -236,9 +235,9 @@ export class ProcessMonitor extends EventEmitter {
         // Don't stop monitoring on errors, just log them
       }
     }, this.config.monitoringInterval);
-    
+
     this.monitoringIntervals.set(processId, interval);
-    
+
     this.logger.debug(`Started monitoring process: ${processId}`);
     this.emit('monitoring:started', { processId });
   }
@@ -252,7 +251,7 @@ export class ProcessMonitor extends EventEmitter {
       clearInterval(interval);
       this.monitoringIntervals.delete(processId);
     }
-    
+
     const monitoringData = this.monitoredProcesses.get(processId);
     if (monitoringData) {
       this.pidToProcessId.delete(monitoringData.pid);
@@ -260,7 +259,7 @@ export class ProcessMonitor extends EventEmitter {
       this.healthReports.delete(processId);
       this.alertHistory.delete(processId);
     }
-    
+
     this.logger.debug(`Stopped monitoring process: ${processId}`);
     this.emit('monitoring:stopped', { processId });
   }
@@ -319,29 +318,28 @@ export class ProcessMonitor extends EventEmitter {
 
     try {
       const startTime = Date.now();
-      
+
       // Get process metrics based on platform
       if (os.platform() === 'win32') {
         await this.updateWindowsProcessMetrics(monitoringData);
       } else {
         await this.updateUnixProcessMetrics(monitoringData);
       }
-      
+
       // Update execution time
       monitoringData.executionTimeMs = Date.now() - startTime;
       monitoringData.lastUpdate = new Date();
-      
+
       // Update trends
       this.updateTrends(monitoringData);
-      
+
       // Check for violations
       this.checkResourceViolations(monitoringData);
-      
+
       this.emit('metrics:updated', { processId, data: monitoringData });
-      
     } catch (error) {
       this.logger.error(`Failed to update metrics for process ${processId}`, error);
-      
+
       // Mark as unresponsive if we can't get metrics
       monitoringData.responsiveness = Math.max(0, monitoringData.responsiveness - 10);
       monitoringData.stability = Math.max(0, monitoringData.stability - 5);
@@ -364,11 +362,11 @@ export class ProcessMonitor extends EventEmitter {
       status: 'healthy',
       issues: [],
       recommendations: [],
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     let healthScore = 100;
-    
+
     // Memory health assessment
     const memoryUsagePercent = (monitoringData.memoryMB / this.limits.maxMemoryMB) * 100;
     if (memoryUsagePercent >= this.config.alertThresholds.memoryCriticalPercent) {
@@ -379,7 +377,7 @@ export class ProcessMonitor extends EventEmitter {
         description: `Memory usage critically high: ${memoryUsagePercent.toFixed(1)}%`,
         currentValue: monitoringData.memoryMB,
         threshold: this.limits.maxMemoryMB,
-        trend: this.calculateTrend(monitoringData.memoryTrend)
+        trend: this.calculateTrend(monitoringData.memoryTrend),
       });
       healthReport.recommendations.push('Consider restarting process or increasing memory limits');
     } else if (memoryUsagePercent >= this.config.alertThresholds.memoryWarningPercent) {
@@ -390,11 +388,11 @@ export class ProcessMonitor extends EventEmitter {
         description: `Memory usage high: ${memoryUsagePercent.toFixed(1)}%`,
         currentValue: monitoringData.memoryMB,
         threshold: this.limits.maxMemoryMB,
-        trend: this.calculateTrend(monitoringData.memoryTrend)
+        trend: this.calculateTrend(monitoringData.memoryTrend),
       });
       healthReport.recommendations.push('Monitor memory usage and consider optimizations');
     }
-    
+
     // CPU health assessment
     const cpuUsagePercent = (monitoringData.cpuPercent / this.limits.maxCpuPercent) * 100;
     if (monitoringData.cpuPercent >= this.config.alertThresholds.cpuCriticalPercent) {
@@ -405,7 +403,7 @@ export class ProcessMonitor extends EventEmitter {
         description: `CPU usage critically high: ${monitoringData.cpuPercent.toFixed(1)}%`,
         currentValue: monitoringData.cpuPercent,
         threshold: this.limits.maxCpuPercent,
-        trend: this.calculateTrend(monitoringData.cpuTrend)
+        trend: this.calculateTrend(monitoringData.cpuTrend),
       });
       healthReport.recommendations.push('Process may need optimization or resource adjustment');
     } else if (monitoringData.cpuPercent >= this.config.alertThresholds.cpuWarningPercent) {
@@ -416,10 +414,10 @@ export class ProcessMonitor extends EventEmitter {
         description: `CPU usage high: ${monitoringData.cpuPercent.toFixed(1)}%`,
         currentValue: monitoringData.cpuPercent,
         threshold: this.limits.maxCpuPercent,
-        trend: this.calculateTrend(monitoringData.cpuTrend)
+        trend: this.calculateTrend(monitoringData.cpuTrend),
       });
     }
-    
+
     // Execution time assessment
     if (monitoringData.executionTimeMs > this.limits.maxExecutionTimeMs) {
       healthScore -= 15;
@@ -429,11 +427,11 @@ export class ProcessMonitor extends EventEmitter {
         description: `Execution time exceeded: ${(monitoringData.executionTimeMs / 1000).toFixed(1)}s`,
         currentValue: monitoringData.executionTimeMs,
         threshold: this.limits.maxExecutionTimeMs,
-        trend: 'deteriorating'
+        trend: 'deteriorating',
       });
       healthReport.recommendations.push('Process may be stuck or running inefficiently');
     }
-    
+
     // File handles assessment
     if (monitoringData.fileHandles > this.limits.maxFileHandles) {
       healthScore -= 10;
@@ -443,11 +441,11 @@ export class ProcessMonitor extends EventEmitter {
         description: `File handles exceeded: ${monitoringData.fileHandles}`,
         currentValue: monitoringData.fileHandles,
         threshold: this.limits.maxFileHandles,
-        trend: 'stable'
+        trend: 'stable',
       });
       healthReport.recommendations.push('Check for file handle leaks');
     }
-    
+
     // Responsiveness assessment
     if (monitoringData.responsiveness < this.config.alertThresholds.responsivenessCritical) {
       healthScore -= 20;
@@ -457,7 +455,7 @@ export class ProcessMonitor extends EventEmitter {
         description: `Process unresponsive: ${monitoringData.responsiveness}%`,
         currentValue: monitoringData.responsiveness,
         threshold: this.config.alertThresholds.responsivenessCritical,
-        trend: 'deteriorating'
+        trend: 'deteriorating',
       });
       healthReport.recommendations.push('Process may be deadlocked or frozen');
     } else if (monitoringData.responsiveness < this.config.alertThresholds.responsivenessWarning) {
@@ -468,13 +466,13 @@ export class ProcessMonitor extends EventEmitter {
         description: `Process sluggish: ${monitoringData.responsiveness}%`,
         currentValue: monitoringData.responsiveness,
         threshold: this.config.alertThresholds.responsivenessWarning,
-        trend: 'deteriorating'
+        trend: 'deteriorating',
       });
     }
-    
+
     // Determine overall status
     healthReport.healthScore = Math.max(0, healthScore);
-    
+
     if (healthReport.healthScore >= 80) {
       healthReport.status = 'healthy';
     } else if (healthReport.healthScore >= 60) {
@@ -484,18 +482,18 @@ export class ProcessMonitor extends EventEmitter {
     } else {
       healthReport.status = 'failing';
     }
-    
+
     // Store the report
     this.healthReports.set(processId, healthReport);
-    
+
     // Emit health events
     if (healthReport.status !== 'healthy') {
       this.emit('health:alert', healthReport);
       this.recordAlert(processId);
     }
-    
+
     this.emit('health:assessed', healthReport);
-    
+
     return healthReport;
   }
 
@@ -504,23 +502,19 @@ export class ProcessMonitor extends EventEmitter {
   private async updateWindowsProcessMetrics(data: ProcessMonitoringData): Promise<void> {
     try {
       // Use wmic or PowerShell to get process metrics on Windows
-      const result = await this.executeCommand(
-        'powershell',
-        [
-          '-Command',
-          `Get-Process -Id ${data.pid} | Select-Object WorkingSet,CPU,Handles,Threads | ConvertTo-Json`
-        ]
-      );
-      
+      const result = await this.executeCommand('powershell', [
+        '-Command',
+        `Get-Process -Id ${data.pid} | Select-Object WorkingSet,CPU,Handles,Threads | ConvertTo-Json`,
+      ]);
+
       const metrics = JSON.parse(result);
-      
+
       // Update metrics (WorkingSet is in bytes)
       data.memoryMB = Math.round((metrics.WorkingSet || 0) / (1024 * 1024));
       data.cpuPercent = Math.round(metrics.CPU || 0);
       data.handleCount = metrics.Handles || 0;
       data.threadCount = metrics.Threads || 0;
       data.fileHandles = Math.min(data.handleCount, this.limits.maxFileHandles); // Approximation
-      
     } catch (error) {
       this.logger.debug(`Failed to get Windows metrics for PID ${data.pid}`, error);
       // Fall back to basic Node.js process metrics
@@ -532,18 +526,20 @@ export class ProcessMonitor extends EventEmitter {
     try {
       // Use ps command to get process metrics on Unix-like systems
       const result = await this.executeCommand('ps', [
-        '-p', String(data.pid),
-        '-o', 'rss,pcpu,nlwp', // RSS memory, CPU%, thread count
-        '--no-headers'
+        '-p',
+        String(data.pid),
+        '-o',
+        'rss,pcpu,nlwp', // RSS memory, CPU%, thread count
+        '--no-headers',
       ]);
-      
+
       const values = result.trim().split(/\s+/);
       if (values.length >= 2) {
         data.memoryMB = Math.round(parseInt(values[0] || '0') / 1024); // RSS in KB, convert to MB
         data.cpuPercent = Math.round(parseFloat(values[1] || '0'));
         data.threadCount = parseInt(values[2] || '1');
       }
-      
+
       // Get file descriptor count
       try {
         const fdDir = `/proc/${data.pid}/fd`;
@@ -554,7 +550,6 @@ export class ProcessMonitor extends EventEmitter {
       } catch {
         // Ignore errors getting file handles
       }
-      
     } catch (error) {
       this.logger.debug(`Failed to get Unix metrics for PID ${data.pid}`, error);
       // Fall back to basic Node.js process metrics
@@ -568,7 +563,7 @@ export class ProcessMonitor extends EventEmitter {
       if (data.pid === process.pid) {
         const memUsage = process.memoryUsage();
         const cpuUsage = process.cpuUsage();
-        
+
         data.memoryMB = Math.round(memUsage.rss / (1024 * 1024));
         data.cpuPercent = Math.round(((cpuUsage.user + cpuUsage.system) / 1000000) * 100);
       } else {
@@ -589,11 +584,10 @@ export class ProcessMonitor extends EventEmitter {
         availableMemoryMB: Math.round(os.freemem() / (1024 * 1024)),
         cpuCores: os.cpus().length,
         loadAverage: os.loadavg(),
-        uptime: os.uptime()
+        uptime: os.uptime(),
       };
-      
+
       this.emit('system:metrics-updated', this.systemMetrics);
-      
     } catch (error) {
       this.logger.error('Failed to update system metrics', error);
     }
@@ -603,7 +597,7 @@ export class ProcessMonitor extends EventEmitter {
     // Add current values to trends
     data.memoryTrend.push(data.memoryMB);
     data.cpuTrend.push(data.cpuPercent);
-    
+
     // Trim trends to configured length
     if (data.memoryTrend.length > this.config.trendHistoryLength) {
       data.memoryTrend = data.memoryTrend.slice(-this.config.trendHistoryLength);
@@ -617,19 +611,19 @@ export class ProcessMonitor extends EventEmitter {
     if (values.length < 10) {
       return 'stable';
     }
-    
+
     const recent = values.slice(-10);
     const older = values.slice(-20, -10);
-    
+
     if (older.length === 0) {
       return 'stable';
     }
-    
+
     const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
     const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
-    
+
     const change = ((recentAvg - olderAvg) / olderAvg) * 100;
-    
+
     if (change < -10) {
       return 'improving';
     } else if (change > 10) {
@@ -649,10 +643,10 @@ export class ProcessMonitor extends EventEmitter {
         type: 'memory',
         current: data.memoryMB,
         limit: this.limits.maxMemoryMB,
-        severity: 'critical'
+        severity: 'critical',
       });
     }
-    
+
     // Check CPU violation
     if (data.cpuPercent > this.limits.maxCpuPercent) {
       data.violations.cpu++;
@@ -662,10 +656,10 @@ export class ProcessMonitor extends EventEmitter {
         type: 'cpu',
         current: data.cpuPercent,
         limit: this.limits.maxCpuPercent,
-        severity: 'high'
+        severity: 'high',
       });
     }
-    
+
     // Check file handles violation
     if (data.fileHandles > this.limits.maxFileHandles) {
       data.violations.handles++;
@@ -675,7 +669,7 @@ export class ProcessMonitor extends EventEmitter {
         type: 'handles',
         current: data.fileHandles,
         limit: this.limits.maxFileHandles,
-        severity: 'medium'
+        severity: 'medium',
       });
     }
   }
@@ -683,11 +677,11 @@ export class ProcessMonitor extends EventEmitter {
   private recordAlert(processId: string): void {
     const alerts = this.alertHistory.get(processId) || [];
     alerts.push(new Date());
-    
+
     // Keep only recent alerts (last hour)
     const cutoff = new Date(Date.now() - 3600000);
-    const recentAlerts = alerts.filter(date => date > cutoff);
-    
+    const recentAlerts = alerts.filter((date) => date > cutoff);
+
     this.alertHistory.set(processId, recentAlerts);
   }
 
@@ -696,15 +690,15 @@ export class ProcessMonitor extends EventEmitter {
       const child = spawn(command, args, { stdio: ['ignore', 'pipe', 'pipe'] });
       let stdout = '';
       let stderr = '';
-      
+
       child.stdout?.on('data', (data) => {
         stdout += data.toString();
       });
-      
+
       child.stderr?.on('data', (data) => {
         stderr += data.toString();
       });
-      
+
       child.on('close', (code) => {
         if (code === 0) {
           resolve(stdout.trim());
@@ -712,11 +706,11 @@ export class ProcessMonitor extends EventEmitter {
           reject(new Error(`Command failed with code ${code}: ${stderr}`));
         }
       });
-      
+
       child.on('error', (error) => {
         reject(error);
       });
-      
+
       // Timeout after 5 seconds
       setTimeout(() => {
         child.kill();
@@ -729,14 +723,14 @@ export class ProcessMonitor extends EventEmitter {
     this.systemMonitoringInterval = setInterval(async () => {
       await this.updateSystemMetrics();
     }, 30000); // Update every 30 seconds
-    
+
     this.logger.debug('System monitoring started');
   }
 
   private setupCleanupHandlers(): void {
     process.on('SIGINT', () => this.shutdown().catch(console.error));
     process.on('SIGTERM', () => this.shutdown().catch(console.error));
-    
+
     process.on('uncaughtException', (error) => {
       this.logger.error('Uncaught exception in ProcessMonitor', error);
     });
@@ -756,7 +750,7 @@ export class ProcessMonitor extends EventEmitter {
   } {
     const processes = this.getAllProcessData();
     const healthReports = this.getAllHealthReports();
-    
+
     let totalViolations = 0;
     const violationsByType: Record<string, number> = {
       memory: 0,
@@ -764,27 +758,28 @@ export class ProcessMonitor extends EventEmitter {
       execution: 0,
       handles: 0,
     };
-    
+
     let totalAlerts = 0;
-    
+
     for (const process of processes) {
       totalViolations += Object.values(process.violations).reduce((a, b) => a + b, 0);
-      
-      Object.keys(violationsByType).forEach(key => {
+
+      Object.keys(violationsByType).forEach((key) => {
         violationsByType[key] += process.violations[key as keyof typeof process.violations];
       });
     }
-    
+
     for (const alerts of this.alertHistory.values()) {
       totalAlerts += alerts.length;
     }
-    
-    const healthyProcesses = healthReports.filter(r => r.status === 'healthy').length;
+
+    const healthyProcesses = healthReports.filter((r) => r.status === 'healthy').length;
     const unhealthyProcesses = healthReports.length - healthyProcesses;
-    const averageHealthScore = healthReports.length > 0 
-      ? healthReports.reduce((sum, r) => sum + r.healthScore, 0) / healthReports.length 
-      : 100;
-    
+    const averageHealthScore =
+      healthReports.length > 0
+        ? healthReports.reduce((sum, r) => sum + r.healthScore, 0) / healthReports.length
+        : 100;
+
     return {
       monitoredProcesses: processes.length,
       totalViolations,
@@ -808,22 +803,21 @@ export class ProcessMonitor extends EventEmitter {
         clearInterval(this.systemMonitoringInterval);
         this.systemMonitoringInterval = null;
       }
-      
+
       // Stop all process monitoring
       const processIds = Array.from(this.monitoringIntervals.keys());
       for (const processId of processIds) {
         this.stopMonitoring(processId);
       }
-      
+
       // Clear all data
       this.monitoredProcesses.clear();
       this.pidToProcessId.clear();
       this.healthReports.clear();
       this.alertHistory.clear();
-      
+
       this.logger.info('Process Monitor shutdown complete');
       this.emit('monitor:shutdown', this.getStats());
-      
     } catch (error) {
       this.logger.error('Error during Process Monitor shutdown', error);
       throw error;

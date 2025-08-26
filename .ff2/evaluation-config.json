@@ -1,0 +1,19 @@
+{
+  "loggingBasePath": "/invalid/path/that/does/not/exist",
+  "jobsLogFile": "jobs.ndjson",
+  "analysisInterval": 0,
+  "promotionThreshold": 0.8,
+  "demotionThreshold": 0.3,
+  "patternAnalysisWindow": 30,
+  "performanceThresholds": {
+    "jobLoggingMs": 10,
+    "patternAnalysisMs": 100,
+    "analyticsGenerationMs": 2000,
+    "qualityAssessmentMs": 100
+  },
+  "mlConfig": {
+    "enabled": true,
+    "trainingDataSize": 1000,
+    "retrainInterval": 7
+  }
+}

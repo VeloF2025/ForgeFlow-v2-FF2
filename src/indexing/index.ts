@@ -20,7 +20,7 @@ export {
   IndexIntegrationService,
   ForgeFlowIndexRegistry,
   VectorSearchProvider,
-  IndexPerformanceOptimizer
+  IndexPerformanceOptimizer,
 };
 
 // 🟢 WORKING: Export all types including new interfaces
@@ -39,8 +39,12 @@ export type {
   SearchResults,
   SearchResult,
   IndexConfig,
-  IndexStats
+  IndexStats,
 } from './types.js';
+
+// Re-export optimizer and registry types
+export type { OptimizerStats } from './performance-optimizer.js';
+export type { RegistryStats } from './index-registry.js';
 
 // 🟢 WORKING: Enhanced factory function with provider registry and optimization
 export function createIndexLayer(config: IndexLayerConfig = {}) {
@@ -61,7 +65,7 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
     enableMetrics: true,
     queryCacheSize: config.queryCacheSize || 2000,
     snippetCacheSize: config.snippetCacheSize || 10000,
-    facetCacheSize: config.facetCacheSize || 1000
+    facetCacheSize: config.facetCacheSize || 1000,
   });
 
   // 🟢 WORKING: Create index manager with FTS5 engine
@@ -83,7 +87,7 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
     maxSnippets: config.maxSnippets || 5,
     autoVacuum: config.autoVacuum ?? true,
     vacuumThreshold: config.vacuumThreshold || 80,
-    retentionDays: config.retentionDays || 90
+    retentionDays: config.retentionDays || 90,
   });
 
   // 🟢 WORKING: Create SQLite FTS5 provider adapter
@@ -96,11 +100,11 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
       vectorDimension: config.vectorDimension || 384,
       similarityMetric: config.similarityMetric || 'cosine',
       embeddingModel: config.embeddingModel || 'sentence-transformers/all-MiniLM-L6-v2',
-      useLocalEmbeddings: config.useLocalEmbeddings ?? true
+      useLocalEmbeddings: config.useLocalEmbeddings ?? true,
     });
-    
+
     registry.registerProvider(vectorProvider);
-    
+
     // Set up hybrid search
     vectorProvider.setTextSearchProvider(fts5Provider);
   }
@@ -109,12 +113,12 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
   const optimizer = new IndexPerformanceOptimizer({
     analysisWindowHours: config.optimizationWindow || 24,
     optimizationIntervalMinutes: config.optimizationInterval || 60,
-    autoOptimizeEnabled: config.autoOptimize ?? true
+    autoOptimizeEnabled: config.autoOptimize ?? true,
   });
 
   // 🟢 WORKING: Register providers with optimizer
   optimizer.registerProvider('sqlite-fts5', fts5Provider);
-  
+
   // 🟢 WORKING: Create integration service with enhanced features
   const integrationService = new IndexIntegrationService(indexManager);
 
@@ -136,11 +140,11 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
     integrationService,
     registry,
     optimizer,
-    
+
     // 🟢 WORKING: Direct access to engines
     fts5Engine,
     searchEngine: indexManager.getSearchEngine(),
-    
+
     // 🟢 WORKING: High-level operations with automatic provider selection
     async search(query: any) {
       optimizer.recordQuery(query, 0, 0); // Will be updated with actual metrics
@@ -154,7 +158,7 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
         throw error;
       }
     },
-    
+
     async index(entries: any[]) {
       return registry.index(entries);
     },
@@ -164,12 +168,12 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
       const registryStats = registry.getRegistryStats();
       const optimizerStats = optimizer.getOptimizationStats();
       const indexStats = await indexManager.getStats();
-      
+
       return {
         registry: registryStats,
         optimizer: optimizerStats,
         index: indexStats,
-        fts5: await fts5Engine.getMetrics()
+        fts5: await fts5Engine.getMetrics(),
       };
     },
 
@@ -177,20 +181,18 @@ export function createIndexLayer(config: IndexLayerConfig = {}) {
       const providerInfos = registry.listProviders();
       return {
         providers: providerInfos,
-        overallHealth: providerInfos.every(p => p.health.status === 'healthy') ? 'healthy' : 'degraded'
+        overallHealth: providerInfos.every((p) => p.health.status === 'healthy')
+          ? 'healthy'
+          : 'degraded',
       };
     },
 
     // 🟢 WORKING: Graceful shutdown
     async shutdown() {
       console.log('🛑 Shutting down enhanced Index Layer...');
-      await Promise.all([
-        registry.shutdown(),
-        optimizer.shutdown(),
-        indexManager.shutdown()
-      ]);
+      await Promise.all([registry.shutdown(), optimizer.shutdown(), indexManager.shutdown()]);
       console.log('✅ Enhanced Index Layer shutdown complete');
-    }
+    },
   };
 }
 
@@ -206,33 +208,33 @@ function createFTS5ProviderAdapter(fts5Engine: SQLiteFTS5Engine): any {
       facetedSearch: true,
       geospatialSearch: false,
       maxContentLength: 100000,
-      supportedLanguages: ['en', 'multilingual']
+      supportedLanguages: ['en', 'multilingual'],
     },
-    
+
     async initialize(config: any) {
       return fts5Engine.initialize();
     },
-    
+
     async shutdown() {
       return fts5Engine.shutdown();
     },
-    
+
     async index(entries: any[]) {
       return fts5Engine.indexEntries(entries);
     },
-    
+
     async search(query: any) {
       return fts5Engine.search(query);
     },
-    
+
     async delete(ids: string[]) {
       return fts5Engine.deleteEntries(ids);
     },
-    
+
     async getHealth() {
       return fts5Engine.getHealth();
     },
-    
+
     async getStats() {
       const metrics = await fts5Engine.getMetrics();
       return {
@@ -240,9 +242,9 @@ function createFTS5ProviderAdapter(fts5Engine: SQLiteFTS5Engine): any {
         indexSize: metrics.indexSize,
         queriesPerSecond: metrics.totalQueries / (metrics.averageQueryTime / 1000 || 1),
         averageLatency: metrics.averageQueryTime,
-        cacheHitRate: metrics.cacheHitRate
+        cacheHitRate: metrics.cacheHitRate,
       };
-    }
+    },
   };
 }
 
@@ -251,40 +253,40 @@ export interface IndexLayerConfig {
   // Database configuration
   databasePath?: string;
   maxDatabaseSize?: number;
-  
+
   // Search configuration
   tokenizer?: 'unicode61' | 'porter' | 'simple' | 'ascii';
   removeAccents?: boolean;
   caseSensitive?: boolean;
-  
+
   // Performance configuration
   cacheSize?: number;
   synchronous?: 'off' | 'normal' | 'full';
   journalMode?: 'delete' | 'truncate' | 'persist' | 'memory' | 'wal';
-  
+
   // Performance configuration
   batchSize?: number;
   maxContentLength?: number;
   queryCacheSize?: number;
   snippetCacheSize?: number;
   facetCacheSize?: number;
-  
+
   // UI configuration
   defaultLimit?: number;
   maxLimit?: number;
   snippetLength?: number;
   maxSnippets?: number;
-  
+
   // Maintenance configuration
   autoVacuum?: boolean;
   vacuumThreshold?: number;
   retentionDays?: number;
-  
+
   // Provider registry configuration
   healthCheckInterval?: number;
   loadBalancing?: 'round-robin' | 'least-latency' | 'health-based' | 'active-first';
   fallbackChain?: string[];
-  
+
   // Vector search configuration
   enableVectorSearch?: boolean;
   enableVectorIndex?: boolean;
@@ -292,7 +294,7 @@ export interface IndexLayerConfig {
   similarityMetric?: 'cosine' | 'euclidean' | 'dot';
   embeddingModel?: string;
   useLocalEmbeddings?: boolean;
-  
+
   // Optimization configuration
   optimizationWindow?: number;
   optimizationInterval?: number;

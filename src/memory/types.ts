@@ -8,16 +8,16 @@ export interface JobMemory {
   startTime: Date;
   endTime?: Date;
   status: 'running' | 'completed' | 'failed' | 'interrupted';
-  
+
   // Memory components
   decisions: Decision[];
   gotchas: Gotcha[];
   context: ContextEntry[];
   outcomes: Outcome[];
-  
+
   // Job metadata
   metadata: MemoryMetadata;
-  
+
   // Analytics tracking
   analytics: JobAnalytics;
 }
@@ -78,7 +78,12 @@ export interface ContextEntry {
   id: string;
   timestamp: Date;
   agentType: string;
-  type: 'code-analysis' | 'pattern-match' | 'knowledge-retrieval' | 'decision-input' | 'error-context';
+  type:
+    | 'code-analysis'
+    | 'pattern-match'
+    | 'knowledge-retrieval'
+    | 'decision-input'
+    | 'error-context';
   source: string; // File path, API endpoint, knowledge card ID, etc.
   content: string; // The actual context content
   relevanceScore: number; // 0-1 score
@@ -231,28 +236,39 @@ export interface IMemoryManager {
   getJobMemory(jobId: string): Promise<JobMemory | null>;
   updateJobMemory(jobId: string, updates: Partial<JobMemory>): Promise<JobMemory>;
   completeJobMemory(jobId: string, finalOutcome: Outcome): Promise<JobMemory>;
-  
+
   // Memory components
   recordDecision(jobId: string, decision: Omit<Decision, 'id' | 'timestamp'>): Promise<Decision>;
   recordGotcha(jobId: string, gotcha: Omit<Gotcha, 'id' | 'timestamp'>): Promise<Gotcha>;
-  recordContext(jobId: string, context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>): Promise<ContextEntry>;
+  recordContext(
+    jobId: string,
+    context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>,
+  ): Promise<ContextEntry>;
   recordOutcome(jobId: string, outcome: Omit<Outcome, 'id' | 'timestamp'>): Promise<Outcome>;
-  
+
   // Updates and resolution
   resolveGotcha(jobId: string, gotchaId: string, resolution: GotchaResolution): Promise<Gotcha>;
-  updateDecisionOutcome(jobId: string, decisionId: string, outcome: DecisionOutcome): Promise<Decision>;
-  trackContextUsage(jobId: string, contextId: string, usage: Omit<ContextUsage, 'timestamp'>): Promise<void>;
-  
+  updateDecisionOutcome(
+    jobId: string,
+    decisionId: string,
+    outcome: DecisionOutcome,
+  ): Promise<Decision>;
+  trackContextUsage(
+    jobId: string,
+    contextId: string,
+    usage: Omit<ContextUsage, 'timestamp'>,
+  ): Promise<void>;
+
   // Analytics and insights
   calculateJobAnalytics(jobId: string): Promise<JobAnalytics>;
   getMemoryInsights(jobId: string): Promise<MemoryInsights>;
   searchSimilarPatterns(pattern: PatternQuery): Promise<PatternMatch[]>;
-  
+
   // Global tracking
   getGlobalJobLog(): Promise<GlobalJobEntry[]>;
   getJobsByIssue(issueId: string): Promise<GlobalJobEntry[]>;
   getJobsByAgent(agentType: string): Promise<GlobalJobEntry[]>;
-  
+
   // Maintenance
   cleanup(): Promise<void>;
   compressOldMemories(daysOld: number): Promise<number>;
@@ -305,16 +321,16 @@ export interface IRuntimeLogger {
   warn(event: string, data: LogData): Promise<void>;
   error(event: string, data: LogData): Promise<void>;
   critical(event: string, data: LogData): Promise<void>;
-  
+
   // Log retrieval
   getLogsForJob(jobId: string, filters?: LogFilters): Promise<RuntimeLog[]>;
   getLogsForSession(sessionId: string, filters?: LogFilters): Promise<RuntimeLog[]>;
   getLogsForAgent(agentType: string, filters?: LogFilters): Promise<RuntimeLog[]>;
-  
+
   // Log analysis
   analyzePerformance(jobId: string): Promise<PerformanceAnalysis>;
   findErrorPatterns(agentType?: string, timeRange?: TimeRange): Promise<ErrorPattern[]>;
-  
+
   // Maintenance
   rotateLogs(): Promise<number>; // Returns number of rotated logs
   cleanupLogs(olderThanDays: number): Promise<number>; // Returns number of deleted logs
@@ -360,18 +376,21 @@ export interface IMemoryAnalytics {
   calculateJobEfficiency(jobId: string): Promise<number>;
   calculateLearningScore(jobId: string): Promise<number>;
   calculateReuseScore(jobId: string): Promise<number>;
-  
+
   // Pattern analysis
   identifySuccessPatterns(jobs: JobMemory[]): Promise<SuccessPattern[]>;
   identifyFailurePatterns(jobs: JobMemory[]): Promise<FailurePattern[]>;
   findSimilarJobs(jobId: string): Promise<SimilarJobMatch[]>;
-  
+
   // Trend analysis
   analyzeTrends(timeRange: TimeRange): Promise<TrendAnalysis>;
   predictJobOutcome(jobMemory: Partial<JobMemory>): Promise<OutcomePrediction>;
-  
+
   // Agent performance
-  analyzeAgentPerformance(agentType: string, timeRange?: TimeRange): Promise<AgentPerformanceAnalysis>;
+  analyzeAgentPerformance(
+    agentType: string,
+    timeRange?: TimeRange,
+  ): Promise<AgentPerformanceAnalysis>;
   compareAgentEffectiveness(): Promise<AgentComparison[]>;
 }
 

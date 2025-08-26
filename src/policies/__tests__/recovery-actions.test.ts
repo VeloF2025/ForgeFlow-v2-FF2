@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { RecoveryContext, RecoveryActionConfig, RecoveryAction } from '../recovery-actions';
 import {
   RecoveryActionManager,
   GitCleanupAction,
@@ -11,11 +12,10 @@ import {
   FilePermissionRecoveryAction,
   AgentStateResetAction,
   ServiceHealthCheckAction,
-  RecoveryContext,
-  RecoveryActionConfig,
-  RecoveryAction
 } from '../recovery-actions';
-import { execAsync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+const execAsync = promisify(exec);
 import * as fs from 'fs-extra';
 
 // Mock dependencies
@@ -24,7 +24,7 @@ vi.mock('child_process', async () => {
   return {
     ...actual,
     exec: vi.fn(),
-    execSync: vi.fn()
+    execSync: vi.fn(),
   };
 });
 
@@ -32,7 +32,7 @@ vi.mock('fs-extra', () => ({
   pathExists: vi.fn(),
   stat: vi.fn(),
   chmod: vi.fn(),
-  readdir: vi.fn()
+  readdir: vi.fn(),
 }));
 
 vi.mock('../../utils/enhanced-logger', () => ({
@@ -40,8 +40,8 @@ vi.mock('../../utils/enhanced-logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
-  }
+    debug: vi.fn(),
+  },
 }));
 
 const mockExec = vi.fn();
@@ -55,7 +55,7 @@ vi.mock('util', () => ({
       return mockExec;
     }
     return fn;
-  })
+  }),
 }));
 
 describe('Recovery Actions', () => {
@@ -63,7 +63,7 @@ describe('Recovery Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockContext = {
       operationName: 'test-operation',
       error: new Error('Test error'),
@@ -71,7 +71,7 @@ describe('Recovery Actions', () => {
       totalAttempts: 3,
       metadata: {},
       workingDirectory: '/test/dir',
-      environment: {}
+      environment: {},
     };
 
     // Setup fs mocks
@@ -112,8 +112,8 @@ describe('Recovery Actions', () => {
         actionType: 'git-cleanup',
         parameters: {
           resetHard: true,
-          cleanUntracked: true
-        }
+          cleanUntracked: true,
+        },
       };
 
       mockExec.mockImplementation((cmd: string) => {
@@ -122,7 +122,8 @@ describe('Recovery Actions', () => {
         if (cmd.includes('git clean')) return Promise.resolve({ stdout: '', stderr: '' });
         if (cmd.includes('git merge --abort')) return Promise.resolve({ stdout: '', stderr: '' });
         if (cmd.includes('git rebase --abort')) return Promise.resolve({ stdout: '', stderr: '' });
-        if (cmd.includes('git status --porcelain')) return Promise.resolve({ stdout: '', stderr: '' });
+        if (cmd.includes('git status --porcelain'))
+          return Promise.resolve({ stdout: '', stderr: '' });
         return Promise.reject(new Error('Unexpected command'));
       });
 
@@ -131,13 +132,13 @@ describe('Recovery Actions', () => {
       expect(result.success).toBe(true);
       expect(result.actionType).toBe('git-cleanup');
       expect(result.sideEffects).toBeDefined();
-      expect(result.sideEffects!.length).toBeGreaterThan(0);
+      expect(result.sideEffects.length).toBeGreaterThan(0);
     });
 
     it('should handle git cleanup failure', async () => {
       const config: RecoveryActionConfig = {
         actionType: 'git-cleanup',
-        parameters: {}
+        parameters: {},
       };
 
       mockExec.mockRejectedValue(new Error('git command failed'));
@@ -153,8 +154,8 @@ describe('Recovery Actions', () => {
         actionType: 'git-cleanup',
         parameters: {
           resetHard: false,
-          cleanUntracked: false
-        }
+          cleanUntracked: false,
+        },
       };
 
       mockExec.mockResolvedValue({ stdout: '', stderr: '' });
@@ -195,24 +196,24 @@ describe('Recovery Actions', () => {
         actionType: 'github-rate-limit-wait',
         parameters: {
           respectHeaders: true,
-          maxWaitTime: 300000
-        }
+          maxWaitTime: 300000,
+        },
       };
 
       const contextWithHeaders = {
         ...mockContext,
         metadata: {
           rateLimitHeaders: {
-            'x-ratelimit-reset': Math.floor((Date.now() + 5000) / 1000).toString()
-          }
-        }
+            'x-ratelimit-reset': Math.floor((Date.now() + 5000) / 1000).toString(),
+          },
+        },
       };
 
       const executePromise = action.execute(config, contextWithHeaders);
-      
+
       // Fast forward time
       vi.advanceTimersByTime(5000);
-      
+
       const result = await executePromise;
 
       expect(result.success).toBe(true);
@@ -223,20 +224,20 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'github-rate-limit-wait',
         parameters: {
-          respectHeaders: false
-        }
+          respectHeaders: false,
+        },
       };
 
       const errorContext = {
         ...mockContext,
-        error: new Error('Rate limit exceeded. Try again in 30 seconds.')
+        error: new Error('Rate limit exceeded. Try again in 30 seconds.'),
       };
 
       const executePromise = action.execute(config, errorContext);
-      
+
       // Fast forward time
       vi.advanceTimersByTime(30000);
-      
+
       const result = await executePromise;
 
       expect(result.success).toBe(true);
@@ -247,24 +248,24 @@ describe('Recovery Actions', () => {
         actionType: 'github-rate-limit-wait',
         parameters: {
           respectHeaders: true,
-          maxWaitTime: 10000
-        }
+          maxWaitTime: 10000,
+        },
       };
 
       const contextWithLongWait = {
         ...mockContext,
         metadata: {
           rateLimitHeaders: {
-            'x-ratelimit-reset': Math.floor((Date.now() + 300000) / 1000).toString() // 5 minutes
-          }
-        }
+            'x-ratelimit-reset': Math.floor((Date.now() + 300000) / 1000).toString(), // 5 minutes
+          },
+        },
       };
 
       const executePromise = action.execute(config, contextWithLongWait);
-      
+
       // Should only wait for maxWaitTime
       vi.advanceTimersByTime(10000);
-      
+
       const result = await executePromise;
 
       expect(result.success).toBe(true);
@@ -300,8 +301,8 @@ describe('Recovery Actions', () => {
         actionType: 'network-connectivity-check',
         parameters: {
           timeout: 10000,
-          testHosts: ['https://google.com']
-        }
+          testHosts: ['https://google.com'],
+        },
       };
 
       // Mock successful connectivity test
@@ -311,17 +312,17 @@ describe('Recovery Actions', () => {
         setTimeout(() => callback({ statusCode: 200 }), 100);
         return {
           on: vi.fn(),
-          end: vi.fn()
+          end: vi.fn(),
         };
       });
-      
+
       require('https').request = mockRequest;
 
       const executePromise = action.execute(config, mockContext);
-      
+
       // Fast forward to allow connectivity test
       vi.advanceTimersByTime(1000);
-      
+
       const result = await executePromise;
 
       expect(result.success).toBe(true);
@@ -354,8 +355,8 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'file-permission-recovery',
         parameters: {
-          targetPath: '/test/file.txt'
-        }
+          targetPath: '/test/file.txt',
+        },
       };
 
       mockFs.pathExists.mockResolvedValue(true);
@@ -372,8 +373,8 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'file-permission-recovery',
         parameters: {
-          targetPath: '/test/dir'
-        }
+          targetPath: '/test/dir',
+        },
       };
 
       mockFs.pathExists.mockResolvedValue(true);
@@ -396,8 +397,8 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'file-permission-recovery',
         parameters: {
-          targetPath: '/non/existent/path'
-        }
+          targetPath: '/non/existent/path',
+        },
       };
 
       mockFs.pathExists.mockResolvedValue(false);
@@ -424,9 +425,9 @@ describe('Recovery Actions', () => {
       const someError = new Error('some error');
       expect(action.canHandle(someError, agentContext)).toBe(true);
 
-      const agentMetadataContext = { 
-        ...mockContext, 
-        metadata: { agentId: 'test-agent' } 
+      const agentMetadataContext = {
+        ...mockContext,
+        metadata: { agentId: 'test-agent' },
       };
       expect(action.canHandle(someError, agentMetadataContext)).toBe(true);
     });
@@ -435,13 +436,13 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'agent-state-reset',
         parameters: {
-          preserveContext: true
-        }
+          preserveContext: true,
+        },
       };
 
       const agentContext = {
         ...mockContext,
-        metadata: { agentId: 'strategic-planner' }
+        metadata: { agentId: 'strategic-planner' },
       };
 
       const result = await action.execute(config, agentContext);
@@ -449,15 +450,15 @@ describe('Recovery Actions', () => {
       expect(result.success).toBe(true);
       expect(result.message).toContain('strategic-planner');
       expect(result.sideEffects).toBeDefined();
-      expect(result.sideEffects!.some(effect => effect.includes('Preserved'))).toBe(true);
+      expect(result.sideEffects.some((effect) => effect.includes('Preserved'))).toBe(true);
     });
 
     it('should reset agent state without context preservation', async () => {
       const config: RecoveryActionConfig = {
         actionType: 'agent-state-reset',
         parameters: {
-          preserveContext: false
-        }
+          preserveContext: false,
+        },
       };
 
       const result = await action.execute(config, mockContext);
@@ -490,8 +491,8 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'service-health-check',
         parameters: {
-          healthEndpoints: ['https://api.service1.com', 'https://api.service2.com']
-        }
+          healthEndpoints: ['https://api.service1.com', 'https://api.service2.com'],
+        },
       };
 
       // Mock successful health checks
@@ -500,10 +501,10 @@ describe('Recovery Actions', () => {
         callback({ statusCode: 200 });
         return {
           on: vi.fn(),
-          end: vi.fn()
+          end: vi.fn(),
         };
       });
-      
+
       require('https').request = mockRequest;
 
       const result = await action.execute(config, mockContext);
@@ -519,8 +520,8 @@ describe('Recovery Actions', () => {
       const config: RecoveryActionConfig = {
         actionType: 'service-health-check',
         parameters: {
-          healthEndpoints: ['https://failing.service.com']
-        }
+          healthEndpoints: ['https://failing.service.com'],
+        },
       };
 
       // Mock failed health check
@@ -529,10 +530,10 @@ describe('Recovery Actions', () => {
         callback({ statusCode: 500 });
         return {
           on: vi.fn(),
-          end: vi.fn()
+          end: vi.fn(),
         };
       });
-      
+
       require('https').request = mockRequest;
 
       const result = await action.execute(config, mockContext);
@@ -555,11 +556,11 @@ describe('Recovery Actions', () => {
     describe('Action Registration', () => {
       it('should register built-in actions on construction', () => {
         const actions = manager.getAvailableActions();
-        
+
         expect(actions.length).toBeGreaterThan(0);
-        expect(actions.some(a => a.actionType === 'git-cleanup')).toBe(true);
-        expect(actions.some(a => a.actionType === 'github-rate-limit-wait')).toBe(true);
-        expect(actions.some(a => a.actionType === 'network-connectivity-check')).toBe(true);
+        expect(actions.some((a) => a.actionType === 'git-cleanup')).toBe(true);
+        expect(actions.some((a) => a.actionType === 'github-rate-limit-wait')).toBe(true);
+        expect(actions.some((a) => a.actionType === 'network-connectivity-check')).toBe(true);
       });
 
       it('should register custom action', () => {
@@ -573,14 +574,14 @@ describe('Recovery Actions', () => {
             success: true,
             actionType: 'custom-test-action',
             duration: 1000,
-            message: 'Custom action executed'
-          })
+            message: 'Custom action executed',
+          }),
         };
 
         manager.registerAction(customAction);
 
         const actions = manager.getAvailableActions();
-        expect(actions.some(a => a.actionType === 'custom-test-action')).toBe(true);
+        expect(actions.some((a) => a.actionType === 'custom-test-action')).toBe(true);
       });
     });
 
@@ -598,13 +599,13 @@ describe('Recovery Actions', () => {
           {
             actionType: 'git-cleanup',
             parameters: { resetHard: false },
-            priority: 5
+            priority: 5,
           },
           {
             actionType: 'network-connectivity-check',
             parameters: { timeout: 1000 },
-            priority: 10
-          }
+            priority: 10,
+          },
         ];
 
         const gitError = new Error('git lock file exists');
@@ -624,8 +625,8 @@ describe('Recovery Actions', () => {
         const actionConfigs: RecoveryActionConfig[] = [
           {
             actionType: 'github-rate-limit-wait',
-            parameters: {}
-          }
+            parameters: {},
+          },
         ];
 
         const networkError = new Error('network timeout');
@@ -648,7 +649,7 @@ describe('Recovery Actions', () => {
           canHandle: () => true,
           execute: async () => {
             throw new Error('Action execution failed');
-          }
+          },
         };
 
         manager.registerAction(failingAction);
@@ -656,8 +657,8 @@ describe('Recovery Actions', () => {
         const actionConfigs: RecoveryActionConfig[] = [
           {
             actionType: 'failing-action',
-            parameters: {}
-          }
+            parameters: {},
+          },
         ];
 
         const results = await manager.executeRecoveryActions(actionConfigs, mockContext);
@@ -684,9 +685,9 @@ describe('Recovery Actions', () => {
               success: true,
               actionType: 'retry-test-action',
               duration: 1000,
-              message: 'Succeeded on retry'
+              message: 'Succeeded on retry',
             };
-          }
+          },
         };
 
         manager.registerAction(retryAction);
@@ -695,15 +696,15 @@ describe('Recovery Actions', () => {
           {
             actionType: 'retry-test-action',
             parameters: {},
-            maxRetries: 3
-          }
+            maxRetries: 3,
+          },
         ];
 
         const executePromise = manager.executeRecoveryActions(actionConfigs, mockContext);
-        
+
         // Fast forward time for retry delays
         vi.advanceTimersByTime(10000);
-        
+
         const results = await executePromise;
 
         expect(results).toHaveLength(1);
@@ -722,8 +723,8 @@ describe('Recovery Actions', () => {
             success: true,
             actionType: 'prerequisite-action',
             duration: 500,
-            message: 'Prerequisite completed'
-          })
+            message: 'Prerequisite completed',
+          }),
         };
 
         const dependentAction: RecoveryAction = {
@@ -736,8 +737,8 @@ describe('Recovery Actions', () => {
             success: true,
             actionType: 'dependent-action',
             duration: 1000,
-            message: 'Dependent action completed'
-          })
+            message: 'Dependent action completed',
+          }),
         };
 
         manager.registerAction(prerequisiteAction);
@@ -747,14 +748,14 @@ describe('Recovery Actions', () => {
           {
             actionType: 'prerequisite-action',
             parameters: {},
-            priority: 10
+            priority: 10,
           },
           {
             actionType: 'dependent-action',
             parameters: {},
             prerequisiteActions: ['prerequisite-action'],
-            priority: 5
-          }
+            priority: 5,
+          },
         ];
 
         const results = await manager.executeRecoveryActions(actionConfigs, mockContext);
@@ -776,8 +777,8 @@ describe('Recovery Actions', () => {
             success: false,
             actionType: 'failing-prerequisite',
             duration: 500,
-            message: 'Prerequisite failed'
-          })
+            message: 'Prerequisite failed',
+          }),
         };
 
         const dependentAction: RecoveryAction = {
@@ -790,8 +791,8 @@ describe('Recovery Actions', () => {
             success: true,
             actionType: 'dependent-action-2',
             duration: 1000,
-            message: 'Should not execute'
-          })
+            message: 'Should not execute',
+          }),
         };
 
         manager.registerAction(failingPrerequisite);
@@ -801,14 +802,14 @@ describe('Recovery Actions', () => {
           {
             actionType: 'failing-prerequisite',
             parameters: {},
-            priority: 10
+            priority: 10,
           },
           {
             actionType: 'dependent-action-2',
             parameters: {},
             prerequisiteActions: ['failing-prerequisite'],
-            priority: 5
-          }
+            priority: 5,
+          },
         ];
 
         const results = await manager.executeRecoveryActions(actionConfigs, mockContext);
@@ -828,7 +829,7 @@ describe('Recovery Actions', () => {
         const recommendations = manager.getRecommendedActions(gitError, gitContext);
 
         expect(recommendations.length).toBeGreaterThan(0);
-        expect(recommendations.some(r => r.actionType === 'git-cleanup')).toBe(true);
+        expect(recommendations.some((r) => r.actionType === 'git-cleanup')).toBe(true);
       });
 
       it('should prioritize recommendations correctly', () => {
@@ -840,7 +841,7 @@ describe('Recovery Actions', () => {
         expect(recommendations.length).toBeGreaterThan(0);
         // Should be sorted by priority (highest first)
         for (let i = 1; i < recommendations.length; i++) {
-          expect(recommendations[i-1].priority! >= recommendations[i].priority!).toBe(true);
+          expect(recommendations[i - 1].priority >= recommendations[i].priority).toBe(true);
         }
       });
     });
@@ -849,7 +850,7 @@ describe('Recovery Actions', () => {
       it('should track action execution metrics', async () => {
         const actionConfig: RecoveryActionConfig = {
           actionType: 'git-cleanup',
-          parameters: { resetHard: false }
+          parameters: { resetHard: false },
         };
 
         const gitError = new Error('git conflict');
@@ -867,7 +868,7 @@ describe('Recovery Actions', () => {
       it('should provide execution history', async () => {
         const actionConfig: RecoveryActionConfig = {
           actionType: 'agent-state-reset',
-          parameters: { preserveContext: true }
+          parameters: { preserveContext: true },
         };
 
         await manager.executeRecoveryActions([actionConfig], mockContext);
@@ -879,10 +880,10 @@ describe('Recovery Actions', () => {
 
       it('should reset metrics', () => {
         manager.resetMetrics();
-        
+
         const allMetrics = manager.getActionMetrics();
         expect(Object.keys(allMetrics)).toHaveLength(0);
-        
+
         const allHistory = manager.getExecutionHistory();
         expect(Object.keys(allHistory)).toHaveLength(0);
       });
@@ -895,7 +896,7 @@ describe('Recovery Actions', () => {
           parameters: {},
           priority: 5,
           timeout: 30000,
-          maxRetries: 2
+          maxRetries: 2,
         };
 
         const errors = manager.validateActionConfig(validConfig);
@@ -908,7 +909,7 @@ describe('Recovery Actions', () => {
           parameters: {},
           priority: 15, // Invalid priority
           timeout: 500, // Too short
-          maxRetries: -1 // Invalid retries
+          maxRetries: -1, // Invalid retries
         };
 
         const errors = manager.validateActionConfig(invalidConfig);

@@ -1,0 +1,5890 @@
+[
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:43.219Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:43.219Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:43.219Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "d210a1f631f7356f",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "7c665c35b57095bc43b1e031bd6005af586085462280f7da2f50c50bf7d1a560",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.970Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.970Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.970Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "684682cf4c89d836",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "4906f7a47138216bec203651a3ffbdda2481cd2bad0764994ccdee9a9b2149e4",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.714Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.714Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.714Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0.8,
+      "knowledgeReused": 0.7,
+      "adaptabilityShown": 0.6,
+      "knowledgeImpact": {
+        "cardsCreated": 2,
+        "cardsUpdated": 3,
+        "gotchasResolved": 1,
+        "patternsIdentified": 1
+      },
+      "efficiency": {
+        "timeToFirstSolution": 300,
+        "iterationsToSuccess": 2,
+        "errorRecoveryTime": 60,
+        "knowledgeRetrievalTime": 15
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0.9,
+        "estimatedComplexity": 0.5,
+        "recommendedApproach": "iterative",
+        "riskFactors": []
+      }
+    },
+    "_id": "f8fac84027bccb07",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "778210d3a733775231929accbae1c2dc02f6abc399235d1e27d85ef19bf3263d",
+      "size": 1957,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.676Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.676Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.676Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0.8,
+      "knowledgeReused": 0.7,
+      "adaptabilityShown": 0.6,
+      "knowledgeImpact": {
+        "cardsCreated": 2,
+        "cardsUpdated": 3,
+        "gotchasResolved": 1,
+        "patternsIdentified": 1
+      },
+      "efficiency": {
+        "timeToFirstSolution": 300,
+        "iterationsToSuccess": 2,
+        "errorRecoveryTime": 60,
+        "knowledgeRetrievalTime": 15
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0.9,
+        "estimatedComplexity": 0.5,
+        "recommendedApproach": "iterative",
+        "riskFactors": []
+      }
+    },
+    "_id": "0918208a912baa40",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "e06c1856ffc7eb4f143f19694a4144911066e6a4f0410602750fb39439acc8da",
+      "size": 1957,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.586Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.586Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.586Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0.8,
+      "knowledgeReused": 0.7,
+      "adaptabilityShown": 0.6,
+      "knowledgeImpact": {
+        "cardsCreated": 2,
+        "cardsUpdated": 3,
+        "gotchasResolved": 1,
+        "patternsIdentified": 1
+      },
+      "efficiency": {
+        "timeToFirstSolution": 300,
+        "iterationsToSuccess": 2,
+        "errorRecoveryTime": 60,
+        "knowledgeRetrievalTime": 15
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0.9,
+        "estimatedComplexity": 0.5,
+        "recommendedApproach": "iterative",
+        "riskFactors": []
+      }
+    },
+    "_id": "1e3e885c966d93d7",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "f5182b1e368202561e660b3f73ddebfc5037ff65020a292dff86e22093ea9cef",
+      "size": 1957,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.540Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.540Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.540Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0.8,
+      "knowledgeReused": 0.7,
+      "adaptabilityShown": 0.6,
+      "knowledgeImpact": {
+        "cardsCreated": 2,
+        "cardsUpdated": 3,
+        "gotchasResolved": 1,
+        "patternsIdentified": 1
+      },
+      "efficiency": {
+        "timeToFirstSolution": 300,
+        "iterationsToSuccess": 2,
+        "errorRecoveryTime": 60,
+        "knowledgeRetrievalTime": 15
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0.9,
+        "estimatedComplexity": 0.5,
+        "recommendedApproach": "iterative",
+        "riskFactors": []
+      }
+    },
+    "_id": "f4ff8a4997fdf0e3",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "7d587e1be3d4b4aaa51ce03df1db6cf269764b1a3620225878d2721f00a790d7",
+      "size": 1957,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.484Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.484Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.484Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0.8,
+      "knowledgeReused": 0.7,
+      "adaptabilityShown": 0.6,
+      "knowledgeImpact": {
+        "cardsCreated": 2,
+        "cardsUpdated": 3,
+        "gotchasResolved": 1,
+        "patternsIdentified": 1
+      },
+      "efficiency": {
+        "timeToFirstSolution": 300,
+        "iterationsToSuccess": 2,
+        "errorRecoveryTime": 60,
+        "knowledgeRetrievalTime": 15
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0.9,
+        "estimatedComplexity": 0.5,
+        "recommendedApproach": "iterative",
+        "riskFactors": []
+      }
+    },
+    "_id": "ef905a0ddd7de1f8",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "d54ca510870f01ced6ac3e26ff38abf94dc66025dbcc0a3d2d02c1ad5c9b5593",
+      "size": 1957,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.411Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.411Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.411Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.9,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "edfcbb79c29b1c13",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "689361b7f34b02083c9dc19c401b909eadd79cc4d839645451563774d3204692",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.338Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.338Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.338Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.9,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "31cdd4b8eea2c811",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "2ba25ec556ad51bdbc7dd54ffb4eb9f0d7fe43ee44b8c666fb04e5e9ef87fdfc",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.338Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.338Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.338Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "31cdd4b8eea2c811",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "2ba25ec556ad51bdbc7dd54ffb4eb9f0d7fe43ee44b8c666fb04e5e9ef87fdfc",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.338Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.338Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.338Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.3,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "31cdd4b8eea2c811",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "833f84c0853d3314ab2526b1bc520ebf0da3f5a1fb92801fe1f9cad2f3f46803",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.338Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.338Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.338Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.4,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "31cdd4b8eea2c811",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "833f84c0853d3314ab2526b1bc520ebf0da3f5a1fb92801fe1f9cad2f3f46803",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.278Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.278Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.278Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.9,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f23ec5d9f9b4fde5",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "fbf252f52da3ea532c97649cc9a1a8045cffb7fdff88e653bcb15f394f13c448",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.278Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.278Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.278Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f23ec5d9f9b4fde5",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "fbf252f52da3ea532c97649cc9a1a8045cffb7fdff88e653bcb15f394f13c448",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.278Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.278Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.278Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.3,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f23ec5d9f9b4fde5",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "ddaa3e27c6ae659b6877482cee2a7946492107caa8aa4dc7a27e6b4e5b34e7d4",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.278Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.278Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.278Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.4,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f23ec5d9f9b4fde5",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "ddaa3e27c6ae659b6877482cee2a7946492107caa8aa4dc7a27e6b4e5b34e7d4",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.193Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.193Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.193Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.9,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "49ac3352fb319d6e",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "fe69a0149db08ed1822ee6c15c1d0e59b7f1a10c30db1beda01f8997273a656d",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.193Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.193Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.193Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "49ac3352fb319d6e",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "fe69a0149db08ed1822ee6c15c1d0e59b7f1a10c30db1beda01f8997273a656d",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.193Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.193Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.193Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.3,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "49ac3352fb319d6e",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "eb60c6bb68d2ba7206805f459eb4ce01679d8be9a76d659f3e1e6eb1bd948177",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.193Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.193Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.193Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.4,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "49ac3352fb319d6e",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "eb60c6bb68d2ba7206805f459eb4ce01679d8be9a76d659f3e1e6eb1bd948177",
+      "size": 1935,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.145Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.144Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "7cbd6c98c620eb45",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "b6b8d235f69a2c2acb6befb52d3b0947ec12af39e60abd60df2434b3e8a84a87",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.144Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.144Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.144Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "e50d83bf13440495",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "84c4da28cd38f3abe15d91816d60d516339c45b6fb95774f8c6bb6b176c8032d",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.144Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.144Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.144Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "4005464a30c7eac0",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "caebbf4383bbc6d337e90e0c53609eafa134aa736c2936d95148f68df5789a74",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.111Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.111Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.111Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "43ea165ca5d30c43",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "13d94ba8e00eb2ab78a6619e7078762821f71544009c9b8e41e58f468259d1e7",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.111Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.111Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.111Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "d550ec10ff37fb16",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "2326acd9b56a6bdd927a1bfb48e0e7f6f83bf995ebffe2eff78626c0f9dca2cc",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.111Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.111Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "637c093c74c143a8",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "934eb312970705ce7ed0f058d4f29d56e6c5285ecea400db96b20d992c94b38c",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.034Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.033Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "75a35be0f6ffbf00",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "2d93ab727edf803c1c90c195b5ca098665a330da055bca4b615e2e99ef339d2c",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.033Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.033Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.033Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "3b38bef85dcf0950",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "c0932003bdbedc41d246ef0f9d687b60856f34d950edcb49554b5a541c25797a",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:42.033Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:42.033Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:42.033Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "1198e017ad42908b",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "fd72dd096cd8a297a83d99c0d61a9870de5917945b384f7a4026683917c52080",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.988Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.988Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.988Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "074a3658721f39b8",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "d6b14b34df29f2199a10c9ab58f2cbdceed3be527fbd2c16395cf0a5970721fd",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.988Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.988Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.988Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "af162b23679800ba",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "9a951c734b25cc0b0ba5976d1fcc1777b152ca159d928e0b7f0b54a9af07bccd",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.988Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.988Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "5067da10afb7831a",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "17d622f42df5a45d977551ebcf66bf923d2dcc4b982d029727c45e89e25da8e4",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.940Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.940Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.940Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f74da312b3febaf2",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "29b2e11681e5c64463575af0a92cb4b2de721c61d3b4019df9e89b34d333703e",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.940Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.940Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "f84a548b525fcc20",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "680ffb37795fa5c4f399914b38848aa9003958ac7ae0399caa306c86d651737d",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.939Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.939Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.939Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "25c10a1b836c66d8",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "dc44959f92520b692675306e3f62e9b62a6c2cfa88dc835b7ba9c95c03e812b9",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-1",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.877Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.877Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.877Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "35315b1d2189fff9",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "5f77b1b47d1304477bccd0f1865380a2b2508fe1c2120972cdf776d8becf53b3",
+      "size": 1927,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-2",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.877Z",
+    "success": false,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.877Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.877Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "55cfbdab5afebaca",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "353c8b90dbb481ed7babbb8c6d6ba4c0bd002ffeaa7697c3c2af3ca14abd0b52",
+      "size": 1928,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "job-3",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.877Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [
+        "test-agent"
+      ],
+      "pattern": "test-pattern",
+      "phase": "implementation",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.877Z",
+      "category": "bugfix",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      }
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "90e522bccd34bd70",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "cd60a3495c24c174b8cdc7113561baa9beefe49cb0ea6530582fabdbc72c2969",
+      "size": 1914,
+      "indexableText": "bugfix medium test agent"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.845Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.845Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.845Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "7ac73117a758c076",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "5d2895d723a4fda5059476ba8f5beb269c63501861ebf490711b42a60fd02b19",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.782Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.782Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.782Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "test-project",
+      "projectPath": "/test/path",
+      "projectType": "typescript",
+      "knowledgeCards": [
+        {
+          "cardId": "card-1",
+          "title": "Test Card",
+          "relevanceScore": 0.9,
+          "effectiveness": 0.8,
+          "usageOutcome": "success"
+        }
+      ],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "linux",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "Test user input",
+        "requestType": "feature",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "9fe810ea18330497",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "5e696c0f9daa6c846a537abf138cf3347cae8002122f08aa599ed1103ffc3e2d",
+      "size": 2093,
+      "indexableText": "feature medium typescript test card"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T12:02:41.655Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T12:02:41.654Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T12:02:41.655Z",
+      "duration": 1
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "8e0f5efe4fe10d89",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "aa3392a06126647b60cefc5ad60bec099d78485de9baf108a799d82cc17f0b01",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  },
+  {
+    "jobId": "test-job-123",
+    "issueId": "test-issue-456",
+    "executionId": "test-execution-789",
+    "timestamp": "2025-08-25T11:41:45.109Z",
+    "success": true,
+    "status": "completed",
+    "metadata": {
+      "agentTypes": [],
+      "pattern": "",
+      "phase": "",
+      "priority": "medium",
+      "startTime": "2025-08-25T11:41:45.109Z",
+      "category": "feature",
+      "complexity": "medium",
+      "childJobIds": [],
+      "githubData": {
+        "labels": []
+      },
+      "endTime": "2025-08-25T11:41:45.109Z",
+      "duration": 0
+    },
+    "metrics": {
+      "performance": {
+        "totalDuration": 0,
+        "agentDurations": {},
+        "queueTime": 0,
+        "executionTime": 0,
+        "overhead": 0
+      },
+      "codeChanges": {
+        "linesAdded": 0,
+        "linesRemoved": 0,
+        "linesModified": 0,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesModified": 0,
+        "complexity": 0
+      },
+      "qualityGates": {
+        "linting": {
+          "passed": true,
+          "errors": 0,
+          "warnings": 0
+        },
+        "typecheck": {
+          "passed": true,
+          "errors": 0
+        },
+        "testing": {
+          "passed": true,
+          "coverage": 0,
+          "failedTests": 0
+        },
+        "security": {
+          "passed": true,
+          "vulnerabilities": 0,
+          "severity": "none"
+        },
+        "performance": {
+          "passed": true,
+          "score": 0
+        }
+      },
+      "resources": {
+        "memoryUsage": 0,
+        "cpuUsage": 0,
+        "diskUsage": 0,
+        "networkRequests": 0
+      }
+    },
+    "context": {
+      "projectId": "",
+      "projectPath": "",
+      "projectType": "",
+      "knowledgeCards": [],
+      "similarJobs": [],
+      "environment": {
+        "operatingSystem": "win32",
+        "dependencies": {}
+      },
+      "userContext": {
+        "userInput": "",
+        "requestType": "",
+        "urgency": "medium"
+      }
+    },
+    "patterns": {
+      "successPatterns": [],
+      "failurePatterns": [],
+      "decisionPatterns": [],
+      "antiPatterns": []
+    },
+    "quality": {
+      "overallScore": 0.8,
+      "components": {
+        "codeQuality": 0,
+        "testQuality": 0,
+        "documentation": 0,
+        "maintainability": 0,
+        "security": 0,
+        "performance": 0
+      },
+      "gatesPassed": 0,
+      "gatesTotal": 0,
+      "gatesSkipped": 0,
+      "issues": [],
+      "improvements": []
+    },
+    "learning": {
+      "learningGenerated": 0,
+      "knowledgeReused": 0,
+      "adaptabilityShown": 0,
+      "knowledgeImpact": {
+        "cardsCreated": 0,
+        "cardsUpdated": 0,
+        "gotchasResolved": 0,
+        "patternsIdentified": 0
+      },
+      "efficiency": {
+        "timeToFirstSolution": 0,
+        "iterationsToSuccess": 0,
+        "errorRecoveryTime": 0,
+        "knowledgeRetrievalTime": 0
+      },
+      "predictions": {
+        "futureSuccessLikelihood": 0,
+        "estimatedComplexity": 0,
+        "recommendedApproach": "",
+        "riskFactors": []
+      }
+    },
+    "_id": "628851a9faf9fcfe",
+    "_version": "1.0",
+    "_computedFields": {
+      "hash": "1494ccc47ea8fe05210a64d819440dd9401189fed5198442535dd403d648b6e2",
+      "size": 1934,
+      "indexableText": "feature medium"
+    }
+  }
+]

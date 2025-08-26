@@ -4,7 +4,13 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
-import { ValidationUtils, ValidationError, ForgeFlowError, ErrorCategory, ErrorSeverity } from './errors';
+import {
+  ValidationUtils,
+  ValidationError,
+  ForgeFlowError,
+  ErrorCategory,
+  ErrorSeverity,
+} from './errors';
 import { logger } from './logger';
 
 // Validation schema types
@@ -13,7 +19,23 @@ export interface ValidationSchema {
 }
 
 export interface ValidationRule {
-  type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'email' | 'url' | 'github-repo' | 'github-token' | 'path' | 'port' | 'timeout' | 'agent-type' | 'execution-pattern' | 'priority' | 'json';
+  type:
+    | 'string'
+    | 'number'
+    | 'boolean'
+    | 'array'
+    | 'object'
+    | 'email'
+    | 'url'
+    | 'github-repo'
+    | 'github-token'
+    | 'path'
+    | 'port'
+    | 'timeout'
+    | 'agent-type'
+    | 'execution-pattern'
+    | 'priority'
+    | 'json';
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -33,15 +55,15 @@ export const CLI_COMMAND_SCHEMAS: Record<string, ValidationSchema> = {
     repo: {
       type: 'url',
       required: false,
-      description: 'GitHub repository URL'
+      description: 'GitHub repository URL',
     },
     config: {
       type: 'path',
       required: false,
-      description: 'Configuration file path'
-    }
+      description: 'Configuration file path',
+    },
   },
-  
+
   'start-parallel': {
     epic: {
       type: 'string',
@@ -49,35 +71,45 @@ export const CLI_COMMAND_SCHEMAS: Record<string, ValidationSchema> = {
       minLength: 3,
       maxLength: 200,
       pattern: /^[a-zA-Z0-9\s\-_#]+$/,
-      description: 'Epic name or issue reference'
+      description: 'Epic name or issue reference',
     },
     pattern: {
       type: 'execution-pattern',
       required: false,
-      description: 'Execution pattern to use'
+      description: 'Execution pattern to use',
     },
     agents: {
       type: 'array',
       required: false,
       custom: (value) => {
         if (Array.isArray(value)) {
-          return value.every(agent => 
-            typeof agent === 'string' && 
-            ['strategic-planner', 'system-architect', 'code-implementer', 
-             'test-coverage-validator', 'security-auditor', 'performance-optimizer',
-             'ui-ux-optimizer', 'database-architect', 'deployment-automation',
-             'code-quality-reviewer', 'antihallucination-validator'].includes(agent)
+          return value.every(
+            (agent) =>
+              typeof agent === 'string' &&
+              [
+                'strategic-planner',
+                'system-architect',
+                'code-implementer',
+                'test-coverage-validator',
+                'security-auditor',
+                'performance-optimizer',
+                'ui-ux-optimizer',
+                'database-architect',
+                'deployment-automation',
+                'code-quality-reviewer',
+                'antihallucination-validator',
+              ].includes(agent),
           );
         }
         return 'Must be array of valid agent types';
       },
-      description: 'Specific agents to deploy'
+      description: 'Specific agents to deploy',
     },
     priority: {
       type: 'priority',
       required: false,
-      description: 'Execution priority level'
-    }
+      description: 'Execution priority level',
+    },
   },
 
   status: {
@@ -85,22 +117,22 @@ export const CLI_COMMAND_SCHEMAS: Record<string, ValidationSchema> = {
       type: 'string',
       required: false,
       pattern: /^[a-zA-Z0-9\-_]+$/,
-      description: 'Execution ID to check status'
-    }
+      description: 'Execution ID to check status',
+    },
   },
 
   agent: {
     type: {
       type: 'agent-type',
       required: true,
-      description: 'Agent type to spawn'
+      description: 'Agent type to spawn',
     },
     issue: {
       type: 'string',
       required: true,
       pattern: /^#?\d+$|^[a-zA-Z0-9\-_\/]+#\d+$/,
-      description: 'GitHub issue number or reference'
-    }
+      description: 'GitHub issue number or reference',
+    },
   },
 
   protocol: {
@@ -108,8 +140,8 @@ export const CLI_COMMAND_SCHEMAS: Record<string, ValidationSchema> = {
       type: 'string',
       required: true,
       enum: ['nlnh', 'antihall', 'ryr'],
-      description: 'Protocol name to activate'
-    }
+      description: 'Protocol name to activate',
+    },
   },
 
   emergency: {
@@ -118,9 +150,9 @@ export const CLI_COMMAND_SCHEMAS: Record<string, ValidationSchema> = {
       required: true,
       minLength: 5,
       maxLength: 500,
-      description: 'Emergency task description'
-    }
-  }
+      description: 'Emergency task description',
+    },
+  },
 };
 
 // API endpoint validation schemas
@@ -131,19 +163,19 @@ export const API_ENDPOINT_SCHEMAS: Record<string, ValidationSchema> = {
       type: 'string',
       required: true,
       pattern: /^[a-zA-Z0-9\-_]+$/,
-      description: 'Agent ID'
+      description: 'Agent ID',
     },
     taskId: {
       type: 'string',
       required: true,
       pattern: /^[a-zA-Z0-9\-_]+$/,
-      description: 'Task ID'
+      description: 'Task ID',
     },
     executionId: {
       type: 'string',
       required: true,
       pattern: /^[a-zA-Z0-9\-_]+$/,
-      description: 'Execution ID'
+      description: 'Execution ID',
     },
     duration: {
       type: 'number',
@@ -151,14 +183,14 @@ export const API_ENDPOINT_SCHEMAS: Record<string, ValidationSchema> = {
       min: 100,
       max: 300000,
       default: 5000,
-      description: 'Task duration in milliseconds'
+      description: 'Task duration in milliseconds',
     },
     shouldFail: {
       type: 'boolean',
       required: false,
       default: false,
-      description: 'Whether task should fail'
-    }
+      description: 'Whether task should fail',
+    },
   },
 
   'PUT /api/agents/:id/status': {
@@ -166,21 +198,21 @@ export const API_ENDPOINT_SCHEMAS: Record<string, ValidationSchema> = {
       type: 'string',
       required: false,
       enum: ['idle', 'busy', 'active', 'error', 'offline'],
-      description: 'Agent status'
+      description: 'Agent status',
     },
     currentTask: {
       type: 'string',
       required: false,
       pattern: /^[a-zA-Z0-9\-_]*$/,
-      description: 'Current task ID'
+      description: 'Current task ID',
     },
     errorMessage: {
       type: 'string',
       required: false,
       maxLength: 1000,
       sanitize: true,
-      description: 'Error message if status is error'
-    }
+      description: 'Error message if status is error',
+    },
   },
 
   // Execution endpoints
@@ -191,24 +223,24 @@ export const API_ENDPOINT_SCHEMAS: Record<string, ValidationSchema> = {
       minLength: 3,
       maxLength: 200,
       sanitize: true,
-      description: 'Epic name or description'
+      description: 'Epic name or description',
     },
     pattern: {
       type: 'execution-pattern',
       required: false,
-      description: 'Execution pattern'
+      description: 'Execution pattern',
     },
     priority: {
       type: 'priority',
       required: false,
       default: 'normal',
-      description: 'Execution priority'
+      description: 'Execution priority',
     },
     agents: {
       type: 'array',
       required: false,
-      description: 'Specific agents to use'
-    }
+      description: 'Specific agents to use',
+    },
   },
 
   // GitHub endpoints
@@ -217,24 +249,24 @@ export const API_ENDPOINT_SCHEMAS: Record<string, ValidationSchema> = {
       type: 'string',
       required: true,
       enum: ['opened', 'closed', 'synchronize', 'labeled', 'unlabeled'],
-      description: 'Webhook action'
+      description: 'Webhook action',
     },
     repository: {
       type: 'object',
       required: true,
-      description: 'Repository information'
+      description: 'Repository information',
     },
     issue: {
       type: 'object',
       required: false,
-      description: 'Issue information'
+      description: 'Issue information',
     },
     pull_request: {
       type: 'object',
       required: false,
-      description: 'Pull request information'
-    }
-  }
+      description: 'Pull request information',
+    },
+  },
 };
 
 // Configuration validation schemas
@@ -243,55 +275,55 @@ export const CONFIG_SCHEMAS: Record<string, ValidationSchema> = {
     github: {
       type: 'object',
       required: true,
-      description: 'GitHub configuration'
+      description: 'GitHub configuration',
     },
     worktree: {
       type: 'object',
       required: true,
-      description: 'Worktree configuration'
+      description: 'Worktree configuration',
     },
     agents: {
       type: 'object',
       required: true,
-      description: 'Agent pool configuration'
+      description: 'Agent pool configuration',
     },
     quality: {
       type: 'object',
       required: true,
-      description: 'Quality gates configuration'
+      description: 'Quality gates configuration',
     },
     protocols: {
       type: 'object',
       required: true,
-      description: 'Protocol enforcement configuration'
-    }
+      description: 'Protocol enforcement configuration',
+    },
   },
 
   githubConfig: {
     token: {
       type: 'github-token',
       required: true,
-      description: 'GitHub personal access token'
+      description: 'GitHub personal access token',
     },
     owner: {
       type: 'string',
       required: true,
       pattern: /^[a-zA-Z0-9\-_]+$/,
-      description: 'Repository owner'
+      description: 'Repository owner',
     },
     repo: {
       type: 'string',
       required: true,
       pattern: /^[a-zA-Z0-9\-_\.]+$/,
-      description: 'Repository name'
+      description: 'Repository name',
     },
     apiUrl: {
       type: 'url',
       required: false,
       default: 'https://api.github.com',
-      description: 'GitHub API base URL'
-    }
-  }
+      description: 'GitHub API base URL',
+    },
+  },
 };
 
 /**
@@ -300,7 +332,7 @@ export const CONFIG_SCHEMAS: Record<string, ValidationSchema> = {
 export function validateInput<T>(
   input: any,
   schema: ValidationSchema,
-  context: string = 'input'
+  context: string = 'input',
 ): T {
   if (!input || typeof input !== 'object') {
     throw new ValidationError(context, input, 'object');
@@ -313,9 +345,12 @@ export function validateInput<T>(
     try {
       const ruleArray = Array.isArray(rules) ? rules : [rules];
       const value = input[fieldName];
-      
+
       // Check if required
-      if (ruleArray.some(rule => rule.required) && (value === undefined || value === null || value === '')) {
+      if (
+        ruleArray.some((rule) => rule.required) &&
+        (value === undefined || value === null || value === '')
+      ) {
         errors.push(`Field '${fieldName}' is required`);
         continue;
       }
@@ -323,7 +358,7 @@ export function validateInput<T>(
       // Skip validation if optional and not provided
       if (value === undefined || value === null) {
         // Apply default value if specified
-        const defaultRule = ruleArray.find(rule => rule.default !== undefined);
+        const defaultRule = ruleArray.find((rule) => rule.default !== undefined);
         if (defaultRule) {
           validated[fieldName] = defaultRule.default;
         }
@@ -332,13 +367,12 @@ export function validateInput<T>(
 
       // Validate against each rule
       let processedValue = value;
-      
+
       for (const rule of ruleArray) {
         processedValue = validateFieldAgainstRule(processedValue, fieldName, rule);
       }
 
       validated[fieldName] = processedValue;
-
     } catch (error) {
       if (error instanceof ValidationError) {
         errors.push(error.userMessage || error.message);
@@ -356,7 +390,7 @@ export function validateInput<T>(
       severity: ErrorSeverity.MEDIUM,
       context: { context, errors, input: sanitizeForLogging(input) },
       recoverable: true,
-      userMessage: `Invalid input: ${errors.join('; ')}`
+      userMessage: `Invalid input: ${errors.join('; ')}`,
     });
   }
 
@@ -391,7 +425,11 @@ function validateFieldAgainstRule(value: any, fieldName: string, rule: Validatio
       ValidationUtils.validateArray(processedValue, fieldName, rule.minLength);
       break;
     case 'object':
-      if (typeof processedValue !== 'object' || processedValue === null || Array.isArray(processedValue)) {
+      if (
+        typeof processedValue !== 'object' ||
+        processedValue === null ||
+        Array.isArray(processedValue)
+      ) {
         throw new ValidationError(fieldName, processedValue, 'object');
       }
       break;
@@ -464,11 +502,11 @@ export function validateApiInput(schema: ValidationSchema) {
 
       // Validate request body
       req.body = validateInput(req.body || {}, schema, `${req.method} ${req.path}`);
-      
+
       // Log validated input (sanitized)
       logger.debug('API input validated', {
         endpoint: `${req.method} ${req.path}`,
-        input: sanitizeForLogging(req.body)
+        input: sanitizeForLogging(req.body),
       });
 
       next();
@@ -476,7 +514,7 @@ export function validateApiInput(schema: ValidationSchema) {
       logger.warn('API input validation failed', {
         endpoint: `${req.method} ${req.path}`,
         error: error instanceof Error ? error.message : String(error),
-        input: sanitizeForLogging(req.body || {})
+        input: sanitizeForLogging(req.body || {}),
       });
 
       if (error instanceof ForgeFlowError) {
@@ -484,13 +522,13 @@ export function validateApiInput(schema: ValidationSchema) {
           success: false,
           error: error.userMessage || error.message,
           code: error.code,
-          details: error.context
+          details: error.context,
         });
       } else {
         res.status(400).json({
           success: false,
           error: 'Invalid input provided',
-          details: String(error)
+          details: String(error),
         });
       }
     }
@@ -510,7 +548,7 @@ export function validateCliCommand(command: string, options: any): any {
       severity: ErrorSeverity.MEDIUM,
       context: { command, availableCommands: Object.keys(CLI_COMMAND_SCHEMAS) },
       recoverable: false,
-      userMessage: `Command '${command}' is not recognized. Available commands: ${Object.keys(CLI_COMMAND_SCHEMAS).join(', ')}`
+      userMessage: `Command '${command}' is not recognized. Available commands: ${Object.keys(CLI_COMMAND_SCHEMAS).join(', ')}`,
     });
   }
 
@@ -529,7 +567,7 @@ export function validateConfiguration<T>(config: any, configType: keyof typeof C
       category: ErrorCategory.CONFIGURATION,
       severity: ErrorSeverity.HIGH,
       recoverable: false,
-      userMessage: `Configuration type '${configType}' is not supported`
+      userMessage: `Configuration type '${configType}' is not supported`,
     });
   }
 
@@ -574,9 +612,9 @@ export function validateInputSystem(): {
     schemasLoaded: {
       cli: Object.keys(CLI_COMMAND_SCHEMAS).length,
       api: Object.keys(API_ENDPOINT_SCHEMAS).length,
-      config: Object.keys(CONFIG_SCHEMAS).length
+      config: Object.keys(CONFIG_SCHEMAS).length,
     },
-    validationTests: {}
+    validationTests: {},
   };
 
   try {
@@ -601,18 +639,20 @@ export function validateInputSystem(): {
       details.validationTests.rateLimiting = 'passed';
     }
 
-    const failedTests = Object.values(details.validationTests).filter(result => result === 'failed');
-    
-    return {
-      status: failedTests.length === 0 ? 'healthy' : failedTests.length < 2 ? 'degraded' : 'unhealthy',
-      details
-    };
+    const failedTests = Object.values(details.validationTests).filter(
+      (result) => result === 'failed',
+    );
 
+    return {
+      status:
+        failedTests.length === 0 ? 'healthy' : failedTests.length < 2 ? 'degraded' : 'unhealthy',
+      details,
+    };
   } catch (error) {
     details.error = String(error);
     return {
       status: 'unhealthy',
-      details
+      details,
     };
   }
 }

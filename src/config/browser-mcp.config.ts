@@ -60,7 +60,9 @@ export const DEFAULT_BROWSER_MCP_CONFIG: BrowserMCPConfig = {
  * Get Browser MCP configuration for a specific agent type
  */
 export function getBrowserMCPConfig(agentType: string): BrowserMCPConfig {
-  return BROWSER_MCP_CONFIGS[agentType as keyof typeof BROWSER_MCP_CONFIGS] || DEFAULT_BROWSER_MCP_CONFIG;
+  return (
+    BROWSER_MCP_CONFIGS[agentType as keyof typeof BROWSER_MCP_CONFIGS] || DEFAULT_BROWSER_MCP_CONFIG
+  );
 }
 
 /**

@@ -38,7 +38,11 @@ export class FileLock {
   private isLocked: boolean = false;
   private cleanupTimer?: NodeJS.Timeout;
 
-  constructor(lockFilePath: string, private operation: string, private metadata?: Record<string, unknown>) {
+  constructor(
+    lockFilePath: string,
+    private operation: string,
+    private metadata?: Record<string, unknown>,
+  ) {
     this.lockPath = path.resolve(lockFilePath);
     this.lockId = randomUUID();
     this.logger = new LogContext(`FileLock:${operation}`);
@@ -49,9 +53,9 @@ export class FileLock {
    */
   async acquire(options: LockOptions = {}): Promise<void> {
     const opts = { ...FileLock.DEFAULT_OPTIONS, ...options };
-    
+
     this.logger.debug(`Attempting to acquire lock: ${this.lockPath}`);
-    
+
     let attempts = 0;
     const startTime = Date.now();
 
@@ -76,14 +80,15 @@ export class FileLock {
         // Wait before retry
         await this.sleep(opts.retryInterval);
         attempts++;
-
       } catch (error) {
         this.logger.error(`Failed to acquire lock attempt ${attempts + 1}`, error);
         throw new Error(`Lock acquisition failed: ${String(error)}`);
       }
     }
 
-    throw new Error(`Failed to acquire lock after ${opts.maxRetries} attempts for operation: ${this.operation}`);
+    throw new Error(
+      `Failed to acquire lock after ${opts.maxRetries} attempts for operation: ${this.operation}`,
+    );
   }
 
   /**
@@ -109,7 +114,6 @@ export class FileLock {
       } else {
         this.logger.warning(`Cannot release lock - ownership verification failed: ${this.lockId}`);
       }
-
     } catch (error) {
       this.logger.error(`Failed to release lock: ${this.lockId}`, error);
       throw new Error(`Lock release failed: ${String(error)}`);
@@ -179,7 +183,6 @@ export class FileLock {
       // This will fail if the file already exists
       await fs.writeFile(this.lockPath, JSON.stringify(lockInfo, null, 2), { flag: 'wx' });
       return true;
-
     } catch (error: any) {
       if (error.code === 'EEXIST') {
         // Lock file already exists
@@ -207,18 +210,20 @@ export class FileLock {
   private async cleanupStaleLock(staleThreshold: number): Promise<void> {
     try {
       const lockInfo = await this.getLockInfo();
-      
+
       if (!lockInfo) {
         return;
       }
 
       const age = Date.now() - lockInfo.timestamp;
-      
+
       // Check if lock is stale based on time
       if (age > staleThreshold) {
         // Try to determine if the process is still running
         if (await this.isProcessStale(lockInfo.pid)) {
-          this.logger.warning(`Removing stale lock: ${lockInfo.id}, age: ${age}ms, pid: ${lockInfo.pid}`);
+          this.logger.warning(
+            `Removing stale lock: ${lockInfo.id}, age: ${age}ms, pid: ${lockInfo.pid}`,
+          );
           await fs.remove(this.lockPath);
         }
       }
@@ -249,7 +254,7 @@ export class FileLock {
   private setupCleanupTimer(staleThreshold: number): void {
     // Set timer for half the stale threshold to refresh our lock
     const refreshInterval = Math.max(staleThreshold / 2, 30000); // At least 30 seconds
-    
+
     this.cleanupTimer = setTimeout(async () => {
       if (this.isLocked) {
         try {
@@ -263,7 +268,7 @@ export class FileLock {
         } catch (error) {
           this.logger.warning('Failed to refresh lock timestamp', error);
         }
-        
+
         // Set up next refresh
         this.setupCleanupTimer(staleThreshold);
       }
@@ -274,7 +279,7 @@ export class FileLock {
    * Sleep for specified milliseconds
    */
   private async sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

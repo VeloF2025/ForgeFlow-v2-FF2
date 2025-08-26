@@ -1,4 +1,8 @@
-import { addEnhancedCommands, areEnhancedCommandsAvailable, showEnhancedCommandsHelp } from "./enhanced-commands";
+import {
+  addEnhancedCommands,
+  areEnhancedCommandsAvailable,
+  showEnhancedCommandsHelp,
+} from './enhanced-commands';
 import { SearchCommands } from './commands/search.js';
 import { Command } from 'commander';
 import { Orchestrator } from '../core/orchestrator';
@@ -351,34 +355,35 @@ protocols:
       }
     });
 
-
   // Add Search Commands (Index Layer)
   try {
     const searchCommands = new SearchCommands();
     searchCommands.registerCommands(program);
-    logger.debug("Search commands (Index Layer) added");
+    logger.debug('Search commands (Index Layer) added');
   } catch (error) {
-    logger.debug("Failed to add search commands:", error);
+    logger.debug('Failed to add search commands:', error);
   }
 
   // Add enhanced CLI commands if available
-  if (process.env.NODE_ENV !== "test") {
-    areEnhancedCommandsAvailable().then(available => {
-      if (available) {
-        addEnhancedCommands(program);
-        logger.debug("Enhanced CLI commands (Foundation Layer) added");
-      } else {
-        logger.debug("Enhanced CLI commands not available - Foundation Layer not initialized");
-      }
-    }).catch(error => {
-      logger.debug("Failed to check enhanced commands availability:", error);
-    });
+  if (process.env.NODE_ENV !== 'test') {
+    areEnhancedCommandsAvailable()
+      .then((available) => {
+        if (available) {
+          addEnhancedCommands(program);
+          logger.debug('Enhanced CLI commands (Foundation Layer) added');
+        } else {
+          logger.debug('Enhanced CLI commands not available - Foundation Layer not initialized');
+        }
+      })
+      .catch((error) => {
+        logger.debug('Failed to check enhanced commands availability:', error);
+      });
   }
 
   // Add enhanced commands help
   program
-    .command("enhanced-help")
-    .description("Show help for enhanced Foundation Layer commands")
+    .command('enhanced-help')
+    .description('Show help for enhanced Foundation Layer commands')
     .action(() => {
       showEnhancedCommandsHelp();
     });

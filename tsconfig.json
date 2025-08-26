@@ -33,6 +33,8 @@
     "strictBindCallApply": false,
     "strictPropertyInitialization": false,
     "alwaysStrict": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

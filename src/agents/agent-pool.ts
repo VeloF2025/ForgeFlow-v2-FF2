@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import PQueue from 'p-queue';
 import type { Agent, AgentConfig, AgentMetrics } from '../types';
 import { LogContext } from '@utils/logger';
@@ -12,10 +13,12 @@ import { DatabaseArchitectAgent } from './database-architect';
 import { DeploymentAutomationAgent } from './deployment-automation';
 import { CodeQualityReviewerAgent } from './code-quality-reviewer';
 import { AntiHallucinationValidatorAgent } from './antihallucination-validator';
-import { PluginManager, PluginManagerConfig, PluginExecutionContext } from './plugin-manager';
+import { GitHubWorkflowAutomationAgent } from './github-workflow-automation';
+import type { PluginManagerConfig, PluginExecutionContext } from './plugin-manager';
+import { PluginManager } from './plugin-manager';
 import type { CustomAgentPlugin, SecurityPermission } from './agent-definition-schema';
 
-export class AgentPool {
+export class AgentPool extends EventEmitter {
   private config: AgentConfig;
   private agents: Map<string, Agent[]>;
   private activeAgents: Map<string, Agent>;
@@ -48,6 +51,7 @@ export class AgentPool {
   >;
 
   constructor(config: AgentConfig, pluginManagerConfig?: PluginManagerConfig) {
+    super();
     this.config = config;
     this.logger = new LogContext('AgentPool');
     this.agents = new Map();
@@ -76,13 +80,58 @@ export class AgentPool {
   // 🟢 WORKING: Public initialization method
   public async initialize(): Promise<void> {
     await this.initializeAgentPools();
+    
+    // 🔗 CRITICAL: Ensure GitHub Workflow Automation Agent is always available
+    await this.ensureGitHubAgentAvailability();
+  }
+
+  // 🔗 CRITICAL: Fail-safe to guarantee GitHub Workflow Automation Agent is never forgotten
+  private async ensureGitHubAgentAvailability(): Promise<void> {
+    const githubAgentType = 'github-workflow-automation';
+    
+    try {
+      // Verify the agent is registered
+      if (!this.agentFactories.has(githubAgentType)) {
+        this.logger.error('🚨 CRITICAL: GitHub Workflow Automation Agent missing from factories!');
+        // Force re-register as fail-safe
+        this.agentFactories.set(githubAgentType, () => new GitHubWorkflowAutomationAgent());
+      }
+
+      // Ensure agent pool exists
+      if (!this.agents.has(githubAgentType) || this.agents.get(githubAgentType)!.length === 0) {
+        this.logger.warn('⚠️ GitHub Workflow Automation Agent pool missing, creating...');
+        const agent = this.agentFactories.get(githubAgentType)!();
+        await agent.initialize();
+        
+        if (!this.agents.has(githubAgentType)) {
+          this.agents.set(githubAgentType, []);
+        }
+        this.agents.get(githubAgentType)!.push(agent);
+      }
+
+      // Initialize metrics if missing
+      if (!this.metrics.has(githubAgentType)) {
+        this.metrics.set(githubAgentType, {
+          tasksCompleted: 0,
+          tasksInProgress: 0,
+          tasksFailed: 0,
+          averageExecutionTime: 0,
+          lastTaskTime: new Date(),
+        });
+      }
+
+      this.logger.info('✅ GitHub Workflow Automation Agent availability verified (HARDCODED)');
+    } catch (error) {
+      this.logger.error('🚨 CRITICAL: Failed to ensure GitHub agent availability:', error);
+      throw new Error('GitHub Workflow Automation Agent initialization failed - this is a critical system failure');
+    }
   }
 
   // 🟢 WORKING: Initialize plugin manager for custom agents
   private async initializePluginManager(config: PluginManagerConfig): Promise<void> {
     try {
       this.pluginManager = new PluginManager(config);
-      
+
       // 🟢 WORKING: Listen for plugin events
       this.pluginManager.on('pluginRegistered', this.handlePluginRegistered.bind(this));
       this.pluginManager.on('pluginError', this.handlePluginError.bind(this));
@@ -120,12 +169,15 @@ export class AgentPool {
   }
 
   // 🟢 WORKING: Initialize pool for custom agent
-  private async initializeCustomAgentPool(agentType: string, plugin: CustomAgentPlugin): Promise<void> {
+  private async initializeCustomAgentPool(
+    agentType: string,
+    plugin: CustomAgentPlugin,
+  ): Promise<void> {
     const pool: Agent[] = [];
 
     // 🟢 WORKING: Create initial instances (fewer for custom agents)
     const initialInstances = 1; // Start with 1, can scale up
-    
+
     for (let i = 0; i < initialInstances; i++) {
       try {
         const agent = await this.createCustomAgentInstance(agentType);
@@ -158,7 +210,9 @@ export class AgentPool {
       lastActive: new Date(),
     });
 
-    this.logger.debug(`Initialized custom agent pool for: ${agentType} with ${pool.length} instances`);
+    this.logger.debug(
+      `Initialized custom agent pool for: ${agentType} with ${pool.length} instances`,
+    );
   }
 
   // 🟢 WORKING: Create custom agent instance
@@ -218,6 +272,13 @@ export class AgentPool {
     this.agentFactories.set(
       'antihallucination-validator',
       () => new AntiHallucinationValidatorAgent(),
+    );
+    
+    // 🔗 CRITICAL: GitHub Workflow Automation Agent - HARDCODED & MANDATORY
+    // This agent is permanently integrated into FF2 and cannot be disabled or forgotten
+    this.agentFactories.set(
+      'github-workflow-automation',
+      () => new GitHubWorkflowAutomationAgent(),
     );
   }
 
@@ -435,7 +496,7 @@ export class AgentPool {
 
   // 🟢 WORKING: Get built-in agent types
   getBuiltInAgentTypes(): string[] {
-    return Array.from(this.agents.keys()).filter(type => !this.customAgentTypes.has(type));
+    return Array.from(this.agents.keys()).filter((type) => !this.customAgentTypes.has(type));
   }
 
   // 🟢 WORKING: Get custom agent types
@@ -504,7 +565,7 @@ export class AgentPool {
 
     return {
       totalCustomAgents: this.customAgentTypes.size,
-      loadedPlugins: this.pluginManager.getLoadedPlugins().map(p => p.definition.type),
+      loadedPlugins: this.pluginManager.getLoadedPlugins().map((p) => p.definition.type),
       activeSandboxes: this.pluginManager.getActiveSandboxes().length,
     };
   }

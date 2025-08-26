@@ -19,8 +19,8 @@ import { IntelligentHybridRetriever } from './hybrid-retriever.js';
 import { RankFusionEngine } from './rank-fusion.js';
 import { OnlineLearningReranker } from './re-ranker.js';
 import { IntelligentLearningAnalytics } from './learning-analytics.js';
-import { ISearchEngine } from '../indexing/types.js';
-import { RetrievalConfig, BanditAlgorithm } from './types.js';
+import type { ISearchEngine } from '../indexing/types.js';
+import type { RetrievalConfig, BanditAlgorithm } from './types.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -28,7 +28,7 @@ import { logger } from '../utils/logger.js';
  */
 export function createRetrievalSystem(
   searchEngine: ISearchEngine,
-  config: RetrievalConfig
+  config: RetrievalConfig,
 ): {
   hybridRetriever: IntelligentHybridRetriever;
   banditLearner: BanditAlgorithm;
@@ -42,13 +42,14 @@ export function createRetrievalSystem(
       banditAlgorithm: config.bandit.algorithm,
       hybridMode: config.hybrid.defaultMode,
       fusionAlgorithm: config.hybrid.fusionAlgorithm,
-      rerankingEnabled: config.reranking.enabled
+      rerankingEnabled: config.reranking.enabled,
     });
 
     // Create bandit algorithm for strategy selection
-    const banditLearner = config.bandit.algorithm === 'epsilon-greedy' 
-      ? new EpsilonGreedyBandit(config.bandit)
-      : new UCBBandit(config.bandit);
+    const banditLearner =
+      config.bandit.algorithm === 'epsilon-greedy'
+        ? new EpsilonGreedyBandit(config.bandit)
+        : new UCBBandit(config.bandit);
 
     // Create feature extraction system
     const featureExtractor = new SmartFeatureExtractor(config.features);
@@ -63,15 +64,18 @@ export function createRetrievalSystem(
     const analytics = new IntelligentLearningAnalytics(config.analytics);
 
     // Create hybrid retriever that orchestrates everything
-    const hybridRetriever = new IntelligentHybridRetriever(
-      searchEngine,
-      banditLearner,
-      config
-    );
+    const hybridRetriever = new IntelligentHybridRetriever(searchEngine, banditLearner, config);
 
     logger.info('FF2 Retrieval System created successfully', {
-      components: ['banditLearner', 'featureExtractor', 'rankFusion', 'reranker', 'analytics', 'hybridRetriever'],
-      ready: true
+      components: [
+        'banditLearner',
+        'featureExtractor',
+        'rankFusion',
+        'reranker',
+        'analytics',
+        'hybridRetriever',
+      ],
+      ready: true,
     });
 
     return {
@@ -80,7 +84,7 @@ export function createRetrievalSystem(
       featureExtractor,
       rankFusion,
       reranker,
-      analytics
+      analytics,
     };
   } catch (error) {
     logger.error('Failed to create retrieval system', error);
@@ -98,7 +102,7 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     epsilonDecay: 0.995,
     initialEpsilon: 0.15,
     confidenceLevel: 2.0,
-    windowSize: 1000
+    windowSize: 1000,
   },
 
   // Feature extraction configuration
@@ -108,19 +112,19 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     enableAffinityFeatures: true,
     enableSemanticFeatures: true,
     enableContextFeatures: true,
-    
+
     featureWeights: {
       titleMatch: 0.25,
       contentMatch: 0.18,
       proximity: 0.15,
       recency: 0.12,
       affinity: 0.12,
-      semantic: 0.10,
-      context: 0.08
+      semantic: 0.1,
+      context: 0.08,
     },
-    
+
     normalizeFeatures: true,
-    scalingMethod: 'minmax'
+    scalingMethod: 'minmax',
   },
 
   // Reranking configuration
@@ -130,7 +134,7 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     learningRate: 0.01,
     regularization: 0.001,
     batchSize: 32,
-    onlineLearning: true
+    onlineLearning: true,
   },
 
   // Hybrid retrieval configuration
@@ -138,7 +142,7 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     defaultMode: 'adaptive',
     parallelTimeout: 2000,
     fusionAlgorithm: 'rrf',
-    enableVectorSearch: false // Default off until vector search is implemented
+    enableVectorSearch: false, // Default off until vector search is implemented
   },
 
   // Analytics configuration
@@ -146,12 +150,12 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     trackingEnabled: true,
     batchSize: 100,
     retentionDays: 30,
-    
+
     slowQueryThreshold: 1000,
     lowRelevanceThreshold: 0.3,
-    
+
     defaultConfidenceLevel: 0.95,
-    defaultMinimumEffect: 0.05
+    defaultMinimumEffect: 0.05,
   },
 
   // Performance configuration
@@ -160,10 +164,10 @@ export const DEFAULT_RETRIEVAL_CONFIG: RetrievalConfig = {
     maxRerankingCandidates: 100,
     cacheEnabled: true,
     cacheTTL: 300000, // 5 minutes
-    
+
     maxMemoryUsage: 100 * 1024 * 1024, // 100MB
-    maxConcurrentQueries: 10
-  }
+    maxConcurrentQueries: 10,
+  },
 };
 
 /**
@@ -176,7 +180,7 @@ export function validateRetrievalConfig(config: RetrievalConfig): string[] {
   if (config.bandit.initialEpsilon < 0 || config.bandit.initialEpsilon > 1) {
     errors.push('Bandit initial epsilon must be between 0 and 1');
   }
-  
+
   if (config.bandit.epsilonDecay <= 0 || config.bandit.epsilonDecay > 1) {
     errors.push('Bandit epsilon decay must be between 0 and 1');
   }
@@ -188,7 +192,9 @@ export function validateRetrievalConfig(config: RetrievalConfig): string[] {
   // Validate feature weights
   const totalWeight = Object.values(config.features.featureWeights).reduce((sum, w) => sum + w, 0);
   if (Math.abs(totalWeight - 1.0) > 0.1) {
-    errors.push(`Feature weights should sum to approximately 1.0 (current: ${totalWeight.toFixed(2)})`);
+    errors.push(
+      `Feature weights should sum to approximately 1.0 (current: ${totalWeight.toFixed(2)})`,
+    );
   }
 
   // Validate reranking configuration
@@ -210,12 +216,18 @@ export function validateRetrievalConfig(config: RetrievalConfig): string[] {
     errors.push('Analytics retention days must be between 1 and 365');
   }
 
-  if (config.analytics.defaultConfidenceLevel < 0.8 || config.analytics.defaultConfidenceLevel > 0.99) {
+  if (
+    config.analytics.defaultConfidenceLevel < 0.8 ||
+    config.analytics.defaultConfidenceLevel > 0.99
+  ) {
     errors.push('Analytics confidence level must be between 0.8 and 0.99');
   }
 
   // Validate performance configuration
-  if (config.performance.maxFeatureExtractionTime < 50 || config.performance.maxFeatureExtractionTime > 5000) {
+  if (
+    config.performance.maxFeatureExtractionTime < 50 ||
+    config.performance.maxFeatureExtractionTime > 5000
+  ) {
     errors.push('Max feature extraction time must be between 50ms and 5s');
   }
 
@@ -238,7 +250,7 @@ export function createRetrievalConfig(overrides: Partial<RetrievalConfig> = {}):
     reranking: { ...DEFAULT_RETRIEVAL_CONFIG.reranking, ...overrides.reranking },
     hybrid: { ...DEFAULT_RETRIEVAL_CONFIG.hybrid, ...overrides.hybrid },
     analytics: { ...DEFAULT_RETRIEVAL_CONFIG.analytics, ...overrides.analytics },
-    performance: { ...DEFAULT_RETRIEVAL_CONFIG.performance, ...overrides.performance }
+    performance: { ...DEFAULT_RETRIEVAL_CONFIG.performance, ...overrides.performance },
   };
 
   const errors = validateRetrievalConfig(config);
@@ -258,7 +270,7 @@ export class RetrievalSystemMonitor {
     averageResponseTime: 0,
     memoryUsage: 0,
     cacheHitRate: 0,
-    errorRate: 0
+    errorRate: 0,
   };
 
   private queryTimes: number[] = [];
@@ -269,7 +281,7 @@ export class RetrievalSystemMonitor {
   recordQuery(responseTime: number, fromCache: boolean = false, error: boolean = false): void {
     this.totalQueries++;
     this.queryTimes.push(responseTime);
-    
+
     if (fromCache) this.cacheHits++;
     if (error) this.errors++;
 
@@ -284,19 +296,16 @@ export class RetrievalSystemMonitor {
   private updateMetrics(): void {
     if (this.queryTimes.length === 0) return;
 
-    this.metrics.averageResponseTime = 
+    this.metrics.averageResponseTime =
       this.queryTimes.reduce((sum, time) => sum + time, 0) / this.queryTimes.length;
-    
-    this.metrics.cacheHitRate = this.totalQueries > 0 
-      ? (this.cacheHits / this.totalQueries) * 100 
-      : 0;
-    
-    this.metrics.errorRate = this.totalQueries > 0 
-      ? (this.errors / this.totalQueries) * 100 
-      : 0;
-    
+
+    this.metrics.cacheHitRate =
+      this.totalQueries > 0 ? (this.cacheHits / this.totalQueries) * 100 : 0;
+
+    this.metrics.errorRate = this.totalQueries > 0 ? (this.errors / this.totalQueries) * 100 : 0;
+
     // Calculate QPS over last minute (simplified)
-    const recentQueries = this.queryTimes.filter(time => Date.now() - time < 60000);
+    const recentQueries = this.queryTimes.filter((time) => Date.now() - time < 60000);
     this.metrics.queriesPerSecond = recentQueries.length / 60;
 
     // Memory usage (simplified - would need actual memory tracking)
@@ -317,7 +326,7 @@ export class RetrievalSystemMonitor {
       averageResponseTime: 0,
       memoryUsage: 0,
       cacheHitRate: 0,
-      errorRate: 0
+      errorRate: 0,
     };
   }
 }

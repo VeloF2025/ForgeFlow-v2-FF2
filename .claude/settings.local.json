@@ -88,7 +88,17 @@
       "Bash(gh issue close:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx eslint:*)",
+      "Bash(timeout 30 npm test -- src/indexing/__tests__/enhanced-index-manager.test.ts --run)",
+      "Bash(timeout 30 npm test src/evaluation/__tests__/evaluation-manager.test.ts)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(timeout 30 npm run build)",
+      "Bash(npx tsx:*)",
+      "Bash(timeout 30 npm test -- src/intelligence/__tests__/context-pack-assembler.test.ts --run)",
+      "Bash(timeout 30 npm test -- src/memory/ src/knowledge/ src/intelligence/ --run)",
+      "Bash(timeout 30 npm test -- src/indexing/__tests__/sqlite-fts5-engine.test.ts --run)",
+      "Bash(timeout 30 npm test -- src/indexing/__tests__/sqlite-fts5-engine.test.ts --run --reporter=basic)"
     ]
   }
 }

@@ -12,8 +12,8 @@ export * from './types';
 
 // Factory function to create a complete Memory Layer instance
 import { MemoryManager } from './memory-manager';
-import { KnowledgeManager } from '../knowledge/knowledge-manager';
-import { MemoryConfig } from './types';
+import type { KnowledgeManager } from '../knowledge/knowledge-manager';
+import type { MemoryConfig } from './types';
 import { logger } from '../utils/logger';
 
 /**
@@ -24,19 +24,21 @@ import { logger } from '../utils/logger';
  */
 export async function createMemoryLayer(
   config: MemoryConfig,
-  knowledgeManager?: KnowledgeManager
+  knowledgeManager?: KnowledgeManager,
 ): Promise<MemoryManager> {
   try {
     logger.info('Creating Memory Layer instance');
-    
+
     const memoryManager = new MemoryManager(config, knowledgeManager);
     await memoryManager.initialize();
-    
+
     logger.info('Memory Layer instance created successfully');
     return memoryManager;
   } catch (error) {
     logger.error('Failed to create Memory Layer instance:', error);
-    throw new Error(`Memory Layer creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Memory Layer creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -55,8 +57,8 @@ export const defaultMemoryConfig: MemoryConfig = {
   performanceThresholds: {
     memoryOperationTimeMs: 50,
     logWriteTimeMs: 10,
-    analyticsCalculationTimeMs: 200
-  }
+    analyticsCalculationTimeMs: 200,
+  },
 };
 
 /**
@@ -74,8 +76,8 @@ export const developmentMemoryConfig: MemoryConfig = {
   performanceThresholds: {
     memoryOperationTimeMs: 100, // More relaxed in dev
     logWriteTimeMs: 20,
-    analyticsCalculationTimeMs: 500
-  }
+    analyticsCalculationTimeMs: 500,
+  },
 };
 
 /**
@@ -93,6 +95,6 @@ export const testMemoryConfig: MemoryConfig = {
   performanceThresholds: {
     memoryOperationTimeMs: 200, // Very relaxed for CI
     logWriteTimeMs: 50,
-    analyticsCalculationTimeMs: 1000
-  }
+    analyticsCalculationTimeMs: 1000,
+  },
 };

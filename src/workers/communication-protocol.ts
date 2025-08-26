@@ -4,10 +4,10 @@ import * as http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { LogContext } from '../utils/logger';
 import { withErrorHandling, ErrorCategory } from '../utils/errors';
-import type { 
-  TaskProgress, 
-  TaskExecutionResult, 
-  TaskExecutionRequest 
+import type {
+  TaskProgress,
+  TaskExecutionResult,
+  TaskExecutionRequest,
 } from './claude-code-adapter';
 
 export interface CommunicationMessage {
@@ -29,7 +29,7 @@ export interface ClientConnection {
 
 /**
  * Communication Protocol - Bidirectional Message Passing System
- * 
+ *
  * Provides real-time communication between FF2 orchestrator, Claude Code adapter,
  * agents, and external monitoring systems through WebSocket connections.
  */
@@ -37,16 +37,16 @@ export class CommunicationProtocol extends EventEmitter {
   private port: number;
   private logger: LogContext;
   private adapter: any; // Reference to ClaudeCodeAdapter
-  
+
   // WebSocket Server
   private server: http.Server | null = null;
   private wsServer: WebSocketServer | null = null;
-  
+
   // Client management
   private clients: Map<string, ClientConnection>;
   private messageQueue: Map<string, CommunicationMessage[]>;
   private messageHistory: CommunicationMessage[];
-  
+
   // Performance monitoring
   private stats: {
     messagesProcessed: number;
@@ -61,17 +61,17 @@ export class CommunicationProtocol extends EventEmitter {
     this.port = port;
     this.logger = new LogContext('CommunicationProtocol');
     this.adapter = adapter;
-    
+
     this.clients = new Map();
     this.messageQueue = new Map();
     this.messageHistory = [];
-    
+
     this.stats = {
       messagesProcessed: 0,
       connectionsTotal: 0,
       activeConnections: 0,
       startTime: new Date(),
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
   }
 
@@ -82,22 +82,18 @@ export class CommunicationProtocol extends EventEmitter {
     this.logger.info(`Initializing Communication Protocol on port ${this.port}`);
 
     try {
-      await withErrorHandling(
-        () => this.startWebSocketServer(),
-        {
-          operationName: 'communication-protocol-init',
-          category: ErrorCategory.CONFIGURATION,
-          retries: 3,
-          timeoutMs: 10000,
-        }
-      );
+      await withErrorHandling(() => this.startWebSocketServer(), {
+        operationName: 'communication-protocol-init',
+        category: ErrorCategory.CONFIGURATION,
+        retries: 3,
+        timeoutMs: 10000,
+      });
 
       this.setupEventHandlers();
       this.startPeriodicMaintenance();
 
       this.logger.info('Communication Protocol initialized successfully');
       this.emit('protocol:initialized');
-
     } catch (error) {
       this.logger.error('Failed to initialize Communication Protocol', error);
       throw error;
@@ -107,13 +103,13 @@ export class CommunicationProtocol extends EventEmitter {
   private async startWebSocketServer(): Promise<void> {
     // Create HTTP server for WebSocket upgrade
     this.server = http.createServer();
-    
+
     // Create WebSocket server
-    this.wsServer = new WebSocketServer({ 
+    this.wsServer = new WebSocketServer({
       server: this.server,
       path: '/ff2-communication',
       perMessageDeflate: false,
-      maxPayload: 1024 * 1024 // 1MB max message size
+      maxPayload: 1024 * 1024, // 1MB max message size
     });
 
     // Handle WebSocket connections
@@ -123,7 +119,7 @@ export class CommunicationProtocol extends EventEmitter {
 
     // Start HTTP server
     await new Promise<void>((resolve, reject) => {
-      this.server!.listen(this.port, (error?: Error) => {
+      this.server.listen(this.port, (error?: Error) => {
         if (error) {
           reject(error);
         } else {
@@ -138,13 +134,13 @@ export class CommunicationProtocol extends EventEmitter {
   private handleNewConnection(socket: WebSocket, request: http.IncomingMessage): void {
     const clientId = this.generateClientId();
     const clientType = this.determineClientType(request);
-    
+
     const client: ClientConnection = {
       id: clientId,
       type: clientType,
       socket,
       subscriptions: [],
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
 
     this.clients.set(clientId, client);
@@ -164,10 +160,10 @@ export class CommunicationProtocol extends EventEmitter {
         serverInfo: {
           version: '2.0.0',
           capabilities: ['task-progress', 'status-updates', 'real-time-monitoring'],
-          uptime: Date.now() - this.stats.startTime.getTime()
-        }
+          uptime: Date.now() - this.stats.startTime.getTime(),
+        },
       },
-      source: 'adapter'
+      source: 'adapter',
     });
 
     // Setup socket event handlers
@@ -210,14 +206,16 @@ export class CommunicationProtocol extends EventEmitter {
   }
 
   private async handleIncomingMessage(
-    client: ClientConnection, 
-    message: CommunicationMessage
+    client: ClientConnection,
+    message: CommunicationMessage,
   ): Promise<void> {
     client.lastActivity = new Date();
     this.stats.messagesProcessed++;
     this.stats.lastActivity = new Date();
 
-    this.logger.debug(`Received ${message.type} from ${client.id}: ${message.data?.action || 'no-action'}`);
+    this.logger.debug(
+      `Received ${message.type} from ${client.id}: ${message.data?.action || 'no-action'}`,
+    );
 
     // Add to message history
     this.messageHistory.push(message);
@@ -230,15 +228,15 @@ export class CommunicationProtocol extends EventEmitter {
         case 'request':
           await this.handleRequest(client, message);
           break;
-        
+
         case 'response':
           await this.handleResponse(client, message);
           break;
-        
+
         case 'notification':
           await this.handleNotification(client, message);
           break;
-        
+
         default:
           this.logger.warning(`Unknown message type: ${message.type} from client ${client.id}`);
       }
@@ -248,34 +246,37 @@ export class CommunicationProtocol extends EventEmitter {
     }
   }
 
-  private async handleRequest(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleRequest(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     const { action, data } = message.data;
 
     switch (action) {
       case 'subscribe':
         await this.handleSubscription(client, data.topics);
         break;
-      
+
       case 'unsubscribe':
-        await this.handleUnsubscription(client, data.topics);
+        await this.handleSubscription(client, data.topics);
         break;
-      
+
       case 'get-status':
         await this.handleStatusRequest(client, message);
         break;
-      
+
       case 'get-tasks':
         await this.handleTasksRequest(client, message);
         break;
-      
+
       case 'get-metrics':
         await this.handleMetricsRequest(client, message);
         break;
-      
+
       case 'cancel-task':
         await this.handleTaskCancellation(client, message, data.taskId);
         break;
-      
+
       default:
         this.sendErrorToClient(client.id, `Unknown action: ${action}`);
     }
@@ -283,13 +284,21 @@ export class CommunicationProtocol extends EventEmitter {
 
   private async handleSubscription(client: ClientConnection, topics: string[]): Promise<void> {
     const validTopics = [
-      'task-progress', 'task-completed', 'task-failed', 'task-cancelled',
-      'agent-started', 'agent-completed', 'agent-failed',
-      'system-load', 'worktree-created', 'worktree-cleaned',
-      'protocol-events', 'error-events'
+      'task-progress',
+      'task-completed',
+      'task-failed',
+      'task-cancelled',
+      'agent-started',
+      'agent-completed',
+      'agent-failed',
+      'system-load',
+      'worktree-created',
+      'worktree-cleaned',
+      'protocol-events',
+      'error-events',
     ];
 
-    const subscriptions = topics.filter(topic => validTopics.includes(topic));
+    const subscriptions = topics.filter((topic) => validTopics.includes(topic));
     client.subscriptions = [...new Set([...client.subscriptions, ...subscriptions])];
 
     this.sendToClient(client.id, {
@@ -299,15 +308,18 @@ export class CommunicationProtocol extends EventEmitter {
       data: {
         action: 'subscribed',
         topics: subscriptions,
-        message: `Subscribed to ${subscriptions.length} topics`
+        message: `Subscribed to ${subscriptions.length} topics`,
       },
-      source: 'adapter'
+      source: 'adapter',
     });
 
     this.logger.debug(`Client ${client.id} subscribed to: ${subscriptions.join(', ')}`);
   }
 
-  private async handleStatusRequest(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleStatusRequest(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     const systemStatus = this.adapter.getSystemStatus();
     const protocolStats = this.getProtocolStats();
 
@@ -319,13 +331,16 @@ export class CommunicationProtocol extends EventEmitter {
         action: 'status-response',
         requestId: message.id,
         system: systemStatus,
-        protocol: protocolStats
+        protocol: protocolStats,
       },
-      source: 'adapter'
+      source: 'adapter',
     });
   }
 
-  private async handleTasksRequest(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleTasksRequest(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     const activeTasks = this.adapter.getAllTaskStatuses();
 
     this.sendToClient(client.id, {
@@ -335,13 +350,16 @@ export class CommunicationProtocol extends EventEmitter {
       data: {
         action: 'tasks-response',
         requestId: message.id,
-        tasks: activeTasks
+        tasks: activeTasks,
       },
-      source: 'adapter'
+      source: 'adapter',
     });
   }
 
-  private async handleMetricsRequest(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleMetricsRequest(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     const adapterMetrics = this.adapter.getMetrics();
     const protocolMetrics = this.getProtocolStats();
 
@@ -353,20 +371,20 @@ export class CommunicationProtocol extends EventEmitter {
         action: 'metrics-response',
         requestId: message.id,
         adapter: adapterMetrics,
-        protocol: protocolMetrics
+        protocol: protocolMetrics,
       },
-      source: 'adapter'
+      source: 'adapter',
     });
   }
 
   private async handleTaskCancellation(
-    client: ClientConnection, 
-    message: CommunicationMessage, 
-    taskId: string
+    client: ClientConnection,
+    message: CommunicationMessage,
+    taskId: string,
   ): Promise<void> {
     try {
       await this.adapter.cancelTask(taskId);
-      
+
       this.sendToClient(client.id, {
         id: this.generateMessageId(),
         type: 'response',
@@ -375,25 +393,34 @@ export class CommunicationProtocol extends EventEmitter {
           action: 'task-cancelled',
           requestId: message.id,
           taskId,
-          message: 'Task cancellation requested'
+          message: 'Task cancellation requested',
         },
-        source: 'adapter'
+        source: 'adapter',
       });
-
     } catch (error) {
       this.sendErrorToClient(client.id, `Failed to cancel task ${taskId}`, String(error));
     }
   }
 
-  private async handleResponse(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleResponse(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     // Handle responses from clients (acknowledgments, etc.)
-    this.logger.debug(`Received response from ${client.id}: ${message.data?.message || 'no-message'}`);
+    this.logger.debug(
+      `Received response from ${client.id}: ${message.data?.message || 'no-message'}`,
+    );
     this.emit('protocol:response', { client, message });
   }
 
-  private async handleNotification(client: ClientConnection, message: CommunicationMessage): Promise<void> {
+  private async handleNotification(
+    client: ClientConnection,
+    message: CommunicationMessage,
+  ): Promise<void> {
     // Handle notifications from clients
-    this.logger.debug(`Received notification from ${client.id}: ${message.data?.type || 'no-type'}`);
+    this.logger.debug(
+      `Received notification from ${client.id}: ${message.data?.type || 'no-type'}`,
+    );
     this.emit('protocol:notification', { client, message });
   }
 
@@ -407,10 +434,10 @@ export class CommunicationProtocol extends EventEmitter {
       timestamp: new Date(),
       data: {
         type: 'task-progress',
-        progress
+        progress,
       },
       source: 'adapter',
-      target: 'broadcast'
+      target: 'broadcast',
     };
 
     this.broadcastToSubscribers('task-progress', message);
@@ -420,8 +447,12 @@ export class CommunicationProtocol extends EventEmitter {
    * Broadcast task completion to subscribed clients
    */
   public broadcastTaskResult(result: TaskExecutionResult): void {
-    const eventType = result.status === 'success' ? 'task-completed' : 
-                     result.status === 'failure' ? 'task-failed' : 'task-cancelled';
+    const eventType =
+      result.status === 'success'
+        ? 'task-completed'
+        : result.status === 'failure'
+          ? 'task-failed'
+          : 'task-cancelled';
 
     const message: CommunicationMessage = {
       id: this.generateMessageId(),
@@ -429,10 +460,10 @@ export class CommunicationProtocol extends EventEmitter {
       timestamp: new Date(),
       data: {
         type: eventType,
-        result
+        result,
       },
       source: 'adapter',
-      target: 'broadcast'
+      target: 'broadcast',
     };
 
     this.broadcastToSubscribers(eventType, message);
@@ -448,19 +479,19 @@ export class CommunicationProtocol extends EventEmitter {
       timestamp: new Date(),
       data: {
         type: 'system-status',
-        status
+        status,
       },
       source: 'adapter',
-      target: 'broadcast'
+      target: 'broadcast',
     };
 
     this.broadcastToSubscribers('system-load', message);
   }
 
   private broadcastToSubscribers(topic: string, message: CommunicationMessage): void {
-    const subscribers = Array.from(this.clients.values()).filter(client => 
-      client.subscriptions.includes(topic) && 
-      client.socket.readyState === WebSocket.OPEN
+    const subscribers = Array.from(this.clients.values()).filter(
+      (client) =>
+        client.subscriptions.includes(topic) && client.socket.readyState === WebSocket.OPEN,
     );
 
     if (subscribers.length === 0) {
@@ -507,9 +538,9 @@ export class CommunicationProtocol extends EventEmitter {
       data: {
         error,
         details,
-        clientId
+        clientId,
       },
-      source: 'adapter'
+      source: 'adapter',
     });
   }
 
@@ -576,7 +607,7 @@ export class CommunicationProtocol extends EventEmitter {
   }
 
   private performHealthCheck(): void {
-    const staleThreshold = Date.now() - (5 * 60 * 1000); // 5 minutes
+    const staleThreshold = Date.now() - 5 * 60 * 1000; // 5 minutes
 
     for (const [clientId, client] of this.clients) {
       if (client.lastActivity.getTime() < staleThreshold) {
@@ -602,10 +633,8 @@ export class CommunicationProtocol extends EventEmitter {
 
   private cleanupMessageHistory(): void {
     // Keep only recent messages
-    const cutoff = Date.now() - (60 * 60 * 1000); // 1 hour
-    this.messageHistory = this.messageHistory.filter(msg => 
-      msg.timestamp.getTime() > cutoff
-    );
+    const cutoff = Date.now() - 60 * 60 * 1000; // 1 hour
+    this.messageHistory = this.messageHistory.filter((msg) => msg.timestamp.getTime() > cutoff);
   }
 
   private getProtocolStats(): {
@@ -627,7 +656,7 @@ export class CommunicationProtocol extends EventEmitter {
       messagesProcessed: this.stats.messagesProcessed,
       uptime: Date.now() - this.stats.startTime.getTime(),
       messageHistory: this.messageHistory.length,
-      clientTypes
+      clientTypes,
     };
   }
 
@@ -661,7 +690,7 @@ export class CommunicationProtocol extends EventEmitter {
       // Close HTTP server
       if (this.server) {
         await new Promise<void>((resolve) => {
-          this.server!.close(() => {
+          this.server.close(() => {
             this.logger.debug('HTTP server closed');
             resolve();
           });
@@ -670,7 +699,6 @@ export class CommunicationProtocol extends EventEmitter {
 
       this.logger.info('Communication Protocol shutdown complete');
       this.emit('protocol:shutdown');
-
     } catch (error) {
       this.logger.error('Error during Communication Protocol shutdown', error);
       throw error;

@@ -4,7 +4,8 @@
  */
 
 import { EventEmitter } from 'events';
-import { ForgeFlowError, ErrorCategory, ErrorSeverity, ErrorHandler } from './errors';
+import type { ForgeFlowError } from './errors';
+import { ErrorCategory, ErrorSeverity, ErrorHandler } from './errors';
 import { logger } from './logger';
 import { gracefulDegradation } from './graceful-degradation';
 
@@ -58,16 +59,22 @@ export interface SystemHealthMetrics {
   totalErrors: number;
   criticalErrors: number;
   systemHealthScore: number;
-  componentHealth: Record<string, {
-    status: string;
-    score: number;
-    lastError?: Date;
-  }>;
-  circuitBreakers: Record<string, {
-    state: string;
-    failures: number;
-    successRate: number;
-  }>;
+  componentHealth: Record<
+    string,
+    {
+      status: string;
+      score: number;
+      lastError?: Date;
+    }
+  >;
+  circuitBreakers: Record<
+    string,
+    {
+      state: string;
+      failures: number;
+      successRate: number;
+    }
+  >;
   recoveryMetrics: {
     attempts: number;
     successes: number;
@@ -113,7 +120,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     }
 
     this.isMonitoring = true;
-    
+
     // Collect metrics every 60 seconds
     this.metricsInterval = setInterval(() => {
       this.collectHealthMetrics();
@@ -137,11 +144,11 @@ export class ErrorMonitoringSystem extends EventEmitter {
     }
 
     this.isMonitoring = false;
-    
+
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
     }
-    
+
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
@@ -202,13 +209,17 @@ export class ErrorMonitoringSystem extends EventEmitter {
     }
 
     // Check triggers
-    return config.triggers.some(trigger => this.evaluateTrigger(error, trigger, config));
+    return config.triggers.some((trigger) => this.evaluateTrigger(error, trigger, config));
   }
 
   /**
    * Evaluate a specific trigger condition
    */
-  private evaluateTrigger(error: ForgeFlowError, trigger: AlertTrigger, config: AlertConfig): boolean {
+  private evaluateTrigger(
+    error: ForgeFlowError,
+    trigger: AlertTrigger,
+    config: AlertConfig,
+  ): boolean {
     const errorHandler = ErrorHandler.getInstance();
     const metrics = errorHandler.getErrorMetrics();
 
@@ -223,7 +234,11 @@ export class ErrorMonitoringSystem extends EventEmitter {
         return error.message.toLowerCase().includes(String(trigger.threshold).toLowerCase());
 
       case 'error-count':
-        return this.evaluateCondition(metrics.totalErrors, trigger.condition, Number(trigger.threshold));
+        return this.evaluateCondition(
+          metrics.totalErrors,
+          trigger.condition,
+          Number(trigger.threshold),
+        );
 
       case 'error-rate':
         const recentMetrics = this.getRecentMetrics(trigger.timeWindowMs);
@@ -231,7 +246,11 @@ export class ErrorMonitoringSystem extends EventEmitter {
         return this.evaluateCondition(errorRate, trigger.condition, Number(trigger.threshold));
 
       case 'health-score':
-        return this.evaluateCondition(metrics.healthScore, trigger.condition, Number(trigger.threshold));
+        return this.evaluateCondition(
+          metrics.healthScore,
+          trigger.condition,
+          Number(trigger.threshold),
+        );
 
       default:
         return false;
@@ -243,7 +262,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
    */
   private evaluateCondition(value: number, condition: string, threshold: number): boolean {
     const trimmedCondition = condition.trim();
-    
+
     if (trimmedCondition.startsWith('>=')) {
       return value >= threshold;
     } else if (trimmedCondition.startsWith('<=')) {
@@ -257,7 +276,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     } else if (trimmedCondition === '!=') {
       return value !== threshold;
     }
-    
+
     return false;
   }
 
@@ -276,16 +295,16 @@ export class ErrorMonitoringSystem extends EventEmitter {
       context: {
         error: error.toJSON(),
         trigger: config.triggers,
-        systemMetrics: this.getLatestMetrics()
+        systemMetrics: this.getLatestMetrics(),
       },
       resolved: false,
-      actions: []
+      actions: [],
     };
 
     // Store alert
     this.activeAlerts.set(alertId, alert);
     this.alertHistory.push(alert);
-    
+
     // Update cooldown and counts
     this.alertCooldowns.set(config.id, new Date());
     const currentHour = Math.floor(Date.now() / 3600000);
@@ -303,7 +322,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
       alertId,
       configId: config.id,
       error: error.message,
-      severity: config.severity
+      severity: config.severity,
     });
 
     this.emit('alert', alert);
@@ -321,7 +340,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     } = {
       type: actionConfig.type,
       status: 'pending',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     alert.actions.push(action);
@@ -331,27 +350,27 @@ export class ErrorMonitoringSystem extends EventEmitter {
         case 'log':
           this.executeLogAction(alert, actionConfig.config);
           break;
-        
+
         case 'console':
           this.executeConsoleAction(alert, actionConfig.config);
           break;
-        
+
         case 'webhook':
           await this.executeWebhookAction(alert, actionConfig.config);
           break;
-        
+
         case 'email':
           await this.executeEmailAction(alert, actionConfig.config);
           break;
-        
+
         case 'slack':
           await this.executeSlackAction(alert, actionConfig.config);
           break;
-        
+
         case 'metric':
           this.executeMetricAction(alert, actionConfig.config);
           break;
-        
+
         default:
           throw new Error(`Unknown action type: ${actionConfig.type}`);
       }
@@ -362,7 +381,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
       action.error = String(error);
       logger.error(`Alert action failed: ${actionConfig.type}`, {
         alertId: alert.id,
-        error: String(error)
+        error: String(error),
       });
     }
   }
@@ -376,7 +395,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
       alertId: alert.id,
       description: alert.description,
       severity: alert.severity,
-      context: alert.context
+      context: alert.context,
     });
   }
 
@@ -397,33 +416,36 @@ export class ErrorMonitoringSystem extends EventEmitter {
   private async executeWebhookAction(alert: Alert, config: any): Promise<void> {
     const https = require('https');
     const url = new URL(config.url);
-    
+
     const payload = {
       alert,
       timestamp: alert.timestamp.toISOString(),
-      source: 'forgeflow-v2'
+      source: 'forgeflow-v2',
     };
 
     const postData = JSON.stringify(payload);
 
     return new Promise((resolve, reject) => {
-      const req = https.request({
-        hostname: url.hostname,
-        port: url.port || 443,
-        path: url.pathname + url.search,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
-          ...(config.headers || {})
-        }
-      }, (res: any) => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve();
-        } else {
-          reject(new Error(`Webhook failed with status ${res.statusCode}`));
-        }
-      });
+      const req = https.request(
+        {
+          hostname: url.hostname,
+          port: url.port || 443,
+          path: url.pathname + url.search,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData),
+            ...(config.headers || {}),
+          },
+        },
+        (res: any) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Webhook failed with status ${res.statusCode}`));
+          }
+        },
+      );
 
       req.on('error', reject);
       req.write(postData);
@@ -440,7 +462,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     logger.info('Email alert would be sent', {
       to: config.to,
       subject: `ForgeFlow Alert: ${alert.title}`,
-      alertId: alert.id
+      alertId: alert.id,
     });
   }
 
@@ -453,7 +475,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     logger.info('Slack alert would be sent', {
       channel: config.channel,
       message: alert.title,
-      alertId: alert.id
+      alertId: alert.id,
     });
   }
 
@@ -468,9 +490,9 @@ export class ErrorMonitoringSystem extends EventEmitter {
       tags: {
         severity: alert.severity,
         configId: alert.configId,
-        ...(config.tags || {})
+        ...(config.tags || {}),
       },
-      timestamp: alert.timestamp
+      timestamp: alert.timestamp,
     });
   }
 
@@ -493,15 +515,15 @@ export class ErrorMonitoringSystem extends EventEmitter {
       recoveryMetrics: {
         attempts: this.getTotalRecoveryAttempts(errorMetrics.recoveryMetrics),
         successes: this.getTotalRecoverySuccesses(errorMetrics.recoveryMetrics),
-        successRate: this.calculateRecoverySuccessRate(errorMetrics.recoveryMetrics)
-      }
+        successRate: this.calculateRecoverySuccessRate(errorMetrics.recoveryMetrics),
+      },
     };
 
     this.healthMetrics.push(metrics);
-    
+
     // Keep only last 24 hours of metrics
-    const cutoff = Date.now() - (24 * 60 * 60 * 1000);
-    this.healthMetrics = this.healthMetrics.filter(m => m.timestamp.getTime() > cutoff);
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    this.healthMetrics = this.healthMetrics.filter((m) => m.timestamp.getTime() > cutoff);
 
     this.emit('metrics', metrics);
   }
@@ -511,7 +533,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
    */
   private getRecentMetrics(timeWindowMs: number): SystemHealthMetrics[] {
     const cutoff = Date.now() - timeWindowMs;
-    return this.healthMetrics.filter(m => m.timestamp.getTime() > cutoff);
+    return this.healthMetrics.filter((m) => m.timestamp.getTime() > cutoff);
   }
 
   /**
@@ -528,7 +550,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     const errorDiff = latest.totalErrors - earliest.totalErrors;
 
     // Return errors per minute
-    return (errorDiff / (timeDiff / 60000));
+    return errorDiff / (timeDiff / 60000);
   }
 
   /**
@@ -543,9 +565,9 @@ export class ErrorMonitoringSystem extends EventEmitter {
    * Get count of critical errors in active alerts
    */
   private getCriticalErrorCount(): number {
-    return Array.from(this.activeAlerts.values())
-      .filter(alert => alert.severity === ErrorSeverity.CRITICAL && !alert.resolved)
-      .length;
+    return Array.from(this.activeAlerts.values()).filter(
+      (alert) => alert.severity === ErrorSeverity.CRITICAL && !alert.resolved,
+    ).length;
   }
 
   /**
@@ -564,7 +586,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
       summary[component.componentId] = {
         status: component.status,
         score: this.componentStatusToScore(component.status),
-        lastError: component.lastFailure
+        lastError: component.lastFailure,
       };
     }
     return summary;
@@ -572,11 +594,11 @@ export class ErrorMonitoringSystem extends EventEmitter {
 
   private componentStatusToScore(status: string): number {
     const scores: Record<string, number> = {
-      'healthy': 100,
-      'degraded': 60,
-      'recovering': 30,
-      'failed': 0,
-      'disabled': 80
+      healthy: 100,
+      degraded: 60,
+      recovering: 30,
+      failed: 0,
+      disabled: 80,
     };
     return scores[status] || 50;
   }
@@ -588,13 +610,17 @@ export class ErrorMonitoringSystem extends EventEmitter {
   }
 
   private getTotalRecoveryAttempts(recoveryMetrics: Record<string, any>): number {
-    return Object.values(recoveryMetrics).reduce((sum: number, metrics: any) => 
-      sum + (metrics.attempts || 0), 0);
+    return Object.values(recoveryMetrics).reduce(
+      (sum: number, metrics: any) => sum + (metrics.attempts || 0),
+      0,
+    );
   }
 
   private getTotalRecoverySuccesses(recoveryMetrics: Record<string, any>): number {
-    return Object.values(recoveryMetrics).reduce((sum: number, metrics: any) => 
-      sum + (metrics.successes || 0), 0);
+    return Object.values(recoveryMetrics).reduce(
+      (sum: number, metrics: any) => sum + (metrics.successes || 0),
+      0,
+    );
   }
 
   private calculateRecoverySuccessRate(recoveryMetrics: Record<string, any>): number {
@@ -623,19 +649,21 @@ export class ErrorMonitoringSystem extends EventEmitter {
       name: 'High Error Rate',
       description: 'System is experiencing an unusually high error rate',
       severity: ErrorSeverity.HIGH,
-      triggers: [{
-        type: 'error-rate',
-        condition: '> 10',
-        timeWindowMs: 300000, // 5 minutes
-        threshold: 10
-      }],
+      triggers: [
+        {
+          type: 'error-rate',
+          condition: '> 10',
+          timeWindowMs: 300000, // 5 minutes
+          threshold: 10,
+        },
+      ],
       actions: [
         { type: 'log', enabled: true, config: { level: 'error' } },
-        { type: 'console', enabled: true, config: { prefix: '🚨 HIGH ERROR RATE' } }
+        { type: 'console', enabled: true, config: { prefix: '🚨 HIGH ERROR RATE' } },
       ],
       enabled: true,
       cooldownMs: 300000, // 5 minutes
-      maxAlertsPerHour: 6
+      maxAlertsPerHour: 6,
     });
 
     // Critical error alert
@@ -644,19 +672,21 @@ export class ErrorMonitoringSystem extends EventEmitter {
       name: 'Critical Error',
       description: 'A critical error has occurred',
       severity: ErrorSeverity.CRITICAL,
-      triggers: [{
-        type: 'severity',
-        condition: '=',
-        timeWindowMs: 0,
-        threshold: ErrorSeverity.CRITICAL
-      }],
+      triggers: [
+        {
+          type: 'severity',
+          condition: '=',
+          timeWindowMs: 0,
+          threshold: ErrorSeverity.CRITICAL,
+        },
+      ],
       actions: [
         { type: 'log', enabled: true, config: { level: 'critical' } },
-        { type: 'console', enabled: true, config: { prefix: '🔴 CRITICAL ERROR' } }
+        { type: 'console', enabled: true, config: { prefix: '🔴 CRITICAL ERROR' } },
       ],
       enabled: true,
       cooldownMs: 60000, // 1 minute
-      maxAlertsPerHour: 20
+      maxAlertsPerHour: 20,
     });
 
     // Low system health alert
@@ -665,19 +695,21 @@ export class ErrorMonitoringSystem extends EventEmitter {
       name: 'Low System Health',
       description: 'System health score has dropped below acceptable levels',
       severity: ErrorSeverity.HIGH,
-      triggers: [{
-        type: 'health-score',
-        condition: '< 70',
-        timeWindowMs: 0,
-        threshold: 70
-      }],
+      triggers: [
+        {
+          type: 'health-score',
+          condition: '< 70',
+          timeWindowMs: 0,
+          threshold: 70,
+        },
+      ],
       actions: [
         { type: 'log', enabled: true, config: { level: 'warn' } },
-        { type: 'console', enabled: true, config: { prefix: '⚠️ LOW SYSTEM HEALTH' } }
+        { type: 'console', enabled: true, config: { prefix: '⚠️ LOW SYSTEM HEALTH' } },
       ],
       enabled: true,
       cooldownMs: 600000, // 10 minutes
-      maxAlertsPerHour: 3
+      maxAlertsPerHour: 3,
     });
   }
 
@@ -685,12 +717,11 @@ export class ErrorMonitoringSystem extends EventEmitter {
    * Clean up old data
    */
   private cleanupOldData(): void {
-    const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
-    
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours
+
     // Clean up alert history
-    this.alertHistory = this.alertHistory.filter(alert => 
-      alert.timestamp.getTime() > cutoff);
-    
+    this.alertHistory = this.alertHistory.filter((alert) => alert.timestamp.getTime() > cutoff);
+
     // Clean up resolved alerts from active alerts
     for (const [id, alert] of this.activeAlerts) {
       if (alert.resolved && alert.resolvedAt && alert.resolvedAt.getTime() < cutoff) {
@@ -702,7 +733,8 @@ export class ErrorMonitoringSystem extends EventEmitter {
     const currentHour = Math.floor(Date.now() / 3600000);
     for (const [key] of this.alertCounts) {
       const keyHour = parseInt(key.split('-').pop() || '0');
-      if (currentHour - keyHour > 24) { // More than 24 hours old
+      if (currentHour - keyHour > 24) {
+        // More than 24 hours old
         this.alertCounts.delete(key);
       }
     }
@@ -722,10 +754,10 @@ export class ErrorMonitoringSystem extends EventEmitter {
   } {
     return {
       monitoring: this.isMonitoring,
-      activeAlerts: Array.from(this.activeAlerts.values()).filter(a => !a.resolved).length,
+      activeAlerts: Array.from(this.activeAlerts.values()).filter((a) => !a.resolved).length,
       totalAlerts: this.alertHistory.length,
       latestMetrics: this.getLatestMetrics(),
-      alertConfigs: this.alertConfigs.size
+      alertConfigs: this.alertConfigs.size,
     };
   }
 
@@ -747,7 +779,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
     logger.info(`Alert resolved: ${alert.title}`, {
       alertId,
       reason,
-      duration: alert.resolvedAt.getTime() - alert.timestamp.getTime()
+      duration: alert.resolvedAt.getTime() - alert.timestamp.getTime(),
     });
 
     this.emit('alertResolved', alert);
@@ -758,7 +790,7 @@ export class ErrorMonitoringSystem extends EventEmitter {
    * Get active alerts
    */
   getActiveAlerts(): Alert[] {
-    return Array.from(this.activeAlerts.values()).filter(alert => !alert.resolved);
+    return Array.from(this.activeAlerts.values()).filter((alert) => !alert.resolved);
   }
 
   /**
@@ -772,8 +804,8 @@ export class ErrorMonitoringSystem extends EventEmitter {
    * Get health metrics history
    */
   getHealthMetrics(hours = 24): SystemHealthMetrics[] {
-    const cutoff = Date.now() - (hours * 60 * 60 * 1000);
-    return this.healthMetrics.filter(m => m.timestamp.getTime() > cutoff);
+    const cutoff = Date.now() - hours * 60 * 60 * 1000;
+    return this.healthMetrics.filter((m) => m.timestamp.getTime() > cutoff);
   }
 }
 

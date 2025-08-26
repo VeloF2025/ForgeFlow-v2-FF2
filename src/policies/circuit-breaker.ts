@@ -83,7 +83,7 @@ export class CircuitBreaker {
 
   constructor(
     private readonly operationName: string,
-    private readonly config: CircuitBreakerConfig
+    private readonly config: CircuitBreakerConfig,
   ) {
     this.validateConfig(config);
     if (config.enableHealthChecks && config.healthCheckInterval) {
@@ -111,13 +111,17 @@ export class CircuitBreaker {
       errors.push('halfOpenMaxCalls must be at least 1');
     }
 
-    if (config.errorRateThreshold !== undefined && 
-        (config.errorRateThreshold < 0 || config.errorRateThreshold > 100)) {
+    if (
+      config.errorRateThreshold !== undefined &&
+      (config.errorRateThreshold < 0 || config.errorRateThreshold > 100)
+    ) {
       errors.push('errorRateThreshold must be between 0 and 100');
     }
 
-    if (config.slowCallRateThreshold !== undefined && 
-        (config.slowCallRateThreshold < 0 || config.slowCallRateThreshold > 100)) {
+    if (
+      config.slowCallRateThreshold !== undefined &&
+      (config.slowCallRateThreshold < 0 || config.slowCallRateThreshold > 100)
+    ) {
       errors.push('slowCallRateThreshold must be between 0 and 100');
     }
 
@@ -129,7 +133,7 @@ export class CircuitBreaker {
         severity: ErrorSeverity.HIGH,
         context: { operationName: this.operationName, errors },
         recoverable: false,
-        userMessage: 'Circuit breaker configuration is invalid'
+        userMessage: 'Circuit breaker configuration is invalid',
       });
     }
   }
@@ -186,7 +190,7 @@ export class CircuitBreaker {
 
     if (this.state === 'half-open') {
       this.halfOpenCalls++;
-      
+
       if (this.halfOpenCalls >= this.config.successThreshold) {
         this.transitionToClosed('Success threshold reached in half-open state');
       }
@@ -236,8 +240,10 @@ export class CircuitBreaker {
     }
 
     // Slow call rate threshold
-    if (this.config.slowCallRateThreshold !== undefined && 
-        this.config.slowCallDurationThreshold !== undefined) {
+    if (
+      this.config.slowCallRateThreshold !== undefined &&
+      this.config.slowCallDurationThreshold !== undefined
+    ) {
       const slowCallRate = this.calculateSlowCallRate();
       if (slowCallRate >= this.config.slowCallRateThreshold) {
         return true;
@@ -250,8 +256,8 @@ export class CircuitBreaker {
   // 🟢 WORKING: Calculate error rate from recent results
   private calculateErrorRate(): number {
     if (this.recentResults.length === 0) return 0;
-    
-    const failures = this.recentResults.filter(r => !r.success).length;
+
+    const failures = this.recentResults.filter((r) => !r.success).length;
     return (failures / this.recentResults.length) * 100;
   }
 
@@ -262,9 +268,9 @@ export class CircuitBreaker {
     }
 
     const slowCalls = this.recentResults.filter(
-      r => r.duration >= this.config.slowCallDurationThreshold!
+      (r) => r.duration >= this.config.slowCallDurationThreshold,
     ).length;
-    
+
     return (slowCalls / this.recentResults.length) * 100;
   }
 
@@ -274,14 +280,14 @@ export class CircuitBreaker {
     this.state = 'open';
     this.nextAttemptTime = Date.now() + this.config.timeout;
     this.halfOpenCalls = 0;
-    
+
     this.recordStateTransition(previousState, 'open', reason);
-    
+
     enhancedLogger.warn('Circuit breaker opened', {
       operationName: this.operationName,
       reason,
       failures: this.failures,
-      timeout: this.config.timeout
+      timeout: this.config.timeout,
     });
   }
 
@@ -289,13 +295,13 @@ export class CircuitBreaker {
     const previousState = this.state;
     this.state = 'half-open';
     this.halfOpenCalls = 0;
-    
+
     this.recordStateTransition(previousState, 'half-open', reason);
-    
+
     enhancedLogger.info('Circuit breaker half-opened', {
       operationName: this.operationName,
       reason,
-      maxCalls: this.config.halfOpenMaxCalls || 3
+      maxCalls: this.config.halfOpenMaxCalls || 3,
     });
   }
 
@@ -304,13 +310,13 @@ export class CircuitBreaker {
     this.state = 'closed';
     this.failures = 0;
     this.halfOpenCalls = 0;
-    
+
     this.recordStateTransition(previousState, 'closed', reason);
-    
+
     enhancedLogger.info('Circuit breaker closed', {
       operationName: this.operationName,
       reason,
-      successThreshold: this.config.successThreshold
+      successThreshold: this.config.successThreshold,
     });
   }
 
@@ -320,7 +326,7 @@ export class CircuitBreaker {
       from,
       to,
       timestamp: new Date(),
-      reason
+      reason,
     });
 
     // Keep only recent transitions (last 50)
@@ -334,8 +340,10 @@ export class CircuitBreaker {
     // Only adjust if we have enough data
     if (this.recentResults.length < 20) return;
 
-    const successRate = (this.recentResults.filter(r => r.success).length / this.recentResults.length) * 100;
-    const avgResponseTime = this.recentResults.reduce((sum, r) => sum + r.duration, 0) / this.recentResults.length;
+    const successRate =
+      (this.recentResults.filter((r) => r.success).length / this.recentResults.length) * 100;
+    const avgResponseTime =
+      this.recentResults.reduce((sum, r) => sum + r.duration, 0) / this.recentResults.length;
 
     // Adjust failure threshold based on recent performance
     if (successRate > 95) {
@@ -370,30 +378,29 @@ export class CircuitBreaker {
   private async performHealthCheck(): Promise<void> {
     try {
       const startTime = Date.now();
-      
+
       // This is a placeholder - in real implementation, this would be
       // the actual health check logic specific to the operation
       await this.executeHealthCheck();
-      
+
       const duration = Date.now() - startTime;
-      
+
       this.healthCheckResults.push({
         timestamp: new Date(),
         success: true,
-        responseTime: duration
+        responseTime: duration,
       });
 
       // If health check passes and circuit is open, consider transitioning to half-open
       if (this.state === 'open') {
         this.transitionToHalfOpen('Health check passed');
       }
-
     } catch (error) {
       this.healthCheckResults.push({
         timestamp: new Date(),
         success: false,
         responseTime: 0,
-        error: error.message
+        error: error.message,
       });
     }
 
@@ -411,7 +418,7 @@ export class CircuitBreaker {
     // For example, for HTTP services, this might be a lightweight ping
     // For database operations, this might be a simple query
     // For now, we'll simulate a basic check
-    
+
     await new Promise((resolve, reject) => {
       setTimeout(() => {
         // Simulate 90% success rate for health checks
@@ -427,10 +434,11 @@ export class CircuitBreaker {
   // 🟢 WORKING: Get current circuit metrics
   getMetrics(): CircuitBreakerMetrics {
     const now = Date.now();
-    const stateStartTime = this.stateTransitions.length > 0 
-      ? this.stateTransitions[this.stateTransitions.length - 1].timestamp.getTime()
-      : now;
-    
+    const stateStartTime =
+      this.stateTransitions.length > 0
+        ? this.stateTransitions[this.stateTransitions.length - 1].timestamp.getTime()
+        : now;
+
     return {
       state: this.state,
       failures: this.failures,
@@ -443,14 +451,14 @@ export class CircuitBreaker {
       averageResponseTime: this.calculateAverageResponseTime(),
       slowCallRate: this.calculateSlowCallRate(),
       timeInCurrentState: now - stateStartTime,
-      healthCheckResults: [...this.healthCheckResults]
+      healthCheckResults: [...this.healthCheckResults],
     };
   }
 
   // 🟢 WORKING: Calculate average response time
   private calculateAverageResponseTime(): number {
     if (this.recentResults.length === 0) return 0;
-    
+
     const totalTime = this.recentResults.reduce((sum, result) => sum + result.duration, 0);
     return totalTime / this.recentResults.length;
   }
@@ -465,11 +473,11 @@ export class CircuitBreaker {
     this.lastSuccessTime = null;
     this.halfOpenCalls = 0;
     this.recentResults = [];
-    
+
     this.recordStateTransition(this.state, 'closed', 'Manual reset');
-    
+
     enhancedLogger.info('Circuit breaker reset', {
-      operationName: this.operationName
+      operationName: this.operationName,
     });
   }
 
@@ -477,18 +485,18 @@ export class CircuitBreaker {
   forceState(newState: CircuitState, reason: string = 'Manual override'): void {
     const oldState = this.state;
     this.state = newState;
-    
+
     if (newState === 'open') {
       this.nextAttemptTime = Date.now() + this.config.timeout;
     }
-    
+
     this.recordStateTransition(oldState, newState, reason);
-    
+
     enhancedLogger.warn('Circuit breaker state forced', {
       operationName: this.operationName,
       from: oldState,
       to: newState,
-      reason
+      reason,
     });
   }
 
@@ -501,7 +509,7 @@ export class CircuitBreaker {
       duration: result.duration,
       failures: this.failures,
       successes: this.successes,
-      totalCalls: this.totalCalls
+      totalCalls: this.totalCalls,
     });
   }
 
@@ -528,7 +536,7 @@ export class CircuitBreakerManager {
     slowCallRateThreshold: 50,
     healthCheckInterval: 30000,
     enableHealthChecks: false,
-    adaptiveThresholds: false
+    adaptiveThresholds: false,
   };
 
   // 🟢 WORKING: Get or create circuit breaker
@@ -537,12 +545,15 @@ export class CircuitBreakerManager {
       const circuitConfig = { ...this.defaultConfig, ...config };
       this.circuits.set(operationName, new CircuitBreaker(operationName, circuitConfig));
     }
-    
-    return this.circuits.get(operationName)!;
+
+    return this.circuits.get(operationName);
   }
 
   // 🟢 WORKING: Check circuit state
-  async checkState(operationName: string, config?: Partial<CircuitBreakerConfig>): Promise<CircuitState> {
+  async checkState(
+    operationName: string,
+    config?: Partial<CircuitBreakerConfig>,
+  ): Promise<CircuitState> {
     const circuit = this.getCircuit(operationName, config);
     return circuit.getMetrics().state;
   }
@@ -551,10 +562,10 @@ export class CircuitBreakerManager {
   async executeWithCircuitBreaker<T>(
     operationName: string,
     operation: () => Promise<T>,
-    config?: Partial<CircuitBreakerConfig>
+    config?: Partial<CircuitBreakerConfig>,
   ): Promise<T> {
     const circuit = this.getCircuit(operationName, config);
-    
+
     if (!circuit.canExecute()) {
       throw new ForgeFlowError({
         code: 'CIRCUIT_BREAKER_OPEN',
@@ -563,7 +574,7 @@ export class CircuitBreakerManager {
         severity: ErrorSeverity.HIGH,
         context: { operationName, state: circuit.getMetrics().state },
         recoverable: false,
-        userMessage: `Service temporarily unavailable: ${operationName}`
+        userMessage: `Service temporarily unavailable: ${operationName}`,
       });
     }
 
@@ -582,12 +593,12 @@ export class CircuitBreakerManager {
       throw err;
     } finally {
       const duration = Date.now() - startTime;
-      
+
       circuit.recordResult({
         success,
         duration,
         error,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
   }
@@ -595,11 +606,11 @@ export class CircuitBreakerManager {
   // 🟢 WORKING: Get metrics for all circuits
   getAllMetrics(): Record<string, CircuitBreakerMetrics> {
     const metrics: Record<string, CircuitBreakerMetrics> = {};
-    
+
     for (const [operationName, circuit] of this.circuits.entries()) {
       metrics[operationName] = circuit.getMetrics();
     }
-    
+
     return metrics;
   }
 
@@ -632,16 +643,15 @@ export class CircuitBreakerManager {
     }
 
     // Calculate health score (0-100)
-    const healthScore = totalCircuits > 0 
-      ? Math.round((closedCircuits / totalCircuits) * 100)
-      : 100;
+    const healthScore =
+      totalCircuits > 0 ? Math.round((closedCircuits / totalCircuits) * 100) : 100;
 
     return {
       totalCircuits,
       openCircuits,
       halfOpenCircuits,
       closedCircuits,
-      overallHealthScore: healthScore
+      overallHealthScore: healthScore,
     };
   }
 
@@ -650,9 +660,9 @@ export class CircuitBreakerManager {
     for (const circuit of this.circuits.values()) {
       circuit.reset();
     }
-    
+
     enhancedLogger.info('All circuit breakers reset', {
-      count: this.circuits.size
+      count: this.circuits.size,
     });
   }
 
@@ -681,9 +691,9 @@ export class CircuitBreakerManager {
   // 🟢 WORKING: Update default configuration
   updateDefaultConfig(config: Partial<CircuitBreakerConfig>): void {
     this.defaultConfig = { ...this.defaultConfig, ...config };
-    
+
     enhancedLogger.info('Updated default circuit breaker configuration', {
-      config: this.defaultConfig
+      config: this.defaultConfig,
     });
   }
 
@@ -702,28 +712,29 @@ export class CircuitBreakerManager {
 }
 
 // 🟢 WORKING: Utility decorator for circuit breaker protection
-export function circuitBreaker(
-  operationName?: string,
-  config?: Partial<CircuitBreakerConfig>
-) {
+export function circuitBreaker(operationName?: string, config?: Partial<CircuitBreakerConfig>) {
   const manager = new CircuitBreakerManager();
-  
+
   return function <T extends (...args: any[]) => Promise<any>>(
     target: any,
     propertyKey: string,
-    descriptor: TypedPropertyDescriptor<T>
-  ) {
-    const originalMethod = descriptor.value!;
+    descriptor?: TypedPropertyDescriptor<T>,
+  ): TypedPropertyDescriptor<T> | void {
+    if (!descriptor) {
+      // Handle property decorator case - not supported for methods
+      return;
+    }
+    const originalMethod = descriptor.value;
     const actualOperationName = operationName || `${target.constructor.name}.${propertyKey}`;
-    
+
     descriptor.value = async function (this: any, ...args: any[]) {
       return manager.executeWithCircuitBreaker(
         actualOperationName,
         () => originalMethod.apply(this, args),
-        config
+        config,
       );
     } as T;
-    
+
     return descriptor;
   };
 }

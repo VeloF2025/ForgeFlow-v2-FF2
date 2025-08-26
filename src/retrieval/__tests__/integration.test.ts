@@ -2,14 +2,25 @@
 // Tests complete ML-enhanced retrieval system functionality
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createRetrievalSystem, DEFAULT_RETRIEVAL_CONFIG, validateRetrievalConfig } from '../index.js';
+import {
+  createRetrievalSystem,
+  DEFAULT_RETRIEVAL_CONFIG,
+  validateRetrievalConfig,
+} from '../index.js';
 import { EpsilonGreedyBandit } from '../bandit-learner.js';
 import { SmartFeatureExtractor } from '../feature-extractor.js';
 import { IntelligentHybridRetriever } from '../hybrid-retriever.js';
 import { OnlineLearningReranker } from '../re-ranker.js';
 import { IntelligentLearningAnalytics } from '../learning-analytics.js';
-import { RetrievalQuery, SearchContext, UserFeedback, RetrievalConfig } from '../types.js';
-import { ISearchEngine, SearchQuery, SearchResults, SearchResult, IndexEntry, IndexContentType } from '../../indexing/types.js';
+import type { RetrievalQuery, SearchContext, UserFeedback, RetrievalConfig } from '../types.js';
+import type {
+  ISearchEngine,
+  SearchQuery,
+  SearchResults,
+  SearchResult,
+  IndexEntry,
+  IndexContentType,
+} from '../../indexing/types.js';
 
 // Mock search engine for testing
 class MockSearchEngine implements ISearchEngine {
@@ -21,9 +32,10 @@ class MockSearchEngine implements ISearchEngine {
 
   async search(query: SearchQuery): Promise<SearchResults> {
     // Simulate search with mock results
-    const filteredResults = this.mockResults.filter(result => 
-      result.entry.title.toLowerCase().includes(query.query.toLowerCase()) ||
-      result.entry.content.toLowerCase().includes(query.query.toLowerCase())
+    const filteredResults = this.mockResults.filter(
+      (result) =>
+        result.entry.title.toLowerCase().includes(query.query.toLowerCase()) ||
+        result.entry.content.toLowerCase().includes(query.query.toLowerCase()),
     );
 
     return {
@@ -33,9 +45,14 @@ class MockSearchEngine implements ISearchEngine {
       currentPage: Math.floor((query.offset || 0) / (query.limit || 20)) + 1,
       executionTime: Math.random() * 100 + 50, // 50-150ms
       facets: {
-        types: [], categories: [], tags: [], projects: [], agents: [], languages: []
+        types: [],
+        categories: [],
+        tags: [],
+        projects: [],
+        agents: [],
+        languages: [],
       },
-      suggestions: []
+      suggestions: [],
     };
   }
 
@@ -63,12 +80,18 @@ class MockSearchEngine implements ISearchEngine {
       topQueries: [],
       averageResponseTime: 75,
       slowQueries: [],
-      cacheMetrics: { hitRate: 0.8, totalHits: 80, totalMisses: 20, cacheSize: 1000, memoryUsage: 1024000 },
+      cacheMetrics: {
+        hitRate: 0.8,
+        totalHits: 80,
+        totalMisses: 20,
+        cacheSize: 1000,
+        memoryUsage: 1024000,
+      },
       averageResults: 5.2,
       zeroResultQueries: 5,
       clickThroughRate: 0.65,
       startDate,
-      endDate
+      endDate,
     };
   }
 }
@@ -91,14 +114,19 @@ describe('FF2 Retrieval Layer Integration', () => {
       id: 'test-issue',
       title: 'Improve authentication flow',
       labels: ['enhancement', 'auth'],
-      description: 'Need to enhance the authentication system'
+      description: 'Need to enhance the authentication system',
     },
     repositoryUrl: 'https://github.com/test/repo',
     activeBranch: 'feature/auth-improvements',
-    workingHours: true
+    workingHours: true,
   };
 
-  const createMockContent = (id: string, title: string, content: string, type: IndexContentType = 'knowledge'): IndexEntry => ({
+  const createMockContent = (
+    id: string,
+    title: string,
+    content: string,
+    type: IndexContentType = 'knowledge',
+  ): IndexEntry => ({
     id,
     type,
     title,
@@ -120,54 +148,82 @@ describe('FF2 Retrieval Layer Integration', () => {
       extension: '.md',
       relatedIds: [],
       parentId: undefined,
-      childIds: []
+      childIds: [],
     },
     lastModified: new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000),
-    searchVector: undefined
+    hash: `mock-hash-${id}`,
+    searchVector: undefined,
   });
 
   beforeEach(() => {
     mockSearchEngine = new MockSearchEngine();
     config = { ...DEFAULT_RETRIEVAL_CONFIG };
-    
+
     // Create mock search results
     const mockResults: SearchResult[] = [
       {
-        entry: createMockContent('auth-guide', 'Authentication Best Practices', 'Comprehensive guide on authentication patterns, JWT tokens, OAuth2 flows, and security considerations. Includes error handling strategies.'),
+        entry: createMockContent(
+          'auth-guide',
+          'Authentication Best Practices',
+          'Comprehensive guide on authentication patterns, JWT tokens, OAuth2 flows, and security considerations. Includes error handling strategies.',
+        ),
         score: 8.5,
         rank: 1,
         contentSnippets: [],
         matchedFields: ['title', 'content'],
         totalMatches: 3,
         relevanceFactors: {
-          titleMatch: 0.9, contentMatch: 0.8, tagMatch: 0.5, categoryMatch: 0.7,
-          recencyBoost: 0.3, effectivenessBoost: 0.8, usageBoost: 0.4
-        }
+          titleMatch: 0.9,
+          contentMatch: 0.8,
+          tagMatch: 0.5,
+          categoryMatch: 0.7,
+          recencyBoost: 0.3,
+          effectivenessBoost: 0.8,
+          usageBoost: 0.4,
+        },
       },
       {
-        entry: createMockContent('testing-guide', 'Testing Authentication Flows', 'Guide for testing authentication systems, including unit tests, integration tests, and E2E testing strategies.'),
+        entry: createMockContent(
+          'testing-guide',
+          'Testing Authentication Flows',
+          'Guide for testing authentication systems, including unit tests, integration tests, and E2E testing strategies.',
+        ),
         score: 7.2,
         rank: 2,
         contentSnippets: [],
         matchedFields: ['title', 'content'],
         totalMatches: 2,
         relevanceFactors: {
-          titleMatch: 0.7, contentMatch: 0.6, tagMatch: 0.8, categoryMatch: 0.6,
-          recencyBoost: 0.5, effectivenessBoost: 0.7, usageBoost: 0.3
-        }
+          titleMatch: 0.7,
+          contentMatch: 0.6,
+          tagMatch: 0.8,
+          categoryMatch: 0.6,
+          recencyBoost: 0.5,
+          effectivenessBoost: 0.7,
+          usageBoost: 0.3,
+        },
       },
       {
-        entry: createMockContent('security-patterns', 'Security Patterns and Anti-Patterns', 'Common security patterns to follow and anti-patterns to avoid in authentication and authorization systems.'),
+        entry: createMockContent(
+          'security-patterns',
+          'Security Patterns and Anti-Patterns',
+          'Common security patterns to follow and anti-patterns to avoid in authentication and authorization systems.',
+        ),
         score: 6.8,
         rank: 3,
         contentSnippets: [],
         matchedFields: ['content', 'tags'],
         totalMatches: 1,
         relevanceFactors: {
-          titleMatch: 0.4, contentMatch: 0.7, tagMatch: 0.3, categoryMatch: 0.8,
-          recencyBoost: 0.2, effectivenessBoost: 0.9, usageBoost: 0.6
-        }
-      }
+          titleMatch: 0.4,
+          contentMatch: 0.7,
+          tagMatch: 0.3,
+          categoryMatch: 0.8,
+          recencyBoost: 0.2,
+          effectivenessBoost: 0.9,
+          usageBoost: 0.6,
+        },
+      },
     ];
 
     mockSearchEngine.setMockResults(mockResults);
@@ -196,8 +252,8 @@ describe('FF2 Retrieval Layer Integration', () => {
         ...DEFAULT_RETRIEVAL_CONFIG,
         bandit: {
           ...DEFAULT_RETRIEVAL_CONFIG.bandit,
-          initialEpsilon: 2.0 // Invalid: > 1
-        }
+          initialEpsilon: 2.0, // Invalid: > 1
+        },
       };
 
       const invalidErrors = validateRetrievalConfig(invalidConfig);
@@ -210,12 +266,12 @@ describe('FF2 Retrieval Layer Integration', () => {
         ...DEFAULT_RETRIEVAL_CONFIG,
         bandit: {
           ...DEFAULT_RETRIEVAL_CONFIG.bandit,
-          algorithm: 'ucb' as const
+          algorithm: 'ucb' as const,
         },
         hybrid: {
           ...DEFAULT_RETRIEVAL_CONFIG.hybrid,
-          defaultMode: 'parallel' as const
-        }
+          defaultMode: 'parallel' as const,
+        },
       };
 
       const customSystem = createRetrievalSystem(mockSearchEngine, customConfig);
@@ -232,7 +288,7 @@ describe('FF2 Retrieval Layer Integration', () => {
         limit: 10,
         includeSnippets: true,
         adaptiveWeights: true,
-        enableReranker: true
+        enableReranker: true,
       };
 
       const results = await retrievalSystem.hybridRetriever.retrieve(query);
@@ -245,7 +301,7 @@ describe('FF2 Retrieval Layer Integration', () => {
       expect(results.adaptiveLearningActive).toBe(true);
 
       // Results should be RetrievalResults with ML enhancements
-      results.results.forEach(result => {
+      results.results.forEach((result) => {
         expect(result.features).toBeDefined();
         expect(result.confidenceScore).toBeGreaterThanOrEqual(0);
         expect(result.confidenceScore).toBeLessThanOrEqual(1);
@@ -257,7 +313,7 @@ describe('FF2 Retrieval Layer Integration', () => {
       const query: RetrievalQuery = {
         query: 'authentication patterns',
         context: mockContext,
-        adaptiveWeights: true
+        adaptiveWeights: true,
       };
 
       // Initial retrieval
@@ -270,10 +326,12 @@ describe('FF2 Retrieval Layer Integration', () => {
         dwellTime: 1000, // Short dwell time
         thumbsDown: true,
         usedInSolution: false,
+        copiedContent: false,
+        bookmarked: false,
         timestamp: new Date(),
         sessionId: 'test-session',
         queryId: 'test-query',
-        resultRank: 1
+        resultRank: 1,
       };
 
       // Simulate strategy update through analytics
@@ -287,7 +345,7 @@ describe('FF2 Retrieval Layer Integration', () => {
       for (let i = 0; i < 10; i++) {
         const result = await retrievalSystem.hybridRetriever.retrieve({
           ...query,
-          explorationRate: 0.3 // Higher exploration to see different strategies
+          explorationRate: 0.3, // Higher exploration to see different strategies
         });
         strategies.add(result.strategyUsed);
       }
@@ -300,12 +358,12 @@ describe('FF2 Retrieval Layer Integration', () => {
       const query: RetrievalQuery = {
         query: 'security testing',
         context: mockContext,
-        enableReranker: true
+        enableReranker: true,
       };
 
       // Collect initial performance
       const initialResults = await retrievalSystem.hybridRetriever.retrieve(query);
-      
+
       // Provide positive feedback for top results and negative for bottom ones
       for (let i = 0; i < initialResults.results.length; i++) {
         const feedback: UserFeedback = {
@@ -314,25 +372,27 @@ describe('FF2 Retrieval Layer Integration', () => {
           thumbsUp: i === 0, // Thumbs up for best result
           usedInSolution: i === 0,
           relevanceRating: i < 2 ? 5 : 2,
+          copiedContent: i === 0,
+          bookmarked: i === 0,
           timestamp: new Date(),
           sessionId: 'learning-session',
           queryId: `query-${i}`,
-          resultRank: i + 1
+          resultRank: i + 1,
         };
 
         await retrievalSystem.reranker.updateOnline(
           query,
           initialResults.results[i] as any, // Cast to SearchResult for compatibility
-          feedback
+          feedback,
         );
       }
 
       // Perform another retrieval - should show improvement
       const improvedResults = await retrievalSystem.hybridRetriever.retrieve(query);
-      
+
       expect(improvedResults).toBeDefined();
       expect(improvedResults.results).toHaveLength(initialResults.results.length);
-      
+
       // Top results should have higher confidence scores after learning
       expect(improvedResults.results[0].confidenceScore).toBeGreaterThan(0.5);
     });
@@ -343,26 +403,29 @@ describe('FF2 Retrieval Layer Integration', () => {
       const queries = [
         { query: 'authentication', expected: 'security' },
         { query: 'testing frameworks', expected: 'testing' },
-        { query: 'error handling', expected: 'development' }
+        { query: 'error handling', expected: 'development' },
       ];
 
       // Perform multiple retrievals
       for (const { query, expected } of queries) {
         const retrievalQuery: RetrievalQuery = {
           query,
-          context: mockContext
+          context: mockContext,
         };
 
         const results = await retrievalSystem.hybridRetriever.retrieve(retrievalQuery);
-        
+
         const feedback: UserFeedback = {
           clicked: true,
           dwellTime: 8000,
           relevanceRating: 4,
+          usedInSolution: true,
+          copiedContent: false,
+          bookmarked: false,
           timestamp: new Date(),
           sessionId: 'analytics-test',
           queryId: query,
-          resultRank: 1
+          resultRank: 1,
         };
 
         await retrievalSystem.analytics.trackRetrieval(retrievalQuery, results, feedback);
@@ -384,21 +447,24 @@ describe('FF2 Retrieval Layer Integration', () => {
       for (let i = 0; i < 50; i++) {
         const query: RetrievalQuery = {
           query: `test query ${i}`,
-          context: mockContext
+          context: mockContext,
         };
 
         const results = await retrievalSystem.hybridRetriever.retrieve(query);
-        
+
         // Simulate improving feedback over time
-        const reward = Math.min(0.9, 0.3 + (i * 0.01));
+        const reward = Math.min(0.9, 0.3 + i * 0.01);
         const feedback: UserFeedback = {
           clicked: reward > 0.5,
           dwellTime: reward * 10000,
+          usedInSolution: reward > 0.7,
+          copiedContent: reward > 0.6,
+          bookmarked: reward > 0.8,
           relevanceRating: Math.ceil(reward * 5),
           timestamp: new Date(),
           sessionId: 'progress-test',
           queryId: `progress-${i}`,
-          resultRank: 1
+          resultRank: 1,
         };
 
         await retrievalSystem.analytics.trackRetrieval(query, results, feedback);
@@ -417,19 +483,28 @@ describe('FF2 Retrieval Layer Integration', () => {
     it('should provide strategy effectiveness analysis', async () => {
       // Force usage of different strategies with different success rates
       const strategies = ['fts-heavy', 'vector-heavy', 'balanced', 'semantic-focused'];
-      
+
       for (const strategy of strategies) {
         for (let i = 0; i < 20; i++) {
           // Different success rates for different strategies
           let reward;
           switch (strategy) {
-            case 'fts-heavy': reward = 0.8 + Math.random() * 0.15; break;
-            case 'vector-heavy': reward = 0.4 + Math.random() * 0.3; break;
-            case 'balanced': reward = 0.65 + Math.random() * 0.2; break;
-            case 'semantic-focused': reward = 0.7 + Math.random() * 0.25; break;
-            default: reward = 0.5;
+            case 'fts-heavy':
+              reward = 0.8 + Math.random() * 0.15;
+              break;
+            case 'vector-heavy':
+              reward = 0.4 + Math.random() * 0.3;
+              break;
+            case 'balanced':
+              reward = 0.65 + Math.random() * 0.2;
+              break;
+            case 'semantic-focused':
+              reward = 0.7 + Math.random() * 0.25;
+              break;
+            default:
+              reward = 0.5;
           }
-          
+
           await retrievalSystem.banditLearner.updateReward(strategy as any, mockContext, reward);
         }
       }
@@ -437,8 +512,10 @@ describe('FF2 Retrieval Layer Integration', () => {
       const effectiveness = await retrievalSystem.analytics.getStrategyEffectiveness();
 
       expect(effectiveness).toHaveLength(strategies.length);
-      expect(effectiveness[0].averageReward).toBeGreaterThan(effectiveness[effectiveness.length - 1].averageReward);
-      
+      expect(effectiveness[0].averageReward).toBeGreaterThan(
+        effectiveness[effectiveness.length - 1].averageReward,
+      );
+
       // FTS-heavy should be most effective based on our simulation
       expect(effectiveness[0].strategy).toBe('fts-heavy');
     });
@@ -457,7 +534,7 @@ describe('FF2 Retrieval Layer Integration', () => {
         successMetrics: ['relevance', 'click-through-rate'],
         minimumSampleSize: 100,
         confidenceLevel: 0.95,
-        minimumEffect: 0.05
+        minimumEffect: 0.05,
       };
 
       const experimentId = await retrievalSystem.analytics.createExperiment(experimentConfig);
@@ -468,25 +545,28 @@ describe('FF2 Retrieval Layer Integration', () => {
       for (let i = 0; i < 50; i++) {
         const query: RetrievalQuery = {
           query: `experiment query ${i}`,
-          context: mockContext
+          context: mockContext,
         };
 
         const results = await retrievalSystem.hybridRetriever.retrieve(query);
-        
+
         // Assign to experiment
         const experimentResults = {
           ...results,
-          experimentId
+          experimentId,
         };
 
         const feedback: UserFeedback = {
           clicked: Math.random() > 0.4,
           dwellTime: 3000 + Math.random() * 7000,
+          usedInSolution: Math.random() > 0.6,
+          copiedContent: Math.random() > 0.7,
+          bookmarked: Math.random() > 0.8,
           relevanceRating: Math.ceil(Math.random() * 5),
           timestamp: new Date(),
           sessionId: 'experiment-session',
           queryId: `exp-${i}`,
-          resultRank: 1
+          resultRank: 1,
         };
 
         await retrievalSystem.analytics.trackRetrieval(query, experimentResults, feedback);
@@ -514,7 +594,7 @@ describe('FF2 Retrieval Layer Integration', () => {
         successMetrics: ['relevance'],
         minimumSampleSize: 30,
         confidenceLevel: 0.95,
-        minimumEffect: 0.1
+        minimumEffect: 0.1,
       };
 
       const experimentId = await retrievalSystem.analytics.createExperiment(experimentConfig);
@@ -524,12 +604,16 @@ describe('FF2 Retrieval Layer Integration', () => {
         const strategy = i % 2 === 0 ? 'balanced' : 'effectiveness-focused';
         const baseReward = strategy === 'effectiveness-focused' ? 0.8 : 0.5; // Clear difference
         const reward = baseReward + (Math.random() - 0.5) * 0.2;
-        
-        await retrievalSystem.banditLearner.updateReward(strategy as any, mockContext, Math.max(0, Math.min(1, reward)));
+
+        await retrievalSystem.banditLearner.updateReward(
+          strategy as any,
+          mockContext,
+          Math.max(0, Math.min(1, reward)),
+        );
       }
 
       const results = await retrievalSystem.analytics.getExperimentResults(experimentId);
-      
+
       expect(results.pValue).toBeLessThan(0.05); // Should detect significance
       expect(results.isStatisticallySignificant).toBe(true);
       expect(results.winner).toBe('effectiveness-focused');
@@ -540,24 +624,24 @@ describe('FF2 Retrieval Layer Integration', () => {
     it('should maintain performance under load', async () => {
       const startTime = Date.now();
       const concurrentQueries = 20;
-      
-      const promises = Array.from({ length: concurrentQueries }, (_, i) => 
+
+      const promises = Array.from({ length: concurrentQueries }, (_, i) =>
         retrievalSystem.hybridRetriever.retrieve({
           query: `concurrent query ${i}`,
           context: mockContext,
-          limit: 10
-        })
+          limit: 10,
+        }),
       );
 
       const results = await Promise.all(promises);
       const endTime = Date.now();
-      
+
       const avgTime = (endTime - startTime) / concurrentQueries;
-      
+
       expect(results).toHaveLength(concurrentQueries);
       expect(avgTime).toBeLessThan(1000); // Average < 1 second per query
-      
-      results.forEach(result => {
+
+      results.forEach((result) => {
         expect(result.executionTime).toBeLessThan(2000); // Individual queries < 2 seconds
         expect(result.results).toBeDefined();
       });
@@ -565,33 +649,40 @@ describe('FF2 Retrieval Layer Integration', () => {
 
     it('should handle memory usage efficiently', async () => {
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       // Perform many retrievals to test memory management
       for (let i = 0; i < 100; i++) {
         const result = await retrievalSystem.hybridRetriever.retrieve({
           query: `memory test ${i}`,
-          context: mockContext
+          context: mockContext,
         });
-        
+
         // Simulate feedback for analytics
         const feedback: UserFeedback = {
           clicked: Math.random() > 0.5,
           dwellTime: Math.random() * 10000,
+          usedInSolution: Math.random() > 0.6,
+          copiedContent: Math.random() > 0.7,
+          bookmarked: Math.random() > 0.8,
           timestamp: new Date(),
           sessionId: 'memory-test',
           queryId: `mem-${i}`,
-          resultRank: 1
+          resultRank: 1,
         };
 
-        await retrievalSystem.analytics.trackRetrieval({
-          query: `memory test ${i}`,
-          context: mockContext
-        }, result, feedback);
+        await retrievalSystem.analytics.trackRetrieval(
+          {
+            query: `memory test ${i}`,
+            context: mockContext,
+          },
+          result,
+          feedback,
+        );
       }
 
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryGrowth = finalMemory - initialMemory;
-      
+
       // Memory growth should be reasonable (< 50MB for 100 queries)
       expect(memoryGrowth).toBeLessThan(50 * 1024 * 1024);
     });
@@ -604,10 +695,12 @@ describe('FF2 Retrieval Layer Integration', () => {
       };
 
       // Should handle error gracefully
-      await expect(retrievalSystem.hybridRetriever.retrieve({
-        query: 'error test',
-        context: mockContext
-      })).rejects.toThrow();
+      await expect(
+        retrievalSystem.hybridRetriever.retrieve({
+          query: 'error test',
+          context: mockContext,
+        }),
+      ).rejects.toThrow();
 
       // Restore search engine
       mockSearchEngine.search = originalSearch;
@@ -615,7 +708,7 @@ describe('FF2 Retrieval Layer Integration', () => {
       // Should work normally after recovery
       const result = await retrievalSystem.hybridRetriever.retrieve({
         query: 'recovery test',
-        context: mockContext
+        context: mockContext,
       });
 
       expect(result).toBeDefined();
@@ -631,7 +724,7 @@ describe('FF2 Retrieval Layer Integration', () => {
         adaptiveWeights: true,
         enableReranker: true,
         explorationRate: 0.2,
-        hybridMode: 'adaptive'
+        hybridMode: 'adaptive',
       };
 
       const results = await retrievalSystem.hybridRetriever.retrieve(query);
@@ -642,9 +735,9 @@ describe('FF2 Retrieval Layer Integration', () => {
       expect(results.featureExtractionTime).toBeGreaterThan(0);
       expect(results.results[0].features).toBeDefined();
       expect(results.results[0].confidenceScore).toBeGreaterThan(0);
-      
+
       // All results should have ML-enhanced metadata
-      results.results.forEach(result => {
+      results.results.forEach((result) => {
         expect(result.retrievalStrategy).toBeDefined();
         expect(result.rankerUsed).toBeDefined();
         expect(typeof result.confidenceScore).toBe('number');
@@ -655,33 +748,40 @@ describe('FF2 Retrieval Layer Integration', () => {
       // Generate diverse activity
       const activities = [
         'authentication flows',
-        'testing strategies', 
+        'testing strategies',
         'security patterns',
         'error handling',
-        'performance optimization'
+        'performance optimization',
       ];
 
       for (const activity of activities) {
         for (let i = 0; i < 10; i++) {
           const result = await retrievalSystem.hybridRetriever.retrieve({
             query: `${activity} ${i}`,
-            context: mockContext
+            context: mockContext,
           });
 
           const feedback: UserFeedback = {
             clicked: Math.random() > 0.3,
             dwellTime: Math.random() * 12000,
+            usedInSolution: Math.random() > 0.5,
+            copiedContent: Math.random() > 0.6,
+            bookmarked: Math.random() > 0.7,
             relevanceRating: Math.ceil(Math.random() * 5),
             timestamp: new Date(),
             sessionId: 'reporting-test',
             queryId: `report-${activity}-${i}`,
-            resultRank: 1
+            resultRank: 1,
           };
 
-          await retrievalSystem.analytics.trackRetrieval({
-            query: `${activity} ${i}`,
-            context: mockContext
-          }, result, feedback);
+          await retrievalSystem.analytics.trackRetrieval(
+            {
+              query: `${activity} ${i}`,
+              context: mockContext,
+            },
+            result,
+            feedback,
+          );
         }
       }
 

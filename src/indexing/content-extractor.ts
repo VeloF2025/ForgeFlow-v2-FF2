@@ -4,42 +4,52 @@
 import { readFile, stat } from 'fs/promises';
 import { extname, basename, dirname, relative } from 'path';
 import { parse as parseYaml } from 'yaml';
-import {
+import * as crypto from 'crypto';
+import type {
   ContentExtractor as IContentExtractor,
   IndexEntry,
   IndexContentType,
   IndexMetadata,
-  IndexError,
-  IndexErrorCode
 } from './types.js';
-import type { 
-  KnowledgeCardFile, 
-  GotchaFile, 
-  ADRFile 
-} from '../knowledge/types.js';
-import type { 
-  JobMemory, 
-  Decision, 
+import { IndexError, IndexErrorCode } from './types.js';
+import type { KnowledgeCardFile, GotchaFile, ADRFile } from '../knowledge/types.js';
+import type {
+  JobMemory,
+  Decision,
   Gotcha as MemoryGotcha,
   ContextEntry,
-  Outcome 
+  Outcome,
 } from '../memory/types.js';
 
 export class ContentExtractor implements IContentExtractor {
   private readonly maxContentLength = 50000; // 50KB limit
   private readonly supportedCodeExtensions = new Set([
-    '.ts', '.js', '.tsx', '.jsx', '.py', '.java', '.cs', '.go', 
-    '.rs', '.cpp', '.c', '.h', '.php', '.rb', '.swift', '.kt'
+    '.ts',
+    '.js',
+    '.tsx',
+    '.jsx',
+    '.py',
+    '.java',
+    '.cs',
+    '.go',
+    '.rs',
+    '.cpp',
+    '.c',
+    '.h',
+    '.php',
+    '.rb',
+    '.swift',
+    '.kt',
   ]);
 
   async extractFromKnowledgeCard(cardFile: KnowledgeCardFile): Promise<IndexEntry> {
     try {
       const frontmatter = cardFile.frontmatter;
       const content = this.cleanContent(cardFile.content);
-      
+
       // Extract keywords from content
       const keywords = this.extractKeywords(content);
-      
+
       const metadata: IndexMetadata = {
         tags: frontmatter.tags || [],
         category: frontmatter.category,
@@ -53,24 +63,32 @@ export class ContentExtractor implements IContentExtractor {
         fileSize: content.length,
         relatedIds: frontmatter.relatedIssues || [],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       };
+
+      const contentWithKeywords = content + '\n\nKeywords: ' + keywords.join(', ');
+      const hash = crypto
+        .createHash('sha256')
+        .update(contentWithKeywords + frontmatter.title + frontmatter.id)
+        .digest('hex')
+        .substring(0, 8);
 
       return {
         id: frontmatter.id,
         type: 'knowledge' as IndexContentType,
         title: frontmatter.title,
-        content: content + '\n\nKeywords: ' + keywords.join(', '),
+        content: contentWithKeywords,
         path: `knowledge/${frontmatter.scope}/${frontmatter.id}`,
+        hash,
         metadata,
         lastModified: new Date(frontmatter.updatedAt),
-        searchVector: undefined
+        searchVector: undefined,
       };
     } catch (error) {
       throw new IndexError(
         `Failed to extract knowledge card: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { cardId: cardFile.frontmatter?.id, error }
+        { cardId: cardFile.frontmatter?.id, error },
       );
     }
   }
@@ -79,13 +97,13 @@ export class ContentExtractor implements IContentExtractor {
     try {
       // Combine all memory components into searchable content
       const contentParts: string[] = [];
-      
+
       // Add job metadata
       contentParts.push(`Job ID: ${memoryEntry.jobId}`);
       contentParts.push(`Issue ID: ${memoryEntry.issueId}`);
       contentParts.push(`Status: ${memoryEntry.status}`);
       contentParts.push(`Agents: ${memoryEntry.metadata.agentTypes.join(', ')}`);
-      
+
       // Add decisions
       if (memoryEntry.decisions && memoryEntry.decisions.length > 0) {
         contentParts.push('\n--- DECISIONS ---');
@@ -94,9 +112,9 @@ export class ContentExtractor implements IContentExtractor {
           contentParts.push(`Category: ${decision.category}`);
           contentParts.push(`Agent: ${decision.agentType}`);
           contentParts.push(`Reasoning: ${decision.reasoning}`);
-          
+
           if (decision.options) {
-            decision.options.forEach(option => {
+            decision.options.forEach((option) => {
               contentParts.push(`Option: ${option.option} (Selected: ${option.selected})`);
               if (option.pros.length > 0) contentParts.push(`Pros: ${option.pros.join(', ')}`);
               if (option.cons.length > 0) contentParts.push(`Cons: ${option.cons.join(', ')}`);
@@ -114,7 +132,7 @@ export class ContentExtractor implements IContentExtractor {
           contentParts.push(`Severity: ${gotcha.severity}`);
           contentParts.push(`Category: ${gotcha.category}`);
           contentParts.push(`Context: ${gotcha.context}`);
-          
+
           if (gotcha.resolution) {
             contentParts.push(`Solution: ${gotcha.resolution.solution}`);
             contentParts.push(`Prevention: ${gotcha.resolution.preventionSteps.join(', ')}`);
@@ -138,7 +156,7 @@ export class ContentExtractor implements IContentExtractor {
         contentParts.push('\n--- CONTEXT ---');
         const contextSummary = memoryEntry.context
           .slice(0, 10) // Limit to first 10 context entries
-          .map(ctx => `${ctx.type}: ${ctx.source}`)
+          .map((ctx) => `${ctx.type}: ${ctx.source}`)
           .join(', ');
         contentParts.push(contextSummary);
       }
@@ -159,24 +177,34 @@ export class ContentExtractor implements IContentExtractor {
         fileSize: content.length,
         relatedIds: memoryEntry.metadata.relatedIssues,
         parentId: memoryEntry.metadata.parentJobId,
-        childIds: memoryEntry.metadata.childJobIds
+        childIds: memoryEntry.metadata.childJobIds,
       };
 
+      const fullContent = summary + '\n\n' + content;
+      const title = `Job Memory: ${memoryEntry.issueId} (${memoryEntry.status})`;
+      const id = `memory-${memoryEntry.jobId}`;
+      const hash = crypto
+        .createHash('sha256')
+        .update(fullContent + title + id)
+        .digest('hex')
+        .substring(0, 8);
+
       return {
-        id: `memory-${memoryEntry.jobId}`,
+        id,
         type: 'memory' as IndexContentType,
-        title: `Job Memory: ${memoryEntry.issueId} (${memoryEntry.status})`,
-        content: summary + '\n\n' + content,
+        title,
+        content: fullContent,
         path: `memory/${memoryEntry.jobId}`,
+        hash,
         metadata,
         lastModified: memoryEntry.endTime || new Date(),
-        searchVector: undefined
+        searchVector: undefined,
       };
     } catch (error) {
       throw new IndexError(
         `Failed to extract memory entry: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { jobId: memoryEntry.jobId, error }
+        { jobId: memoryEntry.jobId, error },
       );
     }
   }
@@ -188,7 +216,7 @@ export class ContentExtractor implements IContentExtractor {
 
       // Parse ADR sections
       const sections = this.parseADRContent(content);
-      
+
       // Create enhanced content with structured sections
       const enhancedContent = [
         content,
@@ -197,7 +225,7 @@ export class ContentExtractor implements IContentExtractor {
         `Deciders: ${frontmatter.deciders.join(', ')}`,
         `Impact: ${frontmatter.impact}`,
         `Complexity: ${frontmatter.complexity}`,
-        `Reversible: ${frontmatter.reversible ? 'Yes' : 'No'}`
+        `Reversible: ${frontmatter.reversible ? 'Yes' : 'No'}`,
       ].join('\n');
 
       const metadata: IndexMetadata = {
@@ -212,24 +240,32 @@ export class ContentExtractor implements IContentExtractor {
         fileSize: content.length,
         relatedIds: frontmatter.relatedDecisions,
         parentId: frontmatter.supersededBy,
-        childIds: []
+        childIds: [],
       };
+
+      const title = `ADR: ${frontmatter.title}`;
+      const hash = crypto
+        .createHash('sha256')
+        .update(enhancedContent + title + frontmatter.id)
+        .digest('hex')
+        .substring(0, 8);
 
       return {
         id: frontmatter.id,
         type: 'adr' as IndexContentType,
-        title: `ADR: ${frontmatter.title}`,
+        title,
         content: enhancedContent,
         path: `adr/${frontmatter.id}`,
+        hash,
         metadata,
         lastModified: new Date(frontmatter.date),
-        searchVector: undefined
+        searchVector: undefined,
       };
     } catch (error) {
       throw new IndexError(
         `Failed to extract ADR: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { adrId: adrFile.frontmatter?.id, error }
+        { adrId: adrFile.frontmatter?.id, error },
       );
     }
   }
@@ -246,7 +282,7 @@ export class ContentExtractor implements IContentExtractor {
         `Severity: ${frontmatter.severity}`,
         `Category: ${frontmatter.category}`,
         `Occurrences: ${frontmatter.occurrenceCount}`,
-        `Prevention Steps: ${frontmatter.preventionSteps.join(', ')}`
+        `Prevention Steps: ${frontmatter.preventionSteps.join(', ')}`,
       ];
 
       if (frontmatter.solution) {
@@ -264,24 +300,33 @@ export class ContentExtractor implements IContentExtractor {
         fileSize: content.length,
         relatedIds: [],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       };
+
+      const title = `Gotcha: ${frontmatter.description}`;
+      const finalContent = enhancedContent.join('\n');
+      const hash = crypto
+        .createHash('sha256')
+        .update(finalContent + title + frontmatter.id)
+        .digest('hex')
+        .substring(0, 8);
 
       return {
         id: frontmatter.id,
         type: 'gotcha' as IndexContentType,
-        title: `Gotcha: ${frontmatter.description}`,
-        content: enhancedContent.join('\n'),
+        title,
+        content: finalContent,
         path: `gotcha/${frontmatter.id}`,
+        hash,
         metadata,
         lastModified: new Date(frontmatter.updatedAt),
-        searchVector: undefined
+        searchVector: undefined,
       };
     } catch (error) {
       throw new IndexError(
         `Failed to extract gotcha: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { gotchaId: gotchaFile.frontmatter?.id, error }
+        { gotchaId: gotchaFile.frontmatter?.id, error },
       );
     }
   }
@@ -296,10 +341,10 @@ export class ContentExtractor implements IContentExtractor {
       const extension = extname(filePath);
       const language = this.detectLanguage(extension);
       const fileName = basename(filePath);
-      
+
       // Extract code elements
       const codeElements = this.extractCodeElements(cleanedContent, language);
-      
+
       // Generate summary
       const summary = this.generateCodeSummary(cleanedContent, language, codeElements);
 
@@ -315,7 +360,7 @@ export class ContentExtractor implements IContentExtractor {
         fileSize: cleanedContent.length,
         relatedIds: [],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       };
 
       const enhancedContent = [
@@ -326,42 +371,54 @@ export class ContentExtractor implements IContentExtractor {
         `Classes: ${codeElements.classes.join(', ')}`,
         `Interfaces: ${codeElements.interfaces.join(', ')}`,
         '\n--- CODE ---',
-        cleanedContent
+        cleanedContent,
       ].join('\n');
 
+      const id = `code-${this.generateFileId(filePath)}`;
+      const title = `Code: ${fileName}`;
+      const hash = crypto
+        .createHash('sha256')
+        .update(enhancedContent + title + id)
+        .digest('hex')
+        .substring(0, 8);
+
       return {
-        id: `code-${this.generateFileId(filePath)}`,
+        id,
         type: 'code' as IndexContentType,
-        title: `Code: ${fileName}`,
+        title,
         content: enhancedContent,
         path: filePath,
+        hash,
         metadata,
         lastModified: stats.mtime,
-        searchVector: undefined
+        searchVector: undefined,
       };
     } catch (error) {
       throw new IndexError(
         `Failed to extract code file: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { filePath, error }
+        { filePath, error },
       );
     }
   }
 
-  async extractFromPath(filePath: string, contentType: IndexContentType): Promise<IndexEntry | null> {
+  async extractFromPath(
+    filePath: string,
+    contentType: IndexContentType,
+  ): Promise<IndexEntry | null> {
     try {
       // Determine extraction method based on content type and file extension
       switch (contentType) {
         case 'code':
           return await this.extractFromCodeFile(filePath);
-        
+
         case 'knowledge':
         case 'adr':
         case 'gotcha':
           // These would typically be YAML/Markdown files with frontmatter
           const content = await readFile(filePath, 'utf-8');
           const parsed = this.parseFrontmatterFile(content);
-          
+
           switch (contentType) {
             case 'knowledge':
               return await this.extractFromKnowledgeCard(parsed as KnowledgeCardFile);
@@ -370,10 +427,10 @@ export class ContentExtractor implements IContentExtractor {
             case 'gotcha':
               return await this.extractFromGotcha(parsed as GotchaFile);
           }
-          
+
         case 'config':
           return await this.extractFromConfigFile(filePath);
-          
+
         default:
           console.warn(`Unsupported content type: ${contentType} for path: ${filePath}`);
           return null;
@@ -386,29 +443,30 @@ export class ContentExtractor implements IContentExtractor {
 
   cleanContent(content: string): string {
     if (!content) return '';
-    
+
     // Remove excessive whitespace
     let cleaned = content.replace(/\s+/g, ' ').trim();
-    
+
     // Remove control characters but keep newlines and tabs
     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-    
+
     // Limit content length
     if (cleaned.length > this.maxContentLength) {
       cleaned = cleaned.substring(0, this.maxContentLength) + '...';
     }
-    
+
     return cleaned;
   }
 
   extractKeywords(content: string): string[] {
     if (!content) return [];
-    
+
     // Simple keyword extraction
-    const words = content.toLowerCase()
+    const words = content
+      .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter(word => word.length > 3 && !this.isStopWord(word));
+      .filter((word) => word.length > 3 && !this.isStopWord(word));
 
     // Count word frequency
     const wordCounts = new Map<string, number>();
@@ -425,22 +483,22 @@ export class ContentExtractor implements IContentExtractor {
 
   generateSummary(content: string, maxLength = 200): string {
     if (!content || content.length <= maxLength) return content;
-    
+
     // Find natural break points
     const sentences = content.split(/[.!?]+/);
     let summary = '';
-    
+
     for (const sentence of sentences) {
       const trimmed = sentence.trim();
       if (!trimmed) continue;
-      
+
       if (summary.length + trimmed.length + 1 <= maxLength) {
         summary += (summary ? '. ' : '') + trimmed;
       } else {
         break;
       }
     }
-    
+
     return summary || content.substring(0, maxLength) + '...';
   }
 
@@ -466,13 +524,16 @@ export class ContentExtractor implements IContentExtractor {
       '.json': 'json',
       '.yaml': 'yaml',
       '.yml': 'yaml',
-      '.md': 'markdown'
+      '.md': 'markdown',
     };
-    
+
     return languageMap[extension.toLowerCase()] || 'text';
   }
 
-  private extractCodeElements(content: string, language: string): {
+  private extractCodeElements(
+    content: string,
+    language: string,
+  ): {
     functions: string[];
     classes: string[];
     interfaces: string[];
@@ -482,7 +543,7 @@ export class ContentExtractor implements IContentExtractor {
       functions: [] as string[],
       classes: [] as string[],
       interfaces: [] as string[],
-      types: [] as string[]
+      types: [] as string[],
     };
 
     switch (language) {
@@ -504,7 +565,9 @@ export class ContentExtractor implements IContentExtractor {
 
   private extractTypeScriptElements(content: string, elements: any): void {
     // Extract functions
-    const functionMatches = content.matchAll(/(?:function\s+|const\s+|let\s+|var\s+)?(\w+)\s*[=:]?\s*(?:async\s+)?(?:function|\(.*?\)\s*=>)/g);
+    const functionMatches = content.matchAll(
+      /(?:function\s+|const\s+|let\s+|var\s+)?(\w+)\s*[=:]?\s*(?:async\s+)?(?:function|\(.*?\)\s*=>)/g,
+    );
     for (const match of functionMatches) {
       if (match[1] && !elements.functions.includes(match[1])) {
         elements.functions.push(match[1]);
@@ -556,7 +619,9 @@ export class ContentExtractor implements IContentExtractor {
 
   private extractJavaElements(content: string, elements: any): void {
     // Extract methods
-    const methodMatches = content.matchAll(/(?:public|private|protected)?\s*(?:static)?\s*\w+\s+(\w+)\s*\(/g);
+    const methodMatches = content.matchAll(
+      /(?:public|private|protected)?\s*(?:static)?\s*\w+\s+(\w+)\s*\(/g,
+    );
     for (const match of methodMatches) {
       if (match[1] && !elements.functions.includes(match[1])) {
         elements.functions.push(match[1]);
@@ -582,69 +647,69 @@ export class ContentExtractor implements IContentExtractor {
 
   private generateCodeSummary(content: string, language: string, elements: any): string {
     const parts = [];
-    
+
     if (elements.classes.length > 0) {
       parts.push(`Classes: ${elements.classes.slice(0, 5).join(', ')}`);
     }
-    
+
     if (elements.interfaces.length > 0) {
       parts.push(`Interfaces: ${elements.interfaces.slice(0, 5).join(', ')}`);
     }
-    
+
     if (elements.functions.length > 0) {
       parts.push(`Functions: ${elements.functions.slice(0, 10).join(', ')}`);
     }
-    
+
     if (elements.types.length > 0) {
       parts.push(`Types: ${elements.types.slice(0, 5).join(', ')}`);
     }
-    
+
     const lines = content.split('\n').length;
     parts.push(`${lines} lines of ${language} code`);
-    
+
     return parts.join('. ') + '.';
   }
 
   private parseFrontmatterFile(content: string): any {
     // Parse YAML frontmatter from Markdown files
     const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-    
+
     if (!frontmatterMatch) {
       throw new Error('Invalid frontmatter format');
     }
-    
+
     const yamlContent = frontmatterMatch[1];
     const markdownContent = frontmatterMatch[2];
-    
+
     const frontmatter = parseYaml(yamlContent);
-    
+
     return {
       frontmatter,
-      content: markdownContent
+      content: markdownContent,
     };
   }
 
   private parseADRContent(content: string): Record<string, string> {
     const sections: Record<string, string> = {};
-    
+
     // Common ADR section patterns
     const sectionPatterns = [
       /## Status\n([\s\S]*?)(?=\n##|$)/i,
       /## Context\n([\s\S]*?)(?=\n##|$)/i,
       /## Decision\n([\s\S]*?)(?=\n##|$)/i,
       /## Consequences\n([\s\S]*?)(?=\n##|$)/i,
-      /## Alternatives\n([\s\S]*?)(?=\n##|$)/i
+      /## Alternatives\n([\s\S]*?)(?=\n##|$)/i,
     ];
-    
+
     const sectionNames = ['status', 'context', 'decision', 'consequences', 'alternatives'];
-    
+
     sectionPatterns.forEach((pattern, index) => {
       const match = content.match(pattern);
       if (match) {
         sections[sectionNames[index]] = match[1].trim();
       }
     });
-    
+
     return sections;
   }
 
@@ -657,7 +722,7 @@ export class ContentExtractor implements IContentExtractor {
     // Parse config based on file type
     let configData: any = {};
     let configType = 'unknown';
-    
+
     try {
       switch (extension.toLowerCase()) {
         case '.json':
@@ -682,7 +747,7 @@ export class ContentExtractor implements IContentExtractor {
     }
 
     const summary = this.generateConfigSummary(fileName, configType, configData);
-    
+
     const metadata: IndexMetadata = {
       tags: ['config', configType, fileName.replace(/\.[^/.]+$/, '')],
       category: 'configuration',
@@ -694,25 +759,35 @@ export class ContentExtractor implements IContentExtractor {
       fileSize: content.length,
       relatedIds: [],
       parentId: undefined,
-      childIds: []
+      childIds: [],
     };
 
+    const id = `config-${this.generateFileId(filePath)}`;
+    const title = `Config: ${fileName}`;
+    const fullContent = summary + '\n\n' + this.cleanContent(content);
+    const hash = crypto
+      .createHash('sha256')
+      .update(fullContent + title + id)
+      .digest('hex')
+      .substring(0, 8);
+
     return {
-      id: `config-${this.generateFileId(filePath)}`,
+      id,
       type: 'config' as IndexContentType,
-      title: `Config: ${fileName}`,
-      content: summary + '\n\n' + this.cleanContent(content),
+      title,
+      content: fullContent,
       path: filePath,
+      hash,
       metadata,
       lastModified: stats.mtime,
-      searchVector: undefined
+      searchVector: undefined,
     };
   }
 
   private parseEnvFile(content: string): Record<string, string> {
     const env: Record<string, string> = {};
     const lines = content.split('\n');
-    
+
     for (const line of lines) {
       const trimmed = line.trim();
       if (trimmed && !trimmed.startsWith('#')) {
@@ -722,13 +797,13 @@ export class ContentExtractor implements IContentExtractor {
         }
       }
     }
-    
+
     return env;
   }
 
   private generateConfigSummary(fileName: string, configType: string, configData: any): string {
     const parts = [`${configType.toUpperCase()} configuration file`];
-    
+
     if (configType === 'json' || configType === 'yaml') {
       const keys = Object.keys(configData || {});
       if (keys.length > 0) {
@@ -741,21 +816,75 @@ export class ContentExtractor implements IContentExtractor {
         parts.push(`Contains ${keys.length} environment variables`);
       }
     }
-    
+
     return parts.join('. ') + '.';
   }
 
   private isStopWord(word: string): boolean {
     const stopWords = new Set([
-      'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-      'this', 'that', 'these', 'those', 'is', 'are', 'was', 'were', 'be', 'been',
-      'have', 'has', 'had', 'will', 'would', 'could', 'should', 'can', 'may',
-      'from', 'into', 'through', 'during', 'before', 'after', 'above', 'below',
-      'function', 'class', 'interface', 'type', 'const', 'let', 'var', 'return',
-      'import', 'export', 'default', 'async', 'await', 'promise', 'string', 'number',
-      'boolean', 'object', 'array', 'null', 'undefined', 'void'
+      'the',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'this',
+      'that',
+      'these',
+      'those',
+      'is',
+      'are',
+      'was',
+      'were',
+      'be',
+      'been',
+      'have',
+      'has',
+      'had',
+      'will',
+      'would',
+      'could',
+      'should',
+      'can',
+      'may',
+      'from',
+      'into',
+      'through',
+      'during',
+      'before',
+      'after',
+      'above',
+      'below',
+      'function',
+      'class',
+      'interface',
+      'type',
+      'const',
+      'let',
+      'var',
+      'return',
+      'import',
+      'export',
+      'default',
+      'async',
+      'await',
+      'promise',
+      'string',
+      'number',
+      'boolean',
+      'object',
+      'array',
+      'null',
+      'undefined',
+      'void',
     ]);
-    
+
     return stopWords.has(word.toLowerCase());
   }
 

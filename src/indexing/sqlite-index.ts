@@ -5,7 +5,7 @@ import Database from 'better-sqlite3';
 type DatabaseType = Database.Database;
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import {
+import type {
   ISQLiteIndex,
   IndexEntry,
   IndexContentType,
@@ -13,9 +13,8 @@ import {
   IndexFilters,
   SQLiteSearchResult,
   IndexConfig,
-  IndexError,
-  IndexErrorCode
 } from './types.js';
+import { IndexError, IndexErrorCode } from './types.js';
 
 export class SQLiteFTS5Index implements ISQLiteIndex {
   private db?: DatabaseType;
@@ -36,7 +35,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
   constructor(config: IndexConfig) {
     this.config = config;
     this.dbPath = config.databasePath;
-    
+
     // Ensure database directory exists
     const dbDir = this.dbPath.substring(0, this.dbPath.lastIndexOf('/'));
     if (!existsSync(dbDir)) {
@@ -47,7 +46,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
   async connect(): Promise<void> {
     try {
       this.db = new Database(this.dbPath, {
-        verbose: process.env.NODE_ENV === 'development' ? console.log : undefined
+        verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
       });
 
       // Configure SQLite for optimal FTS5 performance
@@ -56,7 +55,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       this.db.pragma('cache_size = ' + this.config.cacheSize);
       this.db.pragma('temp_store = memory');
       this.db.pragma('mmap_size = 268435456'); // 256MB
-      
+
       // Enable FTS5 extension (usually built-in with better-sqlite3)
       this.db.loadExtension?.('fts5'); // Optional, may not be needed
 
@@ -66,7 +65,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       throw new IndexError(
         `Failed to connect to SQLite database: ${(error as Error).message}`,
         IndexErrorCode.DATABASE_CONNECTION_FAILED,
-        { dbPath: this.dbPath, error }
+        { dbPath: this.dbPath, error },
       );
     }
   }
@@ -74,7 +73,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
   async disconnect(): Promise<void> {
     if (this.db) {
       // Close prepared statements
-      Object.values(this.statements).forEach(stmt => {
+      Object.values(this.statements).forEach((stmt) => {
         try {
           stmt?.finalize?.();
         } catch {
@@ -95,7 +94,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
 
     const transaction = this.db.transaction(() => {
       // Main entries table with metadata
-      this.db!.exec(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS index_entries (
           id TEXT PRIMARY KEY,
           type TEXT NOT NULL,
@@ -113,7 +112,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       // Create FTS5 virtual table for full-text search
       // Using porter tokenizer for better English language support
       const tokenizer = this.config.tokenizer || 'porter';
-      this.db!.exec(`
+      this.db.exec(`
         CREATE VIRTUAL TABLE IF NOT EXISTS index_fts USING fts5(
           title,
           content,
@@ -127,7 +126,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       `);
 
       // Search analytics table
-      this.db!.exec(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS search_queries (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           query TEXT NOT NULL,
@@ -140,7 +139,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       `);
 
       // Index maintenance log
-      this.db!.exec(`
+      this.db.exec(`
         CREATE TABLE IF NOT EXISTS index_maintenance (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           operation TEXT NOT NULL, -- 'vacuum', 'rebuild', 'cleanup'
@@ -162,17 +161,25 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
 
     const transaction = this.db.transaction(() => {
       // Indexes for efficient filtering and sorting
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_entries_type ON index_entries(type)');
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_entries_last_modified ON index_entries(last_modified DESC)');
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_entries_path ON index_entries(path)');
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_entries_created_at ON index_entries(created_at DESC)');
-      
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_entries_type ON index_entries(type)');
+      this.db.exec(
+        'CREATE INDEX IF NOT EXISTS idx_entries_last_modified ON index_entries(last_modified DESC)',
+      );
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_entries_path ON index_entries(path)');
+      this.db.exec(
+        'CREATE INDEX IF NOT EXISTS idx_entries_created_at ON index_entries(created_at DESC)',
+      );
+
       // Composite indexes for common query patterns
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_entries_type_modified ON index_entries(type, last_modified DESC)');
-      
+      this.db.exec(
+        'CREATE INDEX IF NOT EXISTS idx_entries_type_modified ON index_entries(type, last_modified DESC)',
+      );
+
       // Search analytics indexes
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_queries_timestamp ON search_queries(timestamp DESC)');
-      this.db!.exec('CREATE INDEX IF NOT EXISTS idx_queries_query ON search_queries(query)');
+      this.db.exec(
+        'CREATE INDEX IF NOT EXISTS idx_queries_timestamp ON search_queries(timestamp DESC)',
+      );
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_queries_query ON search_queries(query)');
     });
 
     transaction();
@@ -197,8 +204,8 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       if (version < 1) {
         // Migration to version 1: Add checksum and file_size columns
         try {
-          this.db!.exec('ALTER TABLE index_entries ADD COLUMN checksum TEXT');
-          this.db!.exec('ALTER TABLE index_entries ADD COLUMN file_size INTEGER DEFAULT 0');
+          this.db.exec('ALTER TABLE index_entries ADD COLUMN checksum TEXT');
+          this.db.exec('ALTER TABLE index_entries ADD COLUMN file_size INTEGER DEFAULT 0');
         } catch (error) {
           // Columns might already exist
           console.log('Migration v1: Columns may already exist');
@@ -207,7 +214,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       }
 
       // Set the new version
-      this.db!.pragma(`user_version = ${version}`);
+      this.db.pragma(`user_version = ${version}`);
     });
 
     transaction();
@@ -299,7 +306,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       for (const entry of entries) {
         const metadataJson = JSON.stringify(entry.metadata);
         const timestamp = Math.floor(entry.lastModified.getTime() / 1000);
-        
+
         this.statements.insertEntry.run(
           entry.id,
           entry.type,
@@ -309,12 +316,12 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
           metadataJson,
           timestamp,
           this.generateChecksum(entry.content),
-          entry.content.length
+          entry.content.length,
         );
       }
 
       // Rebuild FTS5 index after bulk insert
-      this.db!.exec('INSERT INTO index_fts(index_fts) VALUES(\'rebuild\')');
+      this.db.exec("INSERT INTO index_fts(index_fts) VALUES('rebuild')");
     });
 
     insertMany(entries);
@@ -333,7 +340,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       for (const entry of entries) {
         const metadataJson = JSON.stringify(entry.metadata);
         const timestamp = Math.floor(entry.lastModified.getTime() / 1000);
-        
+
         this.statements.updateEntry.run(
           entry.type,
           entry.title,
@@ -343,12 +350,12 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
           timestamp,
           this.generateChecksum(entry.content),
           entry.content.length,
-          entry.id
+          entry.id,
         );
       }
 
       // Optimize FTS5 index after updates
-      this.db!.exec('INSERT INTO index_fts(index_fts) VALUES(\'optimize\')');
+      this.db.exec("INSERT INTO index_fts(index_fts) VALUES('optimize')");
     });
 
     updateMany(entries);
@@ -369,7 +376,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       }
 
       // Clean up FTS5 index
-      this.db!.exec('INSERT INTO index_fts(index_fts) VALUES(\'rebuild\')');
+      this.db.exec("INSERT INTO index_fts(index_fts) VALUES('rebuild')");
     });
 
     deleteMany(ids);
@@ -388,26 +395,35 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     try {
       // Build FTS5 query
       const ftsQuery = this.buildFTSQuery(query);
-      
+
       // Convert filters to JSON strings
       const typeFilter = options.filters.types ? JSON.stringify(options.filters.types) : null;
-      const categoryFilter = options.filters.categories ? JSON.stringify(options.filters.categories) : null;
+      const categoryFilter = options.filters.categories
+        ? JSON.stringify(options.filters.categories)
+        : null;
       const tagFilter = options.filters.tags ? JSON.stringify(options.filters.tags) : null;
-      
+
       const results = this.statements.searchFTS.all(
         options.includeSnippets, // snippet parameter
         true, // highlight parameter
         ftsQuery,
         // Filter parameters (repeated for each filter condition)
-        typeFilter ? 1 : null, typeFilter,
-        categoryFilter ? 1 : null, categoryFilter,
-        tagFilter ? 1 : null, tagFilter,
-        options.filters.createdAfter ? 1 : null, 
-        options.filters.createdAfter ? Math.floor(options.filters.createdAfter.getTime() / 1000) : null,
+        typeFilter ? 1 : null,
+        typeFilter,
+        categoryFilter ? 1 : null,
+        categoryFilter,
+        tagFilter ? 1 : null,
+        tagFilter,
+        options.filters.createdAfter ? 1 : null,
+        options.filters.createdAfter
+          ? Math.floor(options.filters.createdAfter.getTime() / 1000)
+          : null,
         options.filters.createdBefore ? 1 : null,
-        options.filters.createdBefore ? Math.floor(options.filters.createdBefore.getTime() / 1000) : null,
+        options.filters.createdBefore
+          ? Math.floor(options.filters.createdBefore.getTime() / 1000)
+          : null,
         options.limit,
-        options.offset
+        options.offset,
       ) as any[];
 
       const endTime = Date.now();
@@ -417,7 +433,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       this.recordSearchQuery(query, results.length, responseTime).catch(console.error);
 
       // Convert results to proper format
-      return results.map(row => ({
+      return results.map((row) => ({
         id: row.id,
         type: row.type as IndexContentType,
         title: row.title,
@@ -427,13 +443,13 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
         lastModified: row.last_modified * 1000, // Convert back to milliseconds
         score: Math.abs(row.score), // FTS5 rank is negative, make it positive
         snippet: row.snippet,
-        highlight: row.title_highlight
+        highlight: row.title_highlight,
       }));
     } catch (error) {
       throw new IndexError(
         `FTS5 search failed: ${(error as Error).message}`,
         IndexErrorCode.SEARCH_TIMEOUT,
-        { query, options, error }
+        { query, options, error },
       );
     }
   }
@@ -442,7 +458,9 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     if (!this.db) throw new Error('Database not connected');
 
     if (!filters) {
-      const result = this.db.prepare('SELECT COUNT(*) as count FROM index_entries').get() as { count: number };
+      const result = this.db.prepare('SELECT COUNT(*) as count FROM index_entries').get() as {
+        count: number;
+      };
       return result.count;
     }
 
@@ -457,7 +475,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       filters.categories ? JSON.stringify(filters.categories) : null,
       filters.tags ? JSON.stringify(filters.tags) : null,
       filters.createdAfter ? Math.floor(filters.createdAfter.getTime() / 1000) : null,
-      filters.createdBefore ? Math.floor(filters.createdBefore.getTime() / 1000) : null
+      filters.createdBefore ? Math.floor(filters.createdBefore.getTime() / 1000) : null,
     ) as { count: number };
 
     return result.count;
@@ -471,23 +489,32 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
 
     // Perform VACUUM to reclaim space
     this.db.exec('VACUUM');
-    
+
     // Optimize FTS5 indexes
-    this.db.exec('INSERT INTO index_fts(index_fts) VALUES(\'optimize\')');
+    this.db.exec("INSERT INTO index_fts(index_fts) VALUES('optimize')");
 
     const sizeAfter = this.getDatabaseSize();
     const duration = Date.now() - startTime;
     const spaceReclaimed = sizeBefore - sizeAfter;
 
     // Log maintenance operation
-    this.db.prepare(`
+    this.db
+      .prepare(
+        `
       INSERT INTO index_maintenance (operation, duration, space_reclaimed, details)
       VALUES (?, ?, ?, ?)
-    `).run('vacuum', duration, spaceReclaimed, JSON.stringify({
-      sizeBefore,
-      sizeAfter,
-      spaceReclaimed
-    }));
+    `,
+      )
+      .run(
+        'vacuum',
+        duration,
+        spaceReclaimed,
+        JSON.stringify({
+          sizeBefore,
+          sizeAfter,
+          spaceReclaimed,
+        }),
+      );
 
     console.log(`✅ Database vacuumed: ${spaceReclaimed} bytes reclaimed in ${duration}ms`);
     return spaceReclaimed;
@@ -498,7 +525,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
 
     const startTime = Date.now();
     this.db.exec('ANALYZE');
-    
+
     const duration = Date.now() - startTime;
     console.log(`✅ Database statistics updated in ${duration}ms`);
   }
@@ -509,11 +536,11 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     try {
       const result = this.db.prepare('PRAGMA integrity_check').get() as { integrity_check: string };
       const isIntact = result.integrity_check === 'ok';
-      
+
       if (!isIntact) {
         console.error('❌ Database integrity check failed:', result.integrity_check);
       }
-      
+
       return isIntact;
     } catch (error) {
       console.error('❌ Database integrity check error:', error);
@@ -524,7 +551,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
   private buildFTSQuery(query: string): string {
     // Simple FTS5 query builder
     // For production, you might want more sophisticated query parsing
-    
+
     if (query.includes('"') && query.includes('"')) {
       // Phrase query - already quoted
       return query;
@@ -536,28 +563,39 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     }
 
     // Simple query - search in title and content with different weights
-    const terms = query.trim().split(/\s+/).filter(term => term.length > 0);
-    
+    const terms = query
+      .trim()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
+
     if (terms.length === 1) {
       // Single term - search with prefix matching
       return `{title} : ${terms[0]}* OR {content} : ${terms[0]}*`;
     }
 
     // Multiple terms - require all terms (implicit AND)
-    const titleQuery = terms.map(term => `${term}*`).join(' ');
-    const contentQuery = terms.map(term => `${term}*`).join(' ');
-    
+    const titleQuery = terms.map((term) => `${term}*`).join(' ');
+    const contentQuery = terms.map((term) => `${term}*`).join(' ');
+
     return `({title} : (${titleQuery})) OR ({content} : (${contentQuery}))`;
   }
 
-  private async recordSearchQuery(query: string, resultCount: number, responseTime: number): Promise<void> {
+  private async recordSearchQuery(
+    query: string,
+    resultCount: number,
+    responseTime: number,
+  ): Promise<void> {
     if (!this.db) return;
 
     try {
-      this.db.prepare(`
+      this.db
+        .prepare(
+          `
         INSERT INTO search_queries (query, result_count, response_time)
         VALUES (?, ?, ?)
-      `).run(query, resultCount, responseTime);
+      `,
+        )
+        .run(query, resultCount, responseTime);
     } catch (error) {
       // Don't let analytics failures affect search functionality
       console.warn('Failed to record search analytics:', error);
@@ -569,7 +607,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     let hash = 0;
     for (let i = 0; i < content.length; i++) {
       const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash.toString(16);
@@ -599,13 +637,17 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
 
     const totalEntries = await this.count();
     const databaseSize = this.getDatabaseSize();
-    
+
     // Get FTS5 index stats
     let indexSize = 0;
     try {
-      const ftsResult = this.db.prepare(`
+      const ftsResult = this.db
+        .prepare(
+          `
         SELECT * FROM index_fts WHERE index_fts MATCH 'indexes'
-      `).all();
+      `,
+        )
+        .all();
       indexSize = JSON.stringify(ftsResult).length; // Rough estimate
     } catch {
       // FTS5 stats not available
@@ -614,13 +656,17 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
     // Get last vacuum time
     let lastVacuum: Date | null = null;
     try {
-      const vacuumResult = this.db.prepare(`
+      const vacuumResult = this.db
+        .prepare(
+          `
         SELECT timestamp FROM index_maintenance 
         WHERE operation = 'vacuum' 
         ORDER BY timestamp DESC 
         LIMIT 1
-      `).get() as { timestamp: number } | undefined;
-      
+      `,
+        )
+        .get() as { timestamp: number } | undefined;
+
       if (vacuumResult) {
         lastVacuum = new Date(vacuumResult.timestamp * 1000);
       }
@@ -633,7 +679,7 @@ export class SQLiteFTS5Index implements ISQLiteIndex {
       databaseSize,
       indexSize,
       lastVacuum,
-      ftsOptimized: true // Assume optimized if no errors
+      ftsOptimized: true, // Assume optimized if no errors
     };
   }
 }

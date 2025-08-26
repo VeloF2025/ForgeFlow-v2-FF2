@@ -213,30 +213,45 @@ export * from './architect';
 // Knowledge Management System Interfaces
 export interface KnowledgeManager {
   // Card operations
-  createCard(card: Omit<KnowledgeCard, 'id' | 'createdAt' | 'updatedAt' | 'lastUsed' | 'usageCount'>): Promise<KnowledgeCard>;
+  createCard(
+    card: Omit<KnowledgeCard, 'id' | 'createdAt' | 'updatedAt' | 'lastUsed' | 'usageCount'>,
+  ): Promise<KnowledgeCard>;
   getCard(id: string): Promise<KnowledgeCard | null>;
   updateCard(id: string, updates: Partial<KnowledgeCard>): Promise<KnowledgeCard>;
   deleteCard(id: string): Promise<void>;
   searchCards(query: KnowledgeQuery): Promise<KnowledgeSearchResult[]>;
-  
+
   // Usage tracking
   recordUsage(cardId: string, issueId: string, outcome: KnowledgeOutcome): Promise<void>;
   updateEffectiveness(cardId: string): Promise<void>;
-  
+
   // Gotcha operations
-  recordGotcha(pattern: Omit<GotchaPattern, 'id' | 'createdAt' | 'updatedAt' | 'promoted'>): Promise<GotchaPattern>;
+  recordGotcha(
+    pattern: Omit<GotchaPattern, 'id' | 'createdAt' | 'updatedAt' | 'promoted'>,
+  ): Promise<GotchaPattern>;
   promoteGotcha(gotchaId: string): Promise<KnowledgeCard>;
-  getGotchaStats(): Promise<{ total: number; promoted: number; byCategory: Record<string, number> }>;
-  
+  getGotchaStats(): Promise<{
+    total: number;
+    promoted: number;
+    byCategory: Record<string, number>;
+  }>;
+
   // ADR operations
-  createADR(adr: Omit<ArchitectureDecisionRecord, 'id' | 'date'>): Promise<ArchitectureDecisionRecord>;
-  updateADR(id: string, updates: Partial<ArchitectureDecisionRecord>): Promise<ArchitectureDecisionRecord>;
+  createADR(
+    adr: Omit<ArchitectureDecisionRecord, 'id' | 'date'>,
+  ): Promise<ArchitectureDecisionRecord>;
+  updateADR(
+    id: string,
+    updates: Partial<ArchitectureDecisionRecord>,
+  ): Promise<ArchitectureDecisionRecord>;
   getADR(id: string): Promise<ArchitectureDecisionRecord | null>;
-  listADRs(filters?: { status?: ArchitectureDecisionRecord['status'][] }): Promise<ArchitectureDecisionRecord[]>;
-  
+  listADRs(filters?: {
+    status?: ArchitectureDecisionRecord['status'][];
+  }): Promise<ArchitectureDecisionRecord[]>;
+
   // Statistics
   getStats(): Promise<KnowledgeStats>;
-  
+
   // Maintenance
   cleanup(): Promise<void>;
   export(path: string): Promise<void>;
@@ -443,5 +458,5 @@ export type {
   RuntimeLog,
   IMemoryManager,
   IRuntimeLogger,
-  IMemoryAnalytics
+  IMemoryAnalytics,
 } from '../memory/types';

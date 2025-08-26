@@ -1,62 +1,62 @@
 // Multi-Armed Bandit Learner - Adaptive Retrieval Strategy Selection
 // Implements epsilon-greedy, UCB, and Thompson sampling algorithms
 
-import {
+import type {
   BanditAlgorithm,
   BanditStatistics,
   BanditModel,
   RetrievalStrategy,
   SearchContext,
   RetrievalConfig,
-  RetrievalError,
-  RetrievalErrorCode
 } from './types.js';
+import { RetrievalError, RetrievalErrorCode } from './types.js';
 import { logger } from '../utils/logger.js';
 
 export class EpsilonGreedyBandit implements BanditAlgorithm {
   private armRewards: Map<RetrievalStrategy, number[]> = new Map();
   private armCounts: Map<RetrievalStrategy, number> = new Map();
   private contextualRewards: Map<string, Map<RetrievalStrategy, number[]>> = new Map();
-  
+
   // Configuration
   private epsilon: number;
   private readonly epsilonDecay: number;
   private readonly minEpsilon: number;
   private readonly windowSize: number;
-  
+
   // Statistics tracking
   private totalTrials = 0;
   private totalReward = 0;
-  private rewardHistory: Array<{ strategy: RetrievalStrategy; reward: number; timestamp: Date }> = [];
-  
+  private rewardHistory: Array<{ strategy: RetrievalStrategy; reward: number; timestamp: Date }> =
+    [];
+
   constructor(config: RetrievalConfig['bandit']) {
     this.epsilon = config.initialEpsilon;
     this.epsilonDecay = config.epsilonDecay;
     this.minEpsilon = 0.01;
     this.windowSize = config.windowSize || 1000;
-    
+
     // Initialize arms for all strategies
     this.initializeArms();
-    
+
     logger.info('EpsilonGreedyBandit initialized', {
       initialEpsilon: this.epsilon,
       epsilonDecay: this.epsilonDecay,
-      windowSize: this.windowSize
+      windowSize: this.windowSize,
     });
   }
 
   private initializeArms(): void {
     const strategies: RetrievalStrategy[] = [
       'fts-heavy',
-      'vector-heavy', 
+      'vector-heavy',
       'balanced',
       'recency-focused',
       'effectiveness-focused',
       'popularity-focused',
-      'semantic-focused'
+      'semantic-focused',
     ];
 
-    strategies.forEach(strategy => {
+    strategies.forEach((strategy) => {
       this.armRewards.set(strategy, []);
       this.armCounts.set(strategy, 0);
     });
@@ -66,23 +66,23 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
     try {
       // Contextual key for context-aware bandit
       const contextKey = this.generateContextKey(context);
-      
+
       // Exploration vs exploitation decision
       if (Math.random() < this.epsilon) {
         // Exploration: select random arm
         const strategy = this.selectRandomArm();
-        logger.debug('Bandit exploration', { 
-          strategy, 
+        logger.debug('Bandit exploration', {
+          strategy,
           epsilon: this.epsilon,
-          contextKey
+          contextKey,
         });
         return strategy;
       } else {
         // Exploitation: select best performing arm
         const strategy = await this.selectBestArm(contextKey);
-        logger.debug('Bandit exploitation', { 
+        logger.debug('Bandit exploitation', {
           strategy,
-          contextKey
+          contextKey,
         });
         return strategy;
       }
@@ -91,7 +91,7 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
       throw new RetrievalError(
         'Bandit arm selection failed',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { context, error }
+        { context, error },
       );
     }
   }
@@ -99,7 +99,7 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
   async updateReward(
     strategy: RetrievalStrategy,
     context: SearchContext,
-    reward: number
+    reward: number,
   ): Promise<void> {
     try {
       // Validate reward
@@ -116,9 +116,9 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
         this.armCounts.set(strategy, 0);
       }
 
-      const rewards = this.armRewards.get(strategy)!;
+      const rewards = this.armRewards.get(strategy);
       rewards.push(reward);
-      this.armCounts.set(strategy, this.armCounts.get(strategy)! + 1);
+      this.armCounts.set(strategy, this.armCounts.get(strategy) + 1);
 
       // Keep only recent rewards (sliding window)
       if (rewards.length > this.windowSize) {
@@ -129,24 +129,25 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
       if (!this.contextualRewards.has(contextKey)) {
         this.contextualRewards.set(contextKey, new Map());
       }
-      
-      const contextRewards = this.contextualRewards.get(contextKey)!;
+
+      const contextRewards = this.contextualRewards.get(contextKey);
       if (!contextRewards.has(strategy)) {
         contextRewards.set(strategy, []);
       }
-      
-      const contextArm = contextRewards.get(strategy)!;
+
+      const contextArm = contextRewards.get(strategy);
       contextArm.push(reward);
-      
+
       // Keep sliding window for contextual rewards too
-      if (contextArm.length > this.windowSize / 10) { // Smaller window for context
+      if (contextArm.length > this.windowSize / 10) {
+        // Smaller window for context
         contextArm.splice(0, contextArm.length - Math.floor(this.windowSize / 10));
       }
 
       // Update global statistics
       this.totalTrials++;
       this.totalReward += reward;
-      
+
       // Store reward history
       this.rewardHistory.push({ strategy, reward, timestamp });
       if (this.rewardHistory.length > this.windowSize) {
@@ -162,14 +163,14 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
         newEpsilon: this.epsilon,
         contextKey,
         totalTrials: this.totalTrials,
-        averageReward: this.totalReward / this.totalTrials
+        averageReward: this.totalReward / this.totalTrials,
       });
     } catch (error) {
       logger.error('Failed to update bandit reward', error);
       throw new RetrievalError(
         'Bandit reward update failed',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { strategy, context, reward, error }
+        { strategy, context, reward, error },
       );
     }
   }
@@ -177,23 +178,26 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
   async getArmStatistics(): Promise<BanditStatistics> {
     try {
       const armStats: BanditStatistics['armStats'] = {};
-      
+
       for (const [strategy, rewards] of this.armRewards.entries()) {
         const trials = rewards.length;
         const totalReward = rewards.reduce((sum, r) => sum + r, 0);
         const averageReward = trials > 0 ? totalReward / trials : 0;
-        
+
         // Calculate confidence interval (95% confidence)
-        const stdError = trials > 1 ? Math.sqrt(
-          rewards.reduce((sum, r) => sum + Math.pow(r - averageReward, 2), 0) / (trials - 1)
-        ) / Math.sqrt(trials) : 0;
-        
+        const stdError =
+          trials > 1
+            ? Math.sqrt(
+                rewards.reduce((sum, r) => sum + Math.pow(r - averageReward, 2), 0) / (trials - 1),
+              ) / Math.sqrt(trials)
+            : 0;
+
         const marginOfError = 1.96 * stdError; // 95% confidence
-        
+
         // Find last used timestamp
-        const lastUsed = this.rewardHistory
-          .filter(entry => entry.strategy === strategy)
-          .pop()?.timestamp || new Date(0);
+        const lastUsed =
+          this.rewardHistory.filter((entry) => entry.strategy === strategy).pop()?.timestamp ||
+          new Date(0);
 
         armStats[strategy] = {
           name: strategy,
@@ -202,15 +206,15 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
           averageReward,
           confidenceInterval: [
             Math.max(0, averageReward - marginOfError),
-            Math.min(1, averageReward + marginOfError)
+            Math.min(1, averageReward + marginOfError),
           ] as [number, number],
-          lastUsed
+          lastUsed,
         };
       }
 
       // Calculate cumulative regret
       const regret = this.calculateRegret();
-      
+
       // Calculate convergence rate
       const convergenceRate = this.calculateConvergenceRate();
 
@@ -221,14 +225,14 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
         armStats,
         regret,
         convergenceRate,
-        explorationRate: this.epsilon
+        explorationRate: this.epsilon,
       };
     } catch (error) {
       logger.error('Failed to get bandit statistics', error);
       throw new RetrievalError(
         'Failed to retrieve bandit statistics',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { error }
+        { error },
       );
     }
   }
@@ -240,27 +244,27 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
       this.armCounts.clear();
       this.contextualRewards.clear();
       this.rewardHistory.length = 0;
-      
+
       // Reset statistics
       this.totalTrials = 0;
       this.totalReward = 0;
-      
+
       // Reset epsilon
       this.epsilon = 0.1; // Reset to initial value
-      
+
       // Reinitialize arms
       this.initializeArms();
-      
+
       logger.info('Bandit learning reset', {
         epsilon: this.epsilon,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     } catch (error) {
       logger.error('Failed to reset bandit learning', error);
       throw new RetrievalError(
         'Failed to reset bandit learning',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { error }
+        { error },
       );
     }
   }
@@ -268,32 +272,34 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
   async exportModel(): Promise<BanditModel> {
     try {
       const armEstimates: BanditModel['armEstimates'] = {};
-      
+
       for (const [strategy, rewards] of this.armRewards.entries()) {
         const trials = rewards.length;
         const mean = trials > 0 ? rewards.reduce((sum, r) => sum + r, 0) / trials : 0;
-        const variance = trials > 1 ? 
-          rewards.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (trials - 1) : 0;
-        
+        const variance =
+          trials > 1
+            ? rewards.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / (trials - 1)
+            : 0;
+
         armEstimates[strategy] = {
           mean,
           variance,
-          samples: trials
+          samples: trials,
         };
       }
 
       // Extract training data (recent samples)
       const recentData = this.rewardHistory.slice(-1000); // Last 1000 samples
-      const contexts = recentData.map(entry => ({}) as SearchContext); // Simplified for export
-      const strategies = recentData.map(entry => entry.strategy);
-      const rewards = recentData.map(entry => entry.reward);
+      const contexts = recentData.map((entry) => ({}) as SearchContext); // Simplified for export
+      const strategies = recentData.map((entry) => entry.strategy);
+      const rewards = recentData.map((entry) => entry.reward);
 
       return {
         algorithm: 'epsilon-greedy',
         parameters: {
           epsilon: this.epsilon,
           epsilonDecay: this.epsilonDecay,
-          windowSize: this.windowSize
+          windowSize: this.windowSize,
         },
         armEstimates,
         contextFeatures: ['agentTypes', 'projectId', 'timestamp'], // Simplified
@@ -301,15 +307,15 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
         trainingData: {
           contexts,
           strategies,
-          rewards
-        }
+          rewards,
+        },
       };
     } catch (error) {
       logger.error('Failed to export bandit model', error);
       throw new RetrievalError(
         'Failed to export bandit model',
         RetrievalErrorCode.MODEL_TRAINING_FAILED,
-        { error }
+        { error },
       );
     }
   }
@@ -326,21 +332,21 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
 
       // Import parameters
       this.epsilon = model.parameters.epsilon || this.epsilon;
-      
+
       // Import arm estimates
       for (const [strategy, estimates] of Object.entries(model.armEstimates)) {
         const retrievalStrategy = strategy as RetrievalStrategy;
-        
+
         // Reconstruct rewards from estimates (approximation)
         const syntheticRewards = this.generateSyntheticRewards(
           estimates.mean,
           estimates.variance,
-          estimates.samples
+          estimates.samples,
         );
-        
+
         this.armRewards.set(retrievalStrategy, syntheticRewards);
         this.armCounts.set(retrievalStrategy, estimates.samples);
-        
+
         // Update global statistics
         this.totalTrials += estimates.samples;
         this.totalReward += estimates.mean * estimates.samples;
@@ -350,14 +356,14 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
         algorithm: model.algorithm,
         modelVersion: model.modelVersion,
         totalArms: Object.keys(model.armEstimates).length,
-        totalSamples: this.totalTrials
+        totalSamples: this.totalTrials,
       });
     } catch (error) {
       logger.error('Failed to import bandit model', error);
       throw new RetrievalError(
         'Failed to import bandit model',
         RetrievalErrorCode.MODEL_TRAINING_FAILED,
-        { model: model.modelVersion, error }
+        { model: model.modelVersion, error },
       );
     }
   }
@@ -370,9 +376,9 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
       context.agentTypes.sort().join(','),
       context.projectId,
       context.currentIssue?.labels?.sort().join(',') || '',
-      context.workingHours ? 'work' : 'off'
+      context.workingHours ? 'work' : 'off',
     ];
-    
+
     return keyParts.join('|');
   }
 
@@ -398,7 +404,7 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
           }
         }
       }
-      
+
       // If we found a good contextual strategy, use it
       if (bestScore > 0) {
         return bestStrategy;
@@ -421,10 +427,7 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
   }
 
   private decayEpsilon(): void {
-    this.epsilon = Math.max(
-      this.minEpsilon,
-      this.epsilon * this.epsilonDecay
-    );
+    this.epsilon = Math.max(this.minEpsilon, this.epsilon * this.epsilonDecay);
   }
 
   private calculateRegret(): number {
@@ -449,10 +452,11 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
     // Simple convergence rate based on recent reward variance
     if (this.rewardHistory.length < 10) return 0;
 
-    const recentRewards = this.rewardHistory.slice(-100).map(entry => entry.reward);
+    const recentRewards = this.rewardHistory.slice(-100).map((entry) => entry.reward);
     const mean = recentRewards.reduce((sum, r) => sum + r, 0) / recentRewards.length;
-    const variance = recentRewards.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / recentRewards.length;
-    
+    const variance =
+      recentRewards.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / recentRewards.length;
+
     // Lower variance indicates higher convergence
     return Math.max(0, 1 - Math.sqrt(variance));
   }
@@ -461,19 +465,19 @@ export class EpsilonGreedyBandit implements BanditAlgorithm {
     // Generate synthetic rewards based on normal distribution approximation
     const rewards: number[] = [];
     const stdDev = Math.sqrt(variance);
-    
+
     for (let i = 0; i < Math.min(samples, this.windowSize); i++) {
       // Box-Muller transform for normal distribution
       const u1 = Math.random();
       const u2 = Math.random();
       const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-      
+
       let reward = mean + z * stdDev;
       reward = Math.max(0, Math.min(1, reward)); // Clamp to [0, 1]
-      
+
       rewards.push(reward);
     }
-    
+
     return rewards;
   }
 }
@@ -488,20 +492,24 @@ export class UCBBandit implements BanditAlgorithm {
   constructor(config: RetrievalConfig['bandit']) {
     this.confidenceLevel = config.confidenceLevel || 2.0;
     this.initializeArms();
-    
+
     logger.info('UCBBandit initialized', {
-      confidenceLevel: this.confidenceLevel
+      confidenceLevel: this.confidenceLevel,
     });
   }
 
   private initializeArms(): void {
     const strategies: RetrievalStrategy[] = [
-      'fts-heavy', 'vector-heavy', 'balanced',
-      'recency-focused', 'effectiveness-focused', 
-      'popularity-focused', 'semantic-focused'
+      'fts-heavy',
+      'vector-heavy',
+      'balanced',
+      'recency-focused',
+      'effectiveness-focused',
+      'popularity-focused',
+      'semantic-focused',
     ];
 
-    strategies.forEach(strategy => {
+    strategies.forEach((strategy) => {
       this.armRewards.set(strategy, []);
       this.armCounts.set(strategy, 0);
     });
@@ -514,19 +522,17 @@ export class UCBBandit implements BanditAlgorithm {
 
       for (const [strategy, rewards] of this.armRewards.entries()) {
         const trials = rewards.length;
-        
+
         if (trials === 0) {
           // Unvisited arms get infinite UCB (exploration)
           return strategy;
         }
 
         const avgReward = rewards.reduce((sum, r) => sum + r, 0) / trials;
-        const confidence = Math.sqrt(
-          (this.confidenceLevel * Math.log(this.totalTrials)) / trials
-        );
-        
+        const confidence = Math.sqrt((this.confidenceLevel * Math.log(this.totalTrials)) / trials);
+
         const ucb = avgReward + confidence;
-        
+
         if (ucb > bestUCB) {
           bestUCB = ucb;
           bestStrategy = strategy;
@@ -536,7 +542,7 @@ export class UCBBandit implements BanditAlgorithm {
       logger.debug('UCB arm selected', {
         strategy: bestStrategy,
         ucb: bestUCB,
-        totalTrials: this.totalTrials
+        totalTrials: this.totalTrials,
       });
 
       return bestStrategy;
@@ -545,33 +551,37 @@ export class UCBBandit implements BanditAlgorithm {
       throw new RetrievalError(
         'UCB arm selection failed',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { context, error }
+        { context, error },
       );
     }
   }
 
-  async updateReward(strategy: RetrievalStrategy, context: SearchContext, reward: number): Promise<void> {
+  async updateReward(
+    strategy: RetrievalStrategy,
+    context: SearchContext,
+    reward: number,
+  ): Promise<void> {
     try {
       if (!this.armRewards.has(strategy)) {
         this.armRewards.set(strategy, []);
         this.armCounts.set(strategy, 0);
       }
 
-      this.armRewards.get(strategy)!.push(reward);
-      this.armCounts.set(strategy, this.armCounts.get(strategy)! + 1);
+      this.armRewards.get(strategy).push(reward);
+      this.armCounts.set(strategy, this.armCounts.get(strategy) + 1);
       this.totalTrials++;
 
       logger.debug('UCB reward updated', {
         strategy,
         reward,
-        totalTrials: this.totalTrials
+        totalTrials: this.totalTrials,
       });
     } catch (error) {
       logger.error('Failed to update UCB reward', error);
       throw new RetrievalError(
         'UCB reward update failed',
         RetrievalErrorCode.BANDIT_UPDATE_FAILED,
-        { strategy, context, reward, error }
+        { strategy, context, reward, error },
       );
     }
   }
@@ -580,20 +590,20 @@ export class UCBBandit implements BanditAlgorithm {
     // Implementation similar to EpsilonGreedyBandit
     const armStats: BanditStatistics['armStats'] = {};
     let totalReward = 0;
-    
+
     for (const [strategy, rewards] of this.armRewards.entries()) {
       const trials = rewards.length;
       const strategyTotalReward = rewards.reduce((sum, r) => sum + r, 0);
       const averageReward = trials > 0 ? strategyTotalReward / trials : 0;
       totalReward += strategyTotalReward;
-      
+
       armStats[strategy] = {
         name: strategy,
         trials,
         totalReward: strategyTotalReward,
         averageReward,
         confidenceInterval: [0, 1], // Simplified
-        lastUsed: new Date()
+        lastUsed: new Date(),
       };
     }
 
@@ -604,7 +614,7 @@ export class UCBBandit implements BanditAlgorithm {
       armStats,
       regret: 0, // Simplified
       convergenceRate: 0, // Simplified
-      explorationRate: 0 // UCB doesn't have explicit exploration rate
+      explorationRate: 0, // UCB doesn't have explicit exploration rate
     };
   }
 
@@ -618,13 +628,13 @@ export class UCBBandit implements BanditAlgorithm {
   async exportModel(): Promise<BanditModel> {
     // Simplified implementation
     const armEstimates: BanditModel['armEstimates'] = {};
-    
+
     for (const [strategy, rewards] of this.armRewards.entries()) {
       const mean = rewards.length > 0 ? rewards.reduce((sum, r) => sum + r, 0) / rewards.length : 0;
       armEstimates[strategy] = {
         mean,
         variance: 0, // Simplified
-        samples: rewards.length
+        samples: rewards.length,
       };
     }
 
@@ -633,7 +643,7 @@ export class UCBBandit implements BanditAlgorithm {
       parameters: { confidenceLevel: this.confidenceLevel },
       armEstimates,
       modelVersion: '1.0.0',
-      trainingData: { contexts: [], strategies: [], rewards: [] }
+      trainingData: { contexts: [], strategies: [], rewards: [] },
     };
   }
 
@@ -641,7 +651,7 @@ export class UCBBandit implements BanditAlgorithm {
     if (model.algorithm !== 'ucb') {
       throw new Error(`Incompatible algorithm: ${model.algorithm}`);
     }
-    
+
     this.confidenceLevel = model.parameters.confidenceLevel || this.confidenceLevel;
     // Simplified import - would need full implementation
   }
@@ -650,7 +660,7 @@ export class UCBBandit implements BanditAlgorithm {
 // Factory function for creating bandit instances
 export function createBanditAlgorithm(
   algorithm: 'epsilon-greedy' | 'ucb' | 'thompson-sampling',
-  config: RetrievalConfig['bandit']
+  config: RetrievalConfig['bandit'],
 ): BanditAlgorithm {
   switch (algorithm) {
     case 'epsilon-greedy':

@@ -4,7 +4,13 @@
  */
 
 import { EventEmitter } from 'events';
-import { ForgeFlowError, ErrorCategory, ErrorSeverity, ErrorHandler, SystemStateManager } from './errors';
+import {
+  ForgeFlowError,
+  ErrorCategory,
+  ErrorSeverity,
+  ErrorHandler,
+  SystemStateManager,
+} from './errors';
 import { errorMonitoring } from './error-monitoring';
 import { enhancedLogger } from './enhanced-logger';
 import { gracefulDegradation, ComponentCriticality, ComponentStatus } from './graceful-degradation';
@@ -63,7 +69,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
 
   constructor(config: Partial<ErrorIntegrationConfig> = {}) {
     super();
-    
+
     this.config = {
       enableMonitoring: true,
       enableGracefulDegradation: true,
@@ -72,18 +78,18 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       autoRecoveryEnabled: true,
       maxRecoveryAttempts: 3,
       healthCheckInterval: 30000,
-      ...config
+      ...config,
     };
 
     this.errorHandler = ErrorHandler.getInstance();
     this.stateManager = SystemStateManager.getInstance();
-    
+
     this.setupIntegration();
     this.registerDefaultRecoveryActions();
-    
+
     enhancedLogger.info('Error orchestrator integration initialized', {
       component: 'error-integration',
-      config: this.config
+      config: this.config,
     });
   }
 
@@ -115,7 +121,6 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
 
       this.emit('initialized');
       enhancedLogger.info('Error orchestrator integration fully initialized');
-
     } catch (error) {
       const integrationError = new ForgeFlowError({
         code: 'INTEGRATION_INIT_FAILED',
@@ -124,7 +129,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         severity: ErrorSeverity.CRITICAL,
         context: { originalError: (error as Error).message },
         recoverable: false,
-        userMessage: 'Critical system initialization failure'
+        userMessage: 'Critical system initialization failure',
       });
 
       enhancedLogger.error('Integration initialization failed', integrationError, {
@@ -132,7 +137,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         operation: 'initialize',
         errorCode: integrationError.code,
         category: integrationError.category,
-        severity: integrationError.severity
+        severity: integrationError.severity,
       });
 
       throw integrationError;
@@ -143,24 +148,23 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
    * Handle orchestrator-specific errors with full context
    */
   async handleOrchestratorError(
-    error: Error | ForgeFlowError, 
-    context: OrchestratorErrorContext
+    error: Error | ForgeFlowError,
+    context: OrchestratorErrorContext,
   ): Promise<ForgeFlowError> {
     const startTime = Date.now();
-    
+
     // Convert to ForgeFlowError if needed
-    const forgeFlowError = error instanceof ForgeFlowError 
-      ? error 
-      : this.convertToForgeFlowError(error, context);
+    const forgeFlowError =
+      error instanceof ForgeFlowError ? error : this.convertToForgeFlowError(error, context);
 
     // Add orchestrator context (create new context object since it's readonly)
     const enhancedContext = {
       ...forgeFlowError.context,
       ...context,
       handledAt: new Date().toISOString(),
-      handlerVersion: '2.0.0'
+      handlerVersion: '2.0.0',
     };
-    
+
     // Create new error with enhanced context
     const enhancedError = new ForgeFlowError({
       code: forgeFlowError.code,
@@ -170,8 +174,12 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       context: enhancedContext,
       recoverable: forgeFlowError.recoverable,
       userMessage: forgeFlowError.userMessage,
-      cause: (forgeFlowError.cause instanceof Error ? forgeFlowError.cause : 
-              (error instanceof Error ? error : new Error(String(error))))
+      cause:
+        forgeFlowError.cause instanceof Error
+          ? forgeFlowError.cause
+          : error instanceof Error
+            ? error
+            : new Error(String(error)),
     });
 
     // Log with enhanced context
@@ -183,7 +191,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       phase: context.phase,
       errorCode: forgeFlowError.code,
       category: forgeFlowError.category,
-      severity: forgeFlowError.severity
+      severity: forgeFlowError.severity,
     });
 
     // Update system state
@@ -199,7 +207,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
           component: context.component,
           operationName: context.operationName,
           errorCode: forgeFlowError.code,
-          recoveryTime: Date.now() - startTime
+          recoveryTime: Date.now() - startTime,
         });
 
         this.emit('recoverySuccessful', { context, error: forgeFlowError });
@@ -219,7 +227,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
     this.emit('orchestratorError', {
       error: handledError,
       context,
-      processingTime: Date.now() - startTime
+      processingTime: Date.now() - startTime,
     });
 
     return handledError;
@@ -230,12 +238,12 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
    */
   registerRecoveryAction(action: RecoveryAction): void {
     this.recoveryActions.set(action.name, action);
-    
+
     enhancedLogger.info('Recovery action registered', {
       component: 'error-integration',
       actionName: action.name,
       applicableCategories: action.applicableCategories,
-      priority: action.priority
+      priority: action.priority,
     });
   }
 
@@ -293,31 +301,31 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       overall: {
         score: gracefulHealth.score,
         status: gracefulHealth.status,
-        timestamp: new Date()
+        timestamp: new Date(),
       },
-      components: gracefulHealth.components.map(component => ({
+      components: gracefulHealth.components.map((component) => ({
         id: component.componentId,
         status: component.status,
         score: this.getComponentScore(component.status),
         lastError: component.lastFailure,
-        errorCount: componentErrorCounts.get(component.componentId) || 0
+        errorCount: componentErrorCounts.get(component.componentId) || 0,
       })),
       errorMetrics: {
         totalErrors: errorMetrics.totalErrors,
         criticalErrors: this.getCriticalErrorCount(),
         recentErrorRate: this.calculateRecentErrorRate(),
-        topErrorCategories
+        topErrorCategories,
       },
       recoveryMetrics: {
         totalRecoveryAttempts: this.getTotalRecoveryAttempts(errorMetrics.recoveryMetrics),
         successfulRecoveries: this.getSuccessfulRecoveries(errorMetrics.recoveryMetrics),
-        successRate: this.calculateRecoverySuccessRate(errorMetrics.recoveryMetrics)
+        successRate: this.calculateRecoverySuccessRate(errorMetrics.recoveryMetrics),
       },
       monitoringStatus: {
         active: monitoringStatus.monitoring,
         alertsActive: monitoringStatus.activeAlerts,
-        metricsCollected: monitoringStatus.latestMetrics ? 1 : 0
-      }
+        metricsCollected: monitoringStatus.latestMetrics ? 1 : 0,
+      },
     };
   }
 
@@ -340,17 +348,18 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
 
       // Wait for active recoveries to complete
       if (this.activeRecoveries.size > 0) {
-        enhancedLogger.info(`Waiting for ${this.activeRecoveries.size} active recoveries to complete`);
+        enhancedLogger.info(
+          `Waiting for ${this.activeRecoveries.size} active recoveries to complete`,
+        );
         await Promise.allSettled(Array.from(this.activeRecoveries.values()));
       }
 
       this.emit('shutdown');
       enhancedLogger.info('Error orchestrator integration shut down successfully');
-
     } catch (error) {
       enhancedLogger.error('Error during integration shutdown', error as Error, {
         component: 'error-integration',
-        operation: 'shutdown'
+        operation: 'shutdown',
       });
     }
   }
@@ -363,13 +372,13 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
     if (this.config.alertOnCriticalErrors) {
       this.errorHandler.onCriticalError((error: ForgeFlowError) => {
         this.emit('criticalError', error);
-        
+
         enhancedLogger.error('Critical error detected', error, {
           component: 'error-integration',
           errorCode: error.code,
           category: error.category,
           severity: error.severity,
-          alertLevel: 'critical'
+          alertLevel: 'critical',
         });
       });
     }
@@ -398,7 +407,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         healthCheck: async () => {
           // Mock health check - in real implementation would check GitHub API connectivity
           return true;
-        }
+        },
       },
       {
         id: 'agent-pool',
@@ -407,7 +416,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         healthCheck: async () => {
           // Mock health check - in real implementation would check agent pool status
           return true;
-        }
+        },
       },
       {
         id: 'worktree-manager',
@@ -416,7 +425,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         healthCheck: async () => {
           // Mock health check - in real implementation would check worktree status
           return true;
-        }
+        },
       },
       {
         id: 'quality-gates',
@@ -425,7 +434,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         healthCheck: async () => {
           // Mock health check - in real implementation would check quality gate status
           return true;
-        }
+        },
       },
       {
         id: 'protocol-enforcer',
@@ -433,8 +442,8 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         criticality: ComponentCriticality.OPTIONAL,
         healthCheck: async () => {
           return true;
-        }
-      }
+        },
+      },
     ];
 
     for (const component of components) {
@@ -448,17 +457,20 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
    */
   private setupStateManagement(): void {
     // Register orchestrator components with state management
-    this.stateManager.registerComponent('orchestrator', 
-      { 
-        status: 'initialized', 
-        activeExecutions: 0, 
-        totalExecutions: 0 
+    this.stateManager.registerComponent(
+      'orchestrator',
+      {
+        status: 'initialized',
+        activeExecutions: 0,
+        totalExecutions: 0,
       },
       (state) => {
-        return state.status !== 'failed' && 
-               typeof state.activeExecutions === 'number' && 
-               state.activeExecutions >= 0;
-      }
+        return (
+          state.status !== 'failed' &&
+          typeof state.activeExecutions === 'number' &&
+          state.activeExecutions >= 0
+        );
+      },
     );
 
     // Register recovery action for orchestrator state issues
@@ -468,7 +480,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       this.stateManager.updateState('orchestrator', {
         status: 'recovered',
         activeExecutions: 0,
-        totalExecutions: 0
+        totalExecutions: 0,
       });
     });
   }
@@ -487,14 +499,14 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         enhancedLogger.info('Attempting GitHub API recovery', {
           component: context.component,
           operationName: context.operationName,
-          errorCode: error.code
+          errorCode: error.code,
         });
 
         // Check if it's a rate limit issue
         if (error.message.toLowerCase().includes('rate limit')) {
           enhancedLogger.info('Rate limit detected, implementing backoff strategy');
           // Implementation would wait for rate limit reset
-          await new Promise(resolve => setTimeout(resolve, 60000)); // Wait 1 minute
+          await new Promise((resolve) => setTimeout(resolve, 60000)); // Wait 1 minute
           return true;
         }
 
@@ -506,7 +518,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         }
 
         return false;
-      }
+      },
     });
 
     // Agent execution recovery
@@ -520,7 +532,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
           component: context.component,
           agentId: context.agentId,
           taskId: context.taskId,
-          errorCode: error.code
+          errorCode: error.code,
         });
 
         // Check if agent is still responsive
@@ -531,7 +543,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         }
 
         return false;
-      }
+      },
     });
 
     // Worktree recovery
@@ -544,7 +556,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         enhancedLogger.info('Attempting worktree recovery', {
           component: context.component,
           operationName: context.operationName,
-          errorCode: error.code
+          errorCode: error.code,
         });
 
         if (error.message.toLowerCase().includes('lock')) {
@@ -554,7 +566,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
         }
 
         return false;
-      }
+      },
     });
   }
 
@@ -577,11 +589,15 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
     }
 
     // Determine severity
-    if (error.message.toLowerCase().includes('critical') || 
-        error.message.toLowerCase().includes('fatal')) {
+    if (
+      error.message.toLowerCase().includes('critical') ||
+      error.message.toLowerCase().includes('fatal')
+    ) {
       severity = ErrorSeverity.CRITICAL;
-    } else if (error.message.toLowerCase().includes('timeout') ||
-               error.message.toLowerCase().includes('network')) {
+    } else if (
+      error.message.toLowerCase().includes('timeout') ||
+      error.message.toLowerCase().includes('network')
+    ) {
       severity = ErrorSeverity.HIGH;
     }
 
@@ -593,7 +609,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       context: { ...context, originalError: error.name },
       recoverable: severity !== ErrorSeverity.CRITICAL,
       userMessage: this.generateUserMessage(category, error.message),
-      cause: error
+      cause: error,
     });
   }
 
@@ -602,28 +618,36 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
    */
   private generateUserMessage(category: ErrorCategory, originalMessage: string): string {
     const messages: Record<ErrorCategory, string> = {
-      [ErrorCategory.GITHUB_INTEGRATION]: 'GitHub integration issue detected. Please check your connection and permissions.',
-      [ErrorCategory.AGENT_EXECUTION]: 'Task execution encountered an issue. The system will automatically retry.',
-      [ErrorCategory.WORKTREE_MANAGEMENT]: 'Repository management issue detected. Please ensure clean repository state.',
-      [ErrorCategory.VALIDATION]: 'Input validation failed. Please check your parameters and try again.',
-      [ErrorCategory.NETWORK]: 'Network connectivity issue detected. Please check your internet connection.',
+      [ErrorCategory.GITHUB_INTEGRATION]:
+        'GitHub integration issue detected. Please check your connection and permissions.',
+      [ErrorCategory.AGENT_EXECUTION]:
+        'Task execution encountered an issue. The system will automatically retry.',
+      [ErrorCategory.WORKTREE_MANAGEMENT]:
+        'Repository management issue detected. Please ensure clean repository state.',
+      [ErrorCategory.VALIDATION]:
+        'Input validation failed. Please check your parameters and try again.',
+      [ErrorCategory.NETWORK]:
+        'Network connectivity issue detected. Please check your internet connection.',
       [ErrorCategory.TIMEOUT]: 'Operation timed out. The system will automatically retry.',
-      [ErrorCategory.INTERNAL_ERROR]: 'An internal system error occurred. Please try again or contact support.',
+      [ErrorCategory.INTERNAL_ERROR]:
+        'An internal system error occurred. Please try again or contact support.',
       // Add other categories as needed
     } as any;
 
-    return messages[category] || 'An unexpected error occurred. Please try again or contact support.';
+    return (
+      messages[category] || 'An unexpected error occurred. Please try again or contact support.'
+    );
   }
 
   /**
    * Attempt automatic recovery for the error
    */
   private async attemptRecovery(
-    context: OrchestratorErrorContext, 
-    error: ForgeFlowError
+    context: OrchestratorErrorContext,
+    error: ForgeFlowError,
   ): Promise<boolean> {
     const recoveryKey = `${context.component}-${context.operationName}-${Date.now()}`;
-    
+
     // Check if already attempting recovery for this operation
     if (this.activeRecoveries.has(recoveryKey)) {
       return false;
@@ -631,7 +655,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
 
     // Find applicable recovery actions
     const applicableActions = Array.from(this.recoveryActions.values())
-      .filter(action => action.applicableCategories.includes(error.category))
+      .filter((action) => action.applicableCategories.includes(error.category))
       .sort((a, b) => b.priority - a.priority); // Sort by priority (highest first)
 
     if (applicableActions.length === 0) {
@@ -650,7 +674,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       enhancedLogger.error('Recovery execution failed', recoveryError as Error, {
         component: 'error-integration',
         operationName: 'recovery',
-        context
+        context,
       });
       return false;
     }
@@ -662,40 +686,43 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
   private async executeRecoveryActions(
     actions: RecoveryAction[],
     context: OrchestratorErrorContext,
-    error: ForgeFlowError
+    error: ForgeFlowError,
   ): Promise<boolean> {
     for (const action of actions) {
       try {
         enhancedLogger.info('Executing recovery action', {
           component: 'error-integration',
           actionName: action.name,
-          operationName: context.operationName
+          operationName: context.operationName,
         });
 
         const recovered = await action.execute(context, error);
-        
+
         if (recovered) {
           this.errorHandler.recordRecoverySuccess(context.operationName, action.name);
           enhancedLogger.info('Recovery action successful', {
             component: 'error-integration',
             actionName: action.name,
-            operationName: context.operationName
+            operationName: context.operationName,
           });
           return true;
         } else {
           enhancedLogger.debug('Recovery action not applicable', {
             component: 'error-integration',
             actionName: action.name,
-            operationName: context.operationName
+            operationName: context.operationName,
           });
         }
-
       } catch (actionError) {
-        this.errorHandler.recordRecoveryFailure(context.operationName, action.name, actionError as Error);
+        this.errorHandler.recordRecoveryFailure(
+          context.operationName,
+          action.name,
+          actionError as Error,
+        );
         enhancedLogger.error('Recovery action failed', actionError as Error, {
           component: 'error-integration',
           actionName: action.name,
-          operationName: context.operationName
+          operationName: context.operationName,
         });
       }
     }
@@ -706,7 +733,10 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
   /**
    * Update system state based on error context
    */
-  private async updateSystemState(context: OrchestratorErrorContext, error: ForgeFlowError): Promise<void> {
+  private async updateSystemState(
+    context: OrchestratorErrorContext,
+    error: ForgeFlowError,
+  ): Promise<void> {
     try {
       if (context.component === 'orchestrator') {
         const currentState = this.stateManager.getState('orchestrator');
@@ -714,7 +744,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
           this.stateManager.updateState('orchestrator', {
             ...currentState,
             lastError: error.timestamp,
-            errorCount: (currentState.errorCount || 0) + 1
+            errorCount: (currentState.errorCount || 0) + 1,
           });
         }
       }
@@ -724,7 +754,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       if (!consistency.consistent) {
         enhancedLogger.warn('System state inconsistency detected', {
           component: 'error-integration',
-          issues: consistency.issues
+          issues: consistency.issues,
         });
 
         // Attempt automatic recovery
@@ -732,15 +762,17 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
           await this.stateManager.recoverSystemConsistency();
           enhancedLogger.info('System state consistency recovered');
         } catch (recoveryError) {
-          enhancedLogger.error('Failed to recover system state consistency', recoveryError as Error);
+          enhancedLogger.error(
+            'Failed to recover system state consistency',
+            recoveryError as Error,
+          );
         }
       }
-
     } catch (stateError) {
       enhancedLogger.error('Failed to update system state', stateError as Error, {
         component: 'error-integration',
         operation: 'updateSystemState',
-        context
+        context,
       });
     }
   }
@@ -756,7 +788,7 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
       enhancedLogger.debug('Updating component health', {
         componentId,
         errorCode: error.code,
-        severity: error.severity
+        severity: error.severity,
       });
     }
   }
@@ -792,21 +824,20 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
   private async performHealthCheck(): Promise<void> {
     try {
       const health = this.getSystemHealthOverview();
-      
+
       enhancedLogger.debug('System health check completed', {
         component: 'error-integration',
         overallScore: health.overall.score,
         status: health.overall.status,
         totalErrors: health.errorMetrics.totalErrors,
-        criticalErrors: health.errorMetrics.criticalErrors
+        criticalErrors: health.errorMetrics.criticalErrors,
       });
 
       this.emit('healthCheck', health);
-
     } catch (error) {
       enhancedLogger.error('Health check failed', error as Error, {
         component: 'error-integration',
-        operation: 'healthCheck'
+        operation: 'healthCheck',
       });
     }
   }
@@ -814,11 +845,11 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
   // Helper methods for metrics calculation
   private getComponentScore(status: string): number {
     const scores: Record<string, number> = {
-      'healthy': 100,
-      'degraded': 60,
-      'recovering': 30,
-      'failed': 0,
-      'disabled': 80
+      healthy: 100,
+      degraded: 60,
+      recovering: 30,
+      failed: 0,
+      disabled: 80,
     };
     return scores[status] || 50;
   }
@@ -834,13 +865,17 @@ export class ErrorOrchestratorIntegration extends EventEmitter {
   }
 
   private getTotalRecoveryAttempts(recoveryMetrics: Record<string, any>): number {
-    return Object.values(recoveryMetrics).reduce((sum: number, metrics: any) => 
-      sum + (metrics.attempts || 0), 0);
+    return Object.values(recoveryMetrics).reduce(
+      (sum: number, metrics: any) => sum + (metrics.attempts || 0),
+      0,
+    );
   }
 
   private getSuccessfulRecoveries(recoveryMetrics: Record<string, any>): number {
-    return Object.values(recoveryMetrics).reduce((sum: number, metrics: any) => 
-      sum + (metrics.successes || 0), 0);
+    return Object.values(recoveryMetrics).reduce(
+      (sum: number, metrics: any) => sum + (metrics.successes || 0),
+      0,
+    );
   }
 
   private calculateRecoverySuccessRate(recoveryMetrics: Record<string, any>): number {

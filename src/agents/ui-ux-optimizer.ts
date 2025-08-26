@@ -1,5 +1,6 @@
 import { BaseAgent } from './base-agent';
-import { BrowserMCPTool, BrowserAction, BrowserMCPConfig } from '../tools/browser-mcp-tool';
+import type { BrowserAction } from '../tools/browser-mcp-tool';
+import { BrowserMCPTool, BrowserMCPConfig } from '../tools/browser-mcp-tool';
 import type { ToolExecutionContext } from '../types';
 
 export class UIUXOptimizerAgent extends BaseAgent {
@@ -76,7 +77,7 @@ export class UIUXOptimizerAgent extends BaseAgent {
 
   private async auditImplementation(worktreeId: string): Promise<void> {
     this.logger.debug(`Auditing current UI implementation in worktree: ${worktreeId}`);
-    
+
     const context: ToolExecutionContext = {
       issueId: this.currentIssueId || '',
       worktreeId,
@@ -86,26 +87,34 @@ export class UIUXOptimizerAgent extends BaseAgent {
 
     try {
       // Navigate to the local development server
-      await this.browserTool.executeAction({
-        type: 'navigate',
-        url: 'http://localhost:3000',
-      }, context);
+      await this.browserTool.executeAction(
+        {
+          type: 'navigate',
+          url: 'http://localhost:3000',
+        },
+        context,
+      );
 
       // Take initial screenshot for baseline
-      await this.browserTool.executeAction({
-        type: 'screenshot',
-      }, context);
+      await this.browserTool.executeAction(
+        {
+          type: 'screenshot',
+        },
+        context,
+      );
 
       // Extract page structure for analysis
-      await this.browserTool.executeAction({
-        type: 'extract',
-        selector: 'body',
-      }, context);
-
+      await this.browserTool.executeAction(
+        {
+          type: 'extract',
+          selector: 'body',
+        },
+        context,
+      );
     } catch (error) {
       this.logger.warning('Browser audit failed, falling back to static analysis', error);
     }
-    
+
     await this.delay(500);
   }
 
@@ -116,7 +125,7 @@ export class UIUXOptimizerAgent extends BaseAgent {
 
   private async ensureResponsive(worktreeId: string): Promise<void> {
     this.logger.debug(`Testing responsive behavior in worktree: ${worktreeId}`);
-    
+
     const context: ToolExecutionContext = {
       issueId: this.currentIssueId || '',
       worktreeId,
@@ -133,29 +142,36 @@ export class UIUXOptimizerAgent extends BaseAgent {
       ];
 
       for (const viewport of viewports) {
-        this.logger.debug(`Testing ${viewport.name} viewport: ${viewport.width}x${viewport.height}`);
-        
+        this.logger.debug(
+          `Testing ${viewport.name} viewport: ${viewport.width}x${viewport.height}`,
+        );
+
         // Set viewport size and take screenshot
-        await this.browserTool.executeAction({
-          type: 'evaluate',
-          script: `window.resizeTo(${viewport.width}, ${viewport.height})`,
-        }, context);
+        await this.browserTool.executeAction(
+          {
+            type: 'evaluate',
+            script: `window.resizeTo(${viewport.width}, ${viewport.height})`,
+          },
+          context,
+        );
 
-        await this.browserTool.executeAction({
-          type: 'screenshot',
-        }, context);
+        await this.browserTool.executeAction(
+          {
+            type: 'screenshot',
+          },
+          context,
+        );
       }
-
     } catch (error) {
       this.logger.warning('Responsive testing failed', error);
     }
-    
+
     await this.delay(600);
   }
 
   private async addAccessibility(worktreeId: string): Promise<void> {
     this.logger.debug(`Running accessibility audits in worktree: ${worktreeId}`);
-    
+
     const context: ToolExecutionContext = {
       issueId: this.currentIssueId || '',
       worktreeId,
@@ -167,25 +183,26 @@ export class UIUXOptimizerAgent extends BaseAgent {
       // Get accessibility report
       const accessibilityReport = await this.browserTool.getAccessibilityReport();
       this.logger.info(`Accessibility score: ${accessibilityReport.score}/100`);
-      
-      if (accessibilityReport.violations.length > 0) {
-        this.logger.warning(`Found ${accessibilityReport.violations.length} accessibility violations`);
-      }
 
+      if (accessibilityReport.violations.length > 0) {
+        this.logger.warning(
+          `Found ${accessibilityReport.violations.length} accessibility violations`,
+        );
+      }
     } catch (error) {
       this.logger.warning('Accessibility audit failed', error);
     }
-    
+
     await this.delay(700);
   }
 
   private async optimizePerformance(worktreeId: string): Promise<void> {
     this.logger.debug(`Running performance tests in worktree: ${worktreeId}`);
-    
+
     try {
       // Get performance metrics
       const performanceMetrics = await this.browserTool.getPerformanceMetrics();
-      
+
       this.logger.info('Performance metrics:', {
         loadTime: `${performanceMetrics.loadTime}ms`,
         firstContentfulPaint: `${performanceMetrics.firstContentfulPaint}ms`,
@@ -196,17 +213,16 @@ export class UIUXOptimizerAgent extends BaseAgent {
       if (performanceMetrics.largestContentfulPaint > 2500) {
         this.logger.warning('LCP exceeds 2.5s threshold - needs optimization');
       }
-
     } catch (error) {
       this.logger.warning('Performance testing failed', error);
     }
-    
+
     await this.delay(500);
   }
 
   private async testViewports(worktreeId: string): Promise<void> {
     this.logger.debug(`Cross-viewport testing in worktree: ${worktreeId}`);
-    
+
     const context: ToolExecutionContext = {
       issueId: this.currentIssueId || '',
       worktreeId,
@@ -229,17 +245,16 @@ export class UIUXOptimizerAgent extends BaseAgent {
           this.logger.debug(`Test scenario failed: ${scenario.type}`, error);
         }
       }
-
     } catch (error) {
       this.logger.warning('Viewport testing failed', error);
     }
-    
+
     await this.delay(400);
   }
 
   private async generateReports(worktreeId: string): Promise<void> {
     this.logger.debug(`Generating visual test reports for worktree: ${worktreeId}`);
-    
+
     try {
       // Generate final screenshot and summary
       const context: ToolExecutionContext = {
@@ -249,16 +264,18 @@ export class UIUXOptimizerAgent extends BaseAgent {
         startTime: new Date(),
       };
 
-      await this.browserTool.executeAction({
-        type: 'screenshot',
-      }, context);
+      await this.browserTool.executeAction(
+        {
+          type: 'screenshot',
+        },
+        context,
+      );
 
       this.logger.info('UI/UX testing report generated successfully');
-
     } catch (error) {
       this.logger.warning('Report generation failed', error);
     }
-    
+
     await this.delay(300);
   }
 

@@ -65,12 +65,14 @@ export class GitCleanupAction implements RecoveryAction {
 
   canHandle(error: Error, context: RecoveryContext): boolean {
     const message = error.message.toLowerCase();
-    return message.includes('lock') || 
-           message.includes('conflict') || 
-           message.includes('merge') ||
-           message.includes('git') ||
-           context.operationName.includes('git') ||
-           context.operationName.includes('worktree');
+    return (
+      message.includes('lock') ||
+      message.includes('conflict') ||
+      message.includes('merge') ||
+      message.includes('git') ||
+      context.operationName.includes('git') ||
+      context.operationName.includes('worktree')
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
@@ -124,19 +126,18 @@ export class GitCleanupAction implements RecoveryAction {
         duration,
         message: `Git cleanup completed. Repository is ${isClean ? 'clean' : 'not clean'}`,
         sideEffects,
-        nextRecommendedActions: isClean ? [] : ['git-status-check']
+        nextRecommendedActions: isClean ? [] : ['git-status-check'],
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `Git cleanup failed: ${error.message}`,
         error: error as Error,
-        sideEffects
+        sideEffects,
       };
     }
   }
@@ -151,10 +152,12 @@ export class GitHubRateLimitWaitAction implements RecoveryAction {
 
   canHandle(error: Error, context: RecoveryContext): boolean {
     const message = error.message.toLowerCase();
-    return message.includes('rate limit') || 
-           message.includes('403') ||
-           message.includes('secondary rate limit') ||
-           context.operationName.includes('github');
+    return (
+      message.includes('rate limit') ||
+      message.includes('403') ||
+      message.includes('secondary rate limit') ||
+      context.operationName.includes('github')
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
@@ -168,7 +171,7 @@ export class GitHubRateLimitWaitAction implements RecoveryAction {
         // Extract wait time from rate limit headers
         const headers = context.metadata.rateLimitHeaders as Record<string, string>;
         const resetTime = headers['x-ratelimit-reset'];
-        
+
         if (resetTime) {
           const resetTimestamp = parseInt(resetTime) * 1000;
           const currentTime = Date.now();
@@ -188,10 +191,10 @@ export class GitHubRateLimitWaitAction implements RecoveryAction {
 
       enhancedLogger.info('Waiting for GitHub rate limit reset', {
         waitTime,
-        operationName: context.operationName
+        operationName: context.operationName,
       });
 
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
 
       const duration = Date.now() - startTime;
 
@@ -199,18 +202,17 @@ export class GitHubRateLimitWaitAction implements RecoveryAction {
         success: true,
         actionType: this.actionType,
         duration,
-        message: `Waited ${Math.round(waitTime / 1000)} seconds for rate limit reset`
+        message: `Waited ${Math.round(waitTime / 1000)} seconds for rate limit reset`,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `Rate limit wait failed: ${error.message}`,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -225,11 +227,13 @@ export class NetworkConnectivityAction implements RecoveryAction {
 
   canHandle(error: Error, context: RecoveryContext): boolean {
     const message = error.message.toLowerCase();
-    return message.includes('network') ||
-           message.includes('enotfound') ||
-           message.includes('econnrefused') ||
-           message.includes('timeout') ||
-           message.includes('connection');
+    return (
+      message.includes('network') ||
+      message.includes('enotfound') ||
+      message.includes('econnrefused') ||
+      message.includes('timeout') ||
+      message.includes('connection')
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
@@ -238,7 +242,7 @@ export class NetworkConnectivityAction implements RecoveryAction {
     const testHosts = (config.parameters.testHosts as string[]) || [
       'https://api.github.com',
       'https://google.com',
-      'https://cloudflare.com'
+      'https://cloudflare.com',
     ];
 
     try {
@@ -250,18 +254,17 @@ export class NetworkConnectivityAction implements RecoveryAction {
         success: true,
         actionType: this.actionType,
         duration,
-        message: `Network connectivity restored after ${Math.round(duration / 1000)} seconds`
+        message: `Network connectivity restored after ${Math.round(duration / 1000)} seconds`,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `Network connectivity not restored within timeout: ${error.message}`,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -278,7 +281,7 @@ export class NetworkConnectivityAction implements RecoveryAction {
         return; // Success
       } catch {
         // Continue trying
-        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        await new Promise((resolve) => setTimeout(resolve, checkInterval));
       }
     }
 
@@ -308,15 +311,18 @@ export class FilePermissionRecoveryAction implements RecoveryAction {
 
   canHandle(error: Error, context: RecoveryContext): boolean {
     const message = error.message.toLowerCase();
-    return message.includes('permission') ||
-           message.includes('eacces') ||
-           message.includes('eperm') ||
-           message.includes('access denied');
+    return (
+      message.includes('permission') ||
+      message.includes('eacces') ||
+      message.includes('eperm') ||
+      message.includes('access denied')
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
     const startTime = Date.now();
-    const targetPath = config.parameters.targetPath as string || context.workingDirectory || process.cwd();
+    const targetPath =
+      (config.parameters.targetPath as string) || context.workingDirectory || process.cwd();
     const sideEffects: string[] = [];
 
     try {
@@ -326,7 +332,7 @@ export class FilePermissionRecoveryAction implements RecoveryAction {
       }
 
       const stats = await fs.stat(targetPath);
-      
+
       if (stats.isFile()) {
         // Fix file permissions
         await fs.chmod(targetPath, 0o644);
@@ -344,19 +350,18 @@ export class FilePermissionRecoveryAction implements RecoveryAction {
         actionType: this.actionType,
         duration,
         message: `File permissions fixed for ${targetPath}`,
-        sideEffects
+        sideEffects,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `File permission recovery failed: ${error.message}`,
         error: error as Error,
-        sideEffects
+        sideEffects,
       };
     }
   }
@@ -366,11 +371,11 @@ export class FilePermissionRecoveryAction implements RecoveryAction {
     await fs.chmod(dirPath, 0o755);
 
     const items = await fs.readdir(dirPath);
-    
+
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
       const stats = await fs.stat(itemPath);
-      
+
       if (stats.isFile()) {
         await fs.chmod(itemPath, 0o644);
       } else if (stats.isDirectory()) {
@@ -388,20 +393,22 @@ export class AgentStateResetAction implements RecoveryAction {
   riskLevel: 'low' = 'low';
 
   canHandle(error: Error, context: RecoveryContext): boolean {
-    return context.operationName.includes('agent') ||
-           error.message.includes('agent') ||
-           context.metadata.agentId !== undefined;
+    return (
+      context.operationName.includes('agent') ||
+      error.message.includes('agent') ||
+      context.metadata.agentId !== undefined
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
     const startTime = Date.now();
     const preserveContext = config.parameters.preserveContext === true;
-    const agentId = context.metadata.agentId as string || 'unknown';
+    const agentId = (context.metadata.agentId as string) || 'unknown';
 
     try {
       // This would integrate with the actual agent system
       // For now, we'll simulate the reset process
-      
+
       const resetActions: string[] = [];
 
       if (preserveContext) {
@@ -410,7 +417,7 @@ export class AgentStateResetAction implements RecoveryAction {
         const contextData = {
           operationName: context.operationName,
           attempt: context.attempt,
-          metadata: context.metadata
+          metadata: context.metadata,
         };
         // In real implementation, this would be stored somewhere
         resetActions.push(`Saved context for agent ${agentId}`);
@@ -427,18 +434,17 @@ export class AgentStateResetAction implements RecoveryAction {
         actionType: this.actionType,
         duration,
         message: `Agent state reset completed for ${agentId}`,
-        sideEffects: resetActions
+        sideEffects: resetActions,
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `Agent state reset failed: ${error.message}`,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -453,10 +459,12 @@ export class ServiceHealthCheckAction implements RecoveryAction {
 
   canHandle(error: Error, context: RecoveryContext): boolean {
     const message = error.message.toLowerCase();
-    return message.includes('service') ||
-           message.includes('endpoint') ||
-           message.includes('api') ||
-           context.operationName.includes('service');
+    return (
+      message.includes('service') ||
+      message.includes('endpoint') ||
+      message.includes('api') ||
+      context.operationName.includes('service')
+    );
   }
 
   async execute(config: RecoveryActionConfig, context: RecoveryContext): Promise<RecoveryResult> {
@@ -477,42 +485,45 @@ export class ServiceHealthCheckAction implements RecoveryAction {
       }
 
       const duration = Date.now() - startTime;
-      const allHealthy = results.every(result => result.includes('OK'));
+      const allHealthy = results.every((result) => result.includes('OK'));
 
       return {
         success: allHealthy,
         actionType: this.actionType,
         duration,
         message: `Health check completed. Results: ${results.join(', ')}`,
-        nextRecommendedActions: allHealthy ? [] : ['service-restart', 'fallback-service']
+        nextRecommendedActions: allHealthy ? [] : ['service-restart', 'fallback-service'],
       };
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         actionType: this.actionType,
         duration,
         message: `Service health check failed: ${error.message}`,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
 
   private async checkEndpoint(endpoint: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = https.request(endpoint, { 
-        method: 'GET', 
-        timeout: 5000,
-        headers: { 'User-Agent': 'ForgeFlow-HealthCheck/1.0' }
-      }, (response) => {
-        if (response.statusCode && response.statusCode >= 200 && response.statusCode < 400) {
-          resolve();
-        } else {
-          reject(new Error(`HTTP ${response.statusCode}`));
-        }
-      });
+      const request = https.request(
+        endpoint,
+        {
+          method: 'GET',
+          timeout: 5000,
+          headers: { 'User-Agent': 'ForgeFlow-HealthCheck/1.0' },
+        },
+        (response) => {
+          if (response.statusCode && response.statusCode >= 200 && response.statusCode < 400) {
+            resolve();
+          } else {
+            reject(new Error(`HTTP ${response.statusCode}`));
+          }
+        },
+      );
 
       request.on('error', reject);
       request.on('timeout', () => reject(new Error('Timeout')));
@@ -525,13 +536,16 @@ export class ServiceHealthCheckAction implements RecoveryAction {
 export class RecoveryActionManager {
   private actions = new Map<string, RecoveryAction>();
   private executionHistory = new Map<string, RecoveryResult[]>();
-  private metrics = new Map<string, {
-    totalExecutions: number;
-    successfulExecutions: number;
-    totalDuration: number;
-    averageDuration: number;
-    successRate: number;
-  }>();
+  private metrics = new Map<
+    string,
+    {
+      totalExecutions: number;
+      successfulExecutions: number;
+      totalDuration: number;
+      averageDuration: number;
+      successRate: number;
+    }
+  >();
 
   constructor() {
     this.registerBuiltinActions();
@@ -545,7 +559,7 @@ export class RecoveryActionManager {
       new NetworkConnectivityAction(),
       new FilePermissionRecoveryAction(),
       new AgentStateResetAction(),
-      new ServiceHealthCheckAction()
+      new ServiceHealthCheckAction(),
     ];
 
     for (const action of actions) {
@@ -554,7 +568,7 @@ export class RecoveryActionManager {
 
     enhancedLogger.info('Registered built-in recovery actions', {
       count: actions.length,
-      actions: actions.map(a => a.actionType)
+      actions: actions.map((a) => a.actionType),
     });
   }
 
@@ -563,14 +577,14 @@ export class RecoveryActionManager {
     this.actions.set(action.actionType, action);
     enhancedLogger.info('Registered recovery action', {
       actionType: action.actionType,
-      description: action.description
+      description: action.description,
     });
   }
 
   // 🟢 WORKING: Execute recovery actions
   async executeRecoveryActions(
     actionConfigs: RecoveryActionConfig[],
-    context: RecoveryContext
+    context: RecoveryContext,
   ): Promise<RecoveryResult[]> {
     const results: RecoveryResult[] = [];
     const sortedConfigs = this.sortActionsByPriority(actionConfigs);
@@ -578,24 +592,21 @@ export class RecoveryActionManager {
     enhancedLogger.info('Executing recovery actions', {
       operationName: context.operationName,
       actionCount: sortedConfigs.length,
-      actions: sortedConfigs.map(c => c.actionType)
+      actions: sortedConfigs.map((c) => c.actionType),
     });
 
     for (const config of sortedConfigs) {
       // Check prerequisites
       if (config.prerequisiteActions) {
-        const prerequisitesMet = await this.checkPrerequisites(
-          config.prerequisiteActions,
-          results
-        );
-        
+        const prerequisitesMet = await this.checkPrerequisites(config.prerequisiteActions, results);
+
         if (!prerequisitesMet) {
           results.push({
             success: false,
             actionType: config.actionType,
             duration: 0,
             message: 'Prerequisites not met',
-            error: new Error('Required prerequisite actions did not complete successfully')
+            error: new Error('Required prerequisite actions did not complete successfully'),
           });
           continue;
         }
@@ -603,10 +614,10 @@ export class RecoveryActionManager {
 
       const result = await this.executeAction(config, context);
       results.push(result);
-      
+
       // Update metrics
       this.updateActionMetrics(config.actionType, result);
-      
+
       // Store in history
       this.storeExecutionHistory(context.operationName, result);
 
@@ -614,7 +625,7 @@ export class RecoveryActionManager {
       if (!result.success && !config.maxRetries) {
         enhancedLogger.warn('Recovery action failed, continuing to next action', {
           actionType: config.actionType,
-          error: result.error?.message
+          error: result.error?.message,
         });
         continue;
       }
@@ -632,8 +643,8 @@ export class RecoveryActionManager {
     enhancedLogger.info('Recovery actions execution completed', {
       operationName: context.operationName,
       totalActions: results.length,
-      successfulActions: results.filter(r => r.success).length,
-      totalDuration: results.reduce((sum, r) => sum + r.duration, 0)
+      successfulActions: results.filter((r) => r.success).length,
+      totalDuration: results.reduce((sum, r) => sum + r.duration, 0),
     });
 
     return results;
@@ -642,17 +653,17 @@ export class RecoveryActionManager {
   // 🟢 WORKING: Execute single recovery action
   private async executeAction(
     config: RecoveryActionConfig,
-    context: RecoveryContext
+    context: RecoveryContext,
   ): Promise<RecoveryResult> {
     const action = this.actions.get(config.actionType);
-    
+
     if (!action) {
       return {
         success: false,
         actionType: config.actionType,
         duration: 0,
         message: `Unknown recovery action type: ${config.actionType}`,
-        error: new Error(`Recovery action not found: ${config.actionType}`)
+        error: new Error(`Recovery action not found: ${config.actionType}`),
       };
     }
 
@@ -663,7 +674,9 @@ export class RecoveryActionManager {
         actionType: config.actionType,
         duration: 0,
         message: `Action cannot handle this error type`,
-        error: new Error(`Recovery action ${config.actionType} cannot handle error: ${context.error.message}`)
+        error: new Error(
+          `Recovery action ${config.actionType} cannot handle error: ${context.error.message}`,
+        ),
       };
     }
 
@@ -672,27 +685,26 @@ export class RecoveryActionManager {
         actionType: config.actionType,
         operationName: context.operationName,
         estimatedDuration: action.estimatedDuration,
-        riskLevel: action.riskLevel
+        riskLevel: action.riskLevel,
       });
 
       const result = await this.executeWithTimeout(action, config, context);
-      
+
       enhancedLogger.info('Recovery action completed', {
         actionType: config.actionType,
         success: result.success,
         duration: result.duration,
-        message: result.message
+        message: result.message,
       });
 
       return result;
-
     } catch (error) {
       return {
         success: false,
         actionType: config.actionType,
         duration: 0,
         message: `Recovery action execution failed: ${error.message}`,
-        error: error as Error
+        error: error as Error,
       };
     }
   }
@@ -701,17 +713,17 @@ export class RecoveryActionManager {
   private async executeWithTimeout(
     action: RecoveryAction,
     config: RecoveryActionConfig,
-    context: RecoveryContext
+    context: RecoveryContext,
   ): Promise<RecoveryResult> {
     const timeout = config.timeout || action.estimatedDuration * 2;
-    
+
     return Promise.race([
       action.execute(config, context),
       new Promise<RecoveryResult>((_, reject) => {
         setTimeout(() => {
           reject(new Error(`Recovery action timeout after ${timeout}ms`));
         }, timeout);
-      })
+      }),
     ]);
   }
 
@@ -719,23 +731,23 @@ export class RecoveryActionManager {
   private async retryAction(
     config: RecoveryActionConfig,
     context: RecoveryContext,
-    maxRetries: number
+    maxRetries: number,
   ): Promise<RecoveryResult | null> {
     for (let retry = 1; retry <= maxRetries; retry++) {
       enhancedLogger.info('Retrying recovery action', {
         actionType: config.actionType,
         retry,
-        maxRetries
+        maxRetries,
       });
 
-      await new Promise(resolve => setTimeout(resolve, 1000 * retry)); // Progressive delay
+      await new Promise((resolve) => setTimeout(resolve, 1000 * retry)); // Progressive delay
 
       const result = await this.executeAction(config, context);
-      
+
       if (result.success) {
         enhancedLogger.info('Recovery action succeeded on retry', {
           actionType: config.actionType,
-          retry
+          retry,
         });
         return result;
       }
@@ -743,9 +755,9 @@ export class RecoveryActionManager {
 
     enhancedLogger.warn('Recovery action failed after all retries', {
       actionType: config.actionType,
-      maxRetries
+      maxRetries,
     });
-    
+
     return null;
   }
 
@@ -757,10 +769,10 @@ export class RecoveryActionManager {
   // 🟢 WORKING: Check if prerequisites are met
   private async checkPrerequisites(
     prerequisiteActions: string[],
-    completedResults: RecoveryResult[]
+    completedResults: RecoveryResult[],
   ): Promise<boolean> {
     for (const prerequisite of prerequisiteActions) {
-      const result = completedResults.find(r => r.actionType === prerequisite);
+      const result = completedResults.find((r) => r.actionType === prerequisite);
       if (!result || !result.success) {
         return false;
       }
@@ -775,7 +787,7 @@ export class RecoveryActionManager {
       successfulExecutions: 0,
       totalDuration: 0,
       averageDuration: 0,
-      successRate: 0
+      successRate: 0,
     };
 
     metrics.totalExecutions++;
@@ -793,12 +805,12 @@ export class RecoveryActionManager {
   private storeExecutionHistory(operationName: string, result: RecoveryResult): void {
     const history = this.executionHistory.get(operationName) || [];
     history.push(result);
-    
+
     // Keep only last 50 executions per operation
     if (history.length > 50) {
       history.shift();
     }
-    
+
     this.executionHistory.set(operationName, history);
   }
 
@@ -813,7 +825,7 @@ export class RecoveryActionManager {
           parameters: this.getDefaultParameters(action.actionType),
           runBefore: true,
           priority: this.calculateActionPriority(action, error, context),
-          timeout: action.estimatedDuration * 2
+          timeout: action.estimatedDuration * 2,
         });
       }
     }
@@ -830,7 +842,7 @@ export class RecoveryActionManager {
       'network-connectivity-check': { timeout: 30000 },
       'file-permission-recovery': {},
       'agent-state-reset': { preserveContext: true },
-      'service-health-check': { healthEndpoints: [] }
+      'service-health-check': { healthEndpoints: [] },
     };
 
     return defaults[actionType] || {};
@@ -840,7 +852,7 @@ export class RecoveryActionManager {
   private calculateActionPriority(
     action: RecoveryAction,
     error: Error,
-    context: RecoveryContext
+    context: RecoveryContext,
   ): number {
     let priority = 5; // Base priority
 
@@ -880,7 +892,7 @@ export class RecoveryActionManager {
     if (actionType) {
       return this.metrics.get(actionType) || {};
     }
-    
+
     return Object.fromEntries(this.metrics.entries());
   }
 
@@ -889,7 +901,7 @@ export class RecoveryActionManager {
     if (operationName) {
       return { [operationName]: this.executionHistory.get(operationName) || [] };
     }
-    
+
     return Object.fromEntries(this.executionHistory.entries());
   }
 

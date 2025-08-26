@@ -6,7 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
-import { FileLock, LockInfo } from '../file-lock';
+import type { LockInfo } from '../file-lock';
+import { FileLock } from '../file-lock';
 
 const TEST_LOCK_DIR = path.join(__dirname, 'test-locks');
 const TEST_OPERATION = 'testOperation';
@@ -58,8 +59,9 @@ describe('FileLock', () => {
       expect(lock1.isHeld()).toBe(true);
 
       // Second lock should fail due to timeout
-      await expect(lock2.acquire({ timeout: 100, retryInterval: 10 }))
-        .rejects.toThrow('Lock timeout');
+      await expect(lock2.acquire({ timeout: 100, retryInterval: 10 })).rejects.toThrow(
+        'Lock timeout',
+      );
 
       expect(lock2.isHeld()).toBe(false);
 
@@ -77,7 +79,7 @@ describe('FileLock', () => {
       const lock = new FileLock(lockPath, TEST_OPERATION, metadata);
 
       await lock.acquire();
-      
+
       const lockInfo = await lock.getLockInfo();
       expect(lockInfo?.metadata).toEqual(metadata);
       expect(lockInfo?.operation).toBe(TEST_OPERATION);
@@ -95,9 +97,10 @@ describe('FileLock', () => {
       await lock1.acquire();
 
       const startTime = Date.now();
-      await expect(lock2.acquire({ timeout: 500, retryInterval: 50 }))
-        .rejects.toThrow('Lock timeout');
-      
+      await expect(lock2.acquire({ timeout: 500, retryInterval: 50 })).rejects.toThrow(
+        'Lock timeout',
+      );
+
       const elapsed = Date.now() - startTime;
       expect(elapsed).toBeGreaterThanOrEqual(450); // Allow some variance
       expect(elapsed).toBeLessThan(1000); // Should not take too long
@@ -125,7 +128,7 @@ describe('FileLock', () => {
       }, 200);
 
       await lock2.acquire({ timeout: 1000, retryInterval: 50 });
-      
+
       expect(acquireCount).toBeGreaterThan(1); // Should have retried multiple times
       expect(lock2.isHeld()).toBe(true);
 
@@ -136,7 +139,7 @@ describe('FileLock', () => {
   describe('Stale Lock Detection and Cleanup', () => {
     it('should detect and clean up stale locks', async () => {
       const lockPath = path.join(TEST_LOCK_DIR, 'stale.lock');
-      
+
       // Create a stale lock manually
       const staleLockInfo: LockInfo = {
         id: 'stale-lock-id',
@@ -145,11 +148,11 @@ describe('FileLock', () => {
         timestamp: Date.now() - 400000, // 6.67 minutes ago (stale)
         operation: 'staleOperation',
       };
-      
+
       await fs.writeJSON(lockPath, staleLockInfo);
 
       const lock = new FileLock(lockPath, 'newOperation');
-      
+
       // Should be able to acquire the lock after cleaning up stale lock
       await lock.acquire({ staleThreshold: 300000 }); // 5 minute threshold
       expect(lock.isHeld()).toBe(true);
@@ -163,7 +166,7 @@ describe('FileLock', () => {
 
     it('should not clean up active locks', async () => {
       const lockPath = path.join(TEST_LOCK_DIR, 'active.lock');
-      
+
       // Create a lock with current process PID (should be active)
       const activeLockInfo: LockInfo = {
         id: 'active-lock-id',
@@ -172,14 +175,15 @@ describe('FileLock', () => {
         timestamp: Date.now() - 100000, // 1.67 minutes ago (not stale)
         operation: 'activeOperation',
       };
-      
+
       await fs.writeJSON(lockPath, activeLockInfo);
 
       const lock = new FileLock(lockPath, 'newOperation');
-      
+
       // Should not be able to acquire the lock
-      await expect(lock.acquire({ timeout: 100, retryInterval: 10, staleThreshold: 300000 }))
-        .rejects.toThrow('Lock timeout');
+      await expect(
+        lock.acquire({ timeout: 100, retryInterval: 10, staleThreshold: 300000 }),
+      ).rejects.toThrow('Lock timeout');
 
       // Original lock should still exist
       const lockInfo = await FileLock.getLockInfo(lockPath);
@@ -193,7 +197,7 @@ describe('FileLock', () => {
       const lock = new FileLock(lockPath, TEST_OPERATION);
 
       await lock.acquire();
-      
+
       // Manually modify lock file to simulate different owner
       const lockInfo = await lock.getLockInfo();
       if (lockInfo) {
@@ -212,10 +216,10 @@ describe('FileLock', () => {
       const lock2 = new FileLock(lockPath, 'owner2');
 
       await lock1.acquire();
-      
+
       // Force release by lock2 (simulating external cleanup)
       await lock2.forceRelease();
-      
+
       // Original lock should handle this gracefully
       await expect(lock1.release()).resolves.not.toThrow();
       expect(lock1.isHeld()).toBe(false);
@@ -237,12 +241,12 @@ describe('FileLock', () => {
 
     it('should handle corrupted lock files', { timeout: 10000 }, async () => {
       const lockPath = path.join(TEST_LOCK_DIR, 'corrupted.lock');
-      
+
       // Create corrupted lock file
       await fs.writeFile(lockPath, 'invalid json content');
 
       const lock = new FileLock(lockPath, TEST_OPERATION);
-      
+
       // Should handle corrupted file and acquire lock
       await lock.acquire({ timeout: 2000 });
       expect(lock.isHeld()).toBe(true);
@@ -264,7 +268,7 @@ describe('FileLock', () => {
       await fs.chmod(lockPath, 0o444); // Read-only
 
       await expect(lock.acquire()).rejects.toThrow();
-      
+
       // Clean up
       await fs.chmod(lockPath, 0o644);
     });
@@ -275,7 +279,7 @@ describe('FileLock', () => {
 
       await lock.acquire();
       await lock.release();
-      
+
       // Second release should be harmless
       await expect(lock.release()).resolves.not.toThrow();
       expect(lock.isHeld()).toBe(false);
@@ -294,9 +298,9 @@ describe('FileLock', () => {
   describe('Static Utility Methods', () => {
     it('should check lock existence correctly', async () => {
       const lockPath = path.join(TEST_LOCK_DIR, 'existence.lock');
-      
+
       expect(await FileLock.isLocked(lockPath)).toBe(false);
-      
+
       await fs.writeJSON(lockPath, { test: true });
       expect(await FileLock.isLocked(lockPath)).toBe(true);
     });
@@ -312,17 +316,17 @@ describe('FileLock', () => {
       };
 
       await fs.writeJSON(lockPath, testInfo);
-      
+
       const info = await FileLock.getLockInfo(lockPath);
       expect(info).toEqual(testInfo);
     });
 
     it('should force remove locks', async () => {
       const lockPath = path.join(TEST_LOCK_DIR, 'force-remove.lock');
-      
+
       await fs.writeJSON(lockPath, { test: true });
       expect(await fs.pathExists(lockPath)).toBe(true);
-      
+
       await FileLock.forceRemove(lockPath);
       expect(await fs.pathExists(lockPath)).toBe(false);
     });
@@ -334,19 +338,19 @@ describe('FileLock', () => {
       const lock = new FileLock(lockPath, TEST_OPERATION);
 
       await lock.acquire({ staleThreshold: 1000 }); // 1 second for testing
-      
+
       const initialInfo = await lock.getLockInfo();
       const initialTimestamp = initialInfo?.timestamp;
 
       // Wait for refresh (should happen at half the stale threshold)
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       const refreshedInfo = await lock.getLockInfo();
       const refreshedTimestamp = refreshedInfo?.timestamp;
 
       // Allow for some timing variance
-      expect(refreshedTimestamp).toBeGreaterThanOrEqual(initialTimestamp!);
-      
+      expect(refreshedTimestamp).toBeGreaterThanOrEqual(initialTimestamp);
+
       await lock.release();
     });
 
@@ -355,16 +359,16 @@ describe('FileLock', () => {
       const lock = new FileLock(lockPath, TEST_OPERATION);
 
       await lock.acquire({ staleThreshold: 1000 });
-      
+
       // Remove lock file to simulate refresh failure
       await fs.remove(lockPath);
 
       // Wait for attempted refresh
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Lock should still be considered held by this instance
       expect(lock.isHeld()).toBe(true);
-      
+
       // But release should work
       await expect(lock.release()).resolves.not.toThrow();
     });

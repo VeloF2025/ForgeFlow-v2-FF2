@@ -97,7 +97,7 @@ export class DeploymentAutomationAgent extends BaseAgent {
 
   async runPreDeploymentChecks(worktreeId: string): Promise<PreDeploymentChecks> {
     this.logger.info(`Running pre-deployment validation checklist in worktree: ${worktreeId}`);
-    
+
     const checks: PreDeploymentChecks = {
       tests: false,
       build: false,
@@ -149,58 +149,58 @@ export class DeploymentAutomationAgent extends BaseAgent {
 
   private validateChecks(checks: PreDeploymentChecks): boolean {
     const required = ['tests', 'build', 'linting', 'typeCheck'] as const;
-    const failed = required.filter(check => !checks[check]);
-    
+    const failed = required.filter((check) => !checks[check]);
+
     if (failed.length > 0) {
       this.logger.error(`❌ DEPLOYMENT BLOCKED - Failed checks: ${failed.join(', ')}`);
       return false;
     }
-    
+
     this.logger.info('✅ ALL QUALITY GATES PASSED - Deployment approved');
     return true;
   }
 
   private async configurePipeline(worktreeId: string): Promise<void> {
     this.logger.info(`Configuring CI/CD pipeline in worktree: ${worktreeId}`);
-    
+
     // Create GitHub Actions workflow if not exists
     const workflowDir = path.join(worktreeId, '.github', 'workflows');
     await fs.ensureDir(workflowDir);
-    
+
     const workflowContent = this.generateGitHubActionsWorkflow();
     await fs.writeFile(path.join(workflowDir, 'deploy.yml'), workflowContent);
-    
+
     this.logger.info('✅ CI/CD pipeline configured');
     await this.delay(300);
   }
 
   private async setupBuild(worktreeId: string): Promise<void> {
     this.logger.info(`Setting up optimized build process in worktree: ${worktreeId}`);
-    
+
     // Verify build configuration
     const packageJsonPath = path.join(worktreeId, 'package.json');
     if (await fs.pathExists(packageJsonPath)) {
       const packageJson = await fs.readJson(packageJsonPath);
-      
+
       // Ensure required build scripts exist
       const requiredScripts = ['build', 'test', 'lint', 'typecheck'];
-      const missingScripts = requiredScripts.filter(script => !packageJson.scripts[script]);
-      
+      const missingScripts = requiredScripts.filter((script) => !packageJson.scripts[script]);
+
       if (missingScripts.length > 0) {
         this.logger.warn(`Missing build scripts: ${missingScripts.join(', ')}`);
       }
     }
-    
+
     this.logger.info('✅ Build process configured');
     await this.delay(400);
   }
 
   private async configureEnvironments(worktreeId: string): Promise<void> {
     this.logger.info(`Configuring deployment environments in worktree: ${worktreeId}`);
-    
+
     // Create environment-specific configurations
     const environments = ['development', 'staging', 'production'];
-    
+
     for (const env of environments) {
       const envFile = path.join(worktreeId, `.env.${env}.example`);
       if (!(await fs.pathExists(envFile))) {
@@ -209,44 +209,44 @@ export class DeploymentAutomationAgent extends BaseAgent {
         this.logger.info(`Created ${env} environment configuration`);
       }
     }
-    
+
     this.logger.info('✅ Environment configurations ready');
     await this.delay(500);
   }
 
   private async createDeploymentScripts(worktreeId: string): Promise<void> {
     this.logger.info(`Creating deployment scripts in worktree: ${worktreeId}`);
-    
+
     const scriptsDir = path.join(worktreeId, 'scripts', 'deploy');
     await fs.ensureDir(scriptsDir);
-    
+
     // Create deployment scripts for different environments
     const deployScript = this.generateDeploymentScript();
     await fs.writeFile(path.join(scriptsDir, 'deploy.sh'), deployScript, { mode: 0o755 });
-    
+
     const rollbackScript = this.generateRollbackScript();
     await fs.writeFile(path.join(scriptsDir, 'rollback.sh'), rollbackScript, { mode: 0o755 });
-    
+
     this.logger.info('✅ Deployment scripts created');
     await this.delay(400);
   }
 
   private async setupMonitoring(worktreeId: string): Promise<void> {
     this.logger.info(`Setting up monitoring and health checks in worktree: ${worktreeId}`);
-    
+
     // Create health check endpoint if not exists
     const healthCheckContent = this.generateHealthCheckEndpoint();
     const healthDir = path.join(worktreeId, 'src', 'health');
     await fs.ensureDir(healthDir);
     await fs.writeFile(path.join(healthDir, 'health-check.ts'), healthCheckContent);
-    
+
     this.logger.info('✅ Monitoring and health checks configured');
     await this.delay(300);
   }
 
   private async prepareRollback(worktreeId: string): Promise<void> {
     this.logger.info(`Preparing rollback procedures in worktree: ${worktreeId}`);
-    
+
     // Document current deployment state
     const currentVersion = await this.getCurrentVersion(worktreeId);
     const rollbackPlan = {
@@ -260,21 +260,21 @@ export class DeploymentAutomationAgent extends BaseAgent {
         'Test critical user flows',
       ],
     };
-    
+
     await fs.writeFile(
       path.join(worktreeId, 'ROLLBACK_PLAN.json'),
-      JSON.stringify(rollbackPlan, null, 2)
+      JSON.stringify(rollbackPlan, null, 2),
     );
-    
+
     this.logger.info('✅ Rollback procedures prepared');
     await this.delay(200);
   }
 
   private async runDeployment(worktreeId: string, issueId: string): Promise<void> {
     this.logger.info(`Executing deployment from worktree: ${worktreeId}`);
-    
+
     const version = await this.getCurrentVersion(worktreeId);
-    
+
     // Initialize deployment tracking
     this.currentDeployment = {
       environment: 'staging', // Default to staging for safety
@@ -282,17 +282,17 @@ export class DeploymentAutomationAgent extends BaseAgent {
       status: 'in-progress',
       startTime: new Date(),
     };
-    
+
     try {
       // Execute deployment command based on project type
       const deployCommand = await this.detectDeploymentMethod(worktreeId);
       this.logger.info(`Running deployment command: ${deployCommand}`);
-      
+
       execSync(deployCommand, { cwd: worktreeId, stdio: 'pipe' });
-      
+
       this.currentDeployment.status = 'success';
       this.currentDeployment.endTime = new Date();
-      
+
       this.logger.info(`✅ Deployment successful - Version: ${version}`);
     } catch (error) {
       this.currentDeployment.status = 'failed';
@@ -301,46 +301,47 @@ export class DeploymentAutomationAgent extends BaseAgent {
     } finally {
       this.deploymentHistory.push({ ...this.currentDeployment });
     }
-    
+
     await this.delay(800);
   }
 
   private async validateDeployment(worktreeId: string): Promise<void> {
     this.logger.info(`Validating deployment from worktree: ${worktreeId}`);
-    
+
     if (!this.currentDeployment) {
       throw new Error('No active deployment to validate');
     }
-    
+
     try {
       // Run post-deployment tests
       this.logger.info('Running smoke tests...');
       execSync('npm run test -- --testNamePattern="smoke"', { cwd: worktreeId, stdio: 'pipe' });
-      
+
       // Check health endpoint if available
       const healthCheck = await this.performHealthCheck();
       this.currentDeployment.healthCheck = healthCheck;
-      
+
       // Monitor error rates
       const errorRate = await this.checkErrorRate();
       this.currentDeployment.errorRate = errorRate;
-      
-      if (errorRate > 0.05) { // 5% error rate threshold
+
+      if (errorRate > 0.05) {
+        // 5% error rate threshold
         throw new Error(`High error rate detected: ${(errorRate * 100).toFixed(2)}%`);
       }
-      
+
       this.logger.info('✅ Deployment validation passed');
     } catch (error) {
       this.logger.error('❌ Deployment validation failed:', error);
       throw error;
     }
-    
+
     await this.delay(300);
   }
 
   private async setupPostDeploymentMonitoring(worktreeId: string): Promise<void> {
     this.logger.info(`Setting up post-deployment monitoring in worktree: ${worktreeId}`);
-    
+
     // Create monitoring configuration
     const monitoringConfig = {
       healthCheck: {
@@ -358,24 +359,28 @@ export class DeploymentAutomationAgent extends BaseAgent {
         email: process.env.ALERT_EMAIL,
       },
     };
-    
+
     await fs.writeFile(
       path.join(worktreeId, 'monitoring.config.json'),
-      JSON.stringify(monitoringConfig, null, 2)
+      JSON.stringify(monitoringConfig, null, 2),
     );
-    
+
     this.logger.info('✅ Post-deployment monitoring configured');
     await this.delay(200);
   }
 
-  private async handleDeploymentError(error: unknown, issueId: string, worktreeId: string): Promise<void> {
+  private async handleDeploymentError(
+    error: unknown,
+    issueId: string,
+    worktreeId: string,
+  ): Promise<void> {
     this.logger.error(`❌ Deployment failed for issue ${issueId}:`, error);
-    
+
     if (this.currentDeployment) {
       this.currentDeployment.status = 'failed';
       this.currentDeployment.endTime = new Date();
     }
-    
+
     // Attempt automatic rollback if deployment was in progress
     if (this.currentDeployment?.status === 'failed') {
       this.logger.info('Attempting automatic rollback...');
@@ -386,7 +391,7 @@ export class DeploymentAutomationAgent extends BaseAgent {
         this.logger.error('❌ Rollback failed:', rollbackError);
       }
     }
-    
+
     this.handleError(error, issueId);
   }
 
@@ -394,11 +399,11 @@ export class DeploymentAutomationAgent extends BaseAgent {
 
   private async executeRollback(worktreeId: string): Promise<void> {
     this.logger.info('Executing rollback procedure...');
-    
+
     if (this.currentDeployment) {
       this.currentDeployment.status = 'rolling-back';
     }
-    
+
     try {
       // Execute rollback command
       execSync('npm run rollback || git revert HEAD --no-edit', { cwd: worktreeId, stdio: 'pipe' });
@@ -417,7 +422,10 @@ export class DeploymentAutomationAgent extends BaseAgent {
     } catch {
       // Fallback to git commit hash
       try {
-        const gitHash = execSync('git rev-parse --short HEAD', { cwd: worktreeId, encoding: 'utf8' });
+        const gitHash = execSync('git rev-parse --short HEAD', {
+          cwd: worktreeId,
+          encoding: 'utf8',
+        });
         return gitHash.trim();
       } catch {
         return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -439,7 +447,7 @@ export class DeploymentAutomationAgent extends BaseAgent {
     if (await fs.pathExists(path.join(worktreeId, 'netlify.toml'))) {
       return 'netlify deploy --prod';
     }
-    
+
     // Default to npm script
     return 'npm run build';
   }
@@ -711,43 +719,47 @@ export class HealthCheckService {
 
   // PUBLIC METHODS FOR ORCHESTRATOR
 
-  public async deployToEnvironment(environment: 'development' | 'staging' | 'production'): Promise<DeploymentStatus> {
+  public async deployToEnvironment(
+    environment: 'development' | 'staging' | 'production',
+  ): Promise<DeploymentStatus> {
     this.logger.info(`Initiating deployment to ${environment} environment`);
-    
+
     const config: DeploymentConfig = {
       environment,
       buildCommand: 'npm run build',
       testCommand: 'npm run test:coverage',
       deployCommand: await this.detectDeploymentMethod(process.cwd()),
     };
-    
+
     // Execute deployment workflow
     const checks = await this.runPreDeploymentChecks(process.cwd());
     if (!this.validateChecks(checks)) {
       throw new Error(`Deployment to ${environment} blocked by quality gates`);
     }
-    
+
     const version = await this.getCurrentVersion(process.cwd());
-    
+
     this.currentDeployment = {
       environment,
       version,
       status: 'in-progress',
       startTime: new Date(),
     };
-    
+
     return this.currentDeployment;
   }
 
   public async rollbackDeployment(targetVersion?: string): Promise<void> {
-    this.logger.info(`Rolling back deployment${targetVersion ? ` to version ${targetVersion}` : ''}`);
-    
+    this.logger.info(
+      `Rolling back deployment${targetVersion ? ` to version ${targetVersion}` : ''}`,
+    );
+
     if (!this.currentDeployment) {
       throw new Error('No active deployment to rollback');
     }
-    
+
     await this.executeRollback(process.cwd());
-    
+
     this.currentDeployment.status = 'rolling-back';
     this.currentDeployment.endTime = new Date();
   }
@@ -765,11 +777,11 @@ export class HealthCheckService {
     if (!current) {
       return 'No active deployment';
     }
-    
-    const duration = current.endTime 
+
+    const duration = current.endTime
       ? current.endTime.getTime() - current.startTime.getTime()
       : Date.now() - current.startTime.getTime();
-    
+
     return `
 [DEPLOYMENT STATUS]
 Environment: ${current.environment}

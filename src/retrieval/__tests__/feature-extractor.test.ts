@@ -3,8 +3,9 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SmartFeatureExtractor } from '../feature-extractor.js';
-import { RetrievalQuery, SearchContext, RetrievalConfig } from '../types.js';
-import { IndexEntry, IndexContentType } from '../../indexing/types.js';
+import type { RetrievalQuery, RetrievalConfig } from '../types.js';
+import { SearchContext } from '../types.js';
+import type { IndexEntry, IndexContentType } from '../../indexing/types.js';
 
 describe('SmartFeatureExtractor', () => {
   const mockConfig: RetrievalConfig['features'] = {
@@ -13,19 +14,19 @@ describe('SmartFeatureExtractor', () => {
     enableAffinityFeatures: true,
     enableSemanticFeatures: true,
     enableContextFeatures: true,
-    
+
     featureWeights: {
       titleMatch: 0.25,
       contentMatch: 0.18,
       proximity: 0.15,
       recency: 0.12,
       affinity: 0.12,
-      semantic: 0.10,
-      context: 0.08
+      semantic: 0.1,
+      context: 0.08,
     },
-    
+
     normalizeFeatures: true,
-    scalingMethod: 'minmax'
+    scalingMethod: 'minmax',
   };
 
   let extractor: SmartFeatureExtractor;
@@ -50,20 +51,22 @@ describe('SmartFeatureExtractor', () => {
           id: 'issue-123',
           title: 'Fix authentication errors',
           labels: ['bug', 'authentication', 'critical'],
-          description: 'Users experiencing auth failures'
+          description: 'Users experiencing auth failures',
         },
         repositoryUrl: 'https://github.com/test/repo',
         activeBranch: 'feature/auth-fix',
-        workingHours: true
-      }
+        workingHours: true,
+      },
     };
 
     mockContent = {
       id: 'content-1',
       type: 'knowledge' as IndexContentType,
       title: 'Authentication Best Practices',
-      content: 'This guide covers authentication patterns, error handling, and security considerations. Use JWT tokens for stateless auth...',
+      content:
+        'This guide covers authentication patterns, error handling, and security considerations. Use JWT tokens for stateless auth...',
       path: '/docs/auth-guide.md',
+      hash: 'content1hash',
       metadata: {
         tags: ['authentication', 'security', 'jwt'],
         category: 'security',
@@ -82,10 +85,10 @@ describe('SmartFeatureExtractor', () => {
         extension: '.md',
         relatedIds: ['content-2', 'content-3'],
         parentId: undefined,
-        childIds: []
+        childIds: [],
       },
       lastModified: new Date('2024-01-10'),
-      searchVector: undefined
+      searchVector: undefined,
     };
   });
 
@@ -116,9 +119,9 @@ describe('SmartFeatureExtractor', () => {
       const disabledConfig = {
         ...mockConfig,
         enableRecencyFeatures: false,
-        enableSemanticFeatures: false
+        enableSemanticFeatures: false,
       };
-      
+
       const disabledExtractor = new SmartFeatureExtractor(disabledConfig);
       const features = await disabledExtractor.extractFeatures(mockQuery, mockContent);
 
@@ -143,11 +146,11 @@ describe('SmartFeatureExtractor', () => {
       const exactMatchContent = {
         ...mockContent,
         title: 'Authentication error handling guide',
-        content: 'This covers authentication error handling in detail'
+        content: 'This covers authentication error handling in detail',
       };
 
       const features = await extractor.extractFeatures(mockQuery, exactMatchContent);
-      
+
       // Should have high match scores due to exact phrase match
       expect(features.basic.titleMatchScore).toBeGreaterThan(0.8);
     });
@@ -157,8 +160,8 @@ describe('SmartFeatureExtractor', () => {
         ...mockContent,
         metadata: {
           ...mockContent.metadata,
-          tags: ['authentication', 'error-handling', 'troubleshooting']
-        }
+          tags: ['authentication', 'error-handling', 'troubleshooting'],
+        },
       };
 
       const features = await extractor.extractFeatures(mockQuery, taggedContent);
@@ -168,7 +171,7 @@ describe('SmartFeatureExtractor', () => {
     it('should detect category matches', async () => {
       const categoryQuery = {
         ...mockQuery,
-        query: 'security patterns'
+        query: 'security patterns',
       };
 
       const features = await extractor.extractFeatures(categoryQuery, mockContent);
@@ -184,8 +187,8 @@ describe('SmartFeatureExtractor', () => {
         lastModified: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
         metadata: {
           ...mockContent.metadata,
-          lastUsed: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) // 7 days ago
-        }
+          lastUsed: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        },
       };
 
       const recencyFeatures = extractor.extractRecencyFeatures(oldContent);
@@ -202,8 +205,8 @@ describe('SmartFeatureExtractor', () => {
         lastModified: new Date(),
         metadata: {
           ...mockContent.metadata,
-          lastUsed: new Date()
-        }
+          lastUsed: new Date(),
+        },
       };
 
       const recencyFeatures = extractor.extractRecencyFeatures(recentContent);
@@ -216,7 +219,7 @@ describe('SmartFeatureExtractor', () => {
     it('should extract temporal patterns', () => {
       const timestampedContent = {
         ...mockContent,
-        lastModified: new Date('2024-01-15T14:30:00Z') // Monday 2:30 PM
+        lastModified: new Date('2024-01-15T14:30:00Z'), // Monday 2:30 PM
       };
 
       const recencyFeatures = extractor.extractRecencyFeatures(timestampedContent);
@@ -234,7 +237,7 @@ describe('SmartFeatureExtractor', () => {
       const content = {
         ...mockContent,
         title: 'JWT Authentication Security Guide',
-        content: 'Comprehensive guide on JWT tokens and authentication security practices'
+        content: 'Comprehensive guide on JWT tokens and authentication security practices',
       };
 
       const proximityFeatures = extractor.extractProximityFeatures(query, content);
@@ -247,7 +250,7 @@ describe('SmartFeatureExtractor', () => {
       const query = { ...mockQuery, query: 'authentication security' };
       const content = {
         ...mockContent,
-        title: 'Authentication Security Best Practices'
+        title: 'Authentication Security Best Practices',
       };
 
       const proximityFeatures = extractor.extractProximityFeatures(query, content);
@@ -278,8 +281,8 @@ describe('SmartFeatureExtractor', () => {
         ...mockQuery,
         context: {
           ...mockQuery.context,
-          agentTypes: ['code-implementer', 'security-auditor']
-        }
+          agentTypes: ['code-implementer', 'security-auditor'],
+        },
       };
 
       const affinityFeatures = extractor.extractAffinityFeatures(query.context, mockContent);
@@ -293,40 +296,49 @@ describe('SmartFeatureExtractor', () => {
         ...mockContent,
         metadata: {
           ...mockContent.metadata,
-          projectId: 'test-project' // Same as query
-        }
+          projectId: 'test-project', // Same as query
+        },
       };
 
-      const affinityFeatures = extractor.extractAffinityFeatures(mockQuery.context, sameProjectContent);
+      const affinityFeatures = extractor.extractAffinityFeatures(
+        mockQuery.context,
+        sameProjectContent,
+      );
       expect(affinityFeatures.projectRelevance).toBe(1.0);
 
       const differentProjectContent = {
         ...mockContent,
         metadata: {
           ...mockContent.metadata,
-          projectId: 'other-project'
-        }
+          projectId: 'other-project',
+        },
       };
 
-      const affinityFeatures2 = extractor.extractAffinityFeatures(mockQuery.context, differentProjectContent);
+      const affinityFeatures2 = extractor.extractAffinityFeatures(
+        mockQuery.context,
+        differentProjectContent,
+      );
       expect(affinityFeatures2.projectRelevance).toBeLessThan(1.0);
     });
 
     it('should evaluate complexity fit based on expertise level', () => {
       const beginnerContext = {
         ...mockQuery.context,
-        expertiseLevel: 'beginner' as const
+        expertiseLevel: 'beginner' as const,
       };
 
       const highComplexityContent = {
         ...mockContent,
         metadata: {
           ...mockContent.metadata,
-          difficulty: 'high' as const
-        }
+          difficulty: 'high' as const,
+        },
       };
 
-      const affinityFeatures = extractor.extractAffinityFeatures(beginnerContext, highComplexityContent);
+      const affinityFeatures = extractor.extractAffinityFeatures(
+        beginnerContext,
+        highComplexityContent,
+      );
       expect(affinityFeatures.complexityFit).toBeLessThan(0.5);
     });
 
@@ -335,8 +347,8 @@ describe('SmartFeatureExtractor', () => {
         ...mockContent,
         metadata: {
           ...mockContent.metadata,
-          language: 'javascript'
-        }
+          language: 'javascript',
+        },
       };
 
       const affinityFeatures = extractor.extractAffinityFeatures(mockQuery.context, jsContent);
@@ -362,7 +374,7 @@ describe('SmartFeatureExtractor', () => {
           ![Authentication Flow](auth-diagram.png)
           
           For more info, see https://jwt.io
-        `
+        `,
       };
 
       const semanticFeatures = extractor.extractSemanticFeatures(codeContent);
@@ -376,7 +388,8 @@ describe('SmartFeatureExtractor', () => {
     it('should calculate complexity scores', () => {
       const complexContent = {
         ...mockContent,
-        content: 'Complex async function implementation with Promise chaining, error handling, try-catch blocks, and advanced algorithms for optimization and architecture patterns'
+        content:
+          'Complex async function implementation with Promise chaining, error handling, try-catch blocks, and advanced algorithms for optimization and architecture patterns',
       };
 
       const semanticFeatures = extractor.extractSemanticFeatures(complexContent);
@@ -386,29 +399,34 @@ describe('SmartFeatureExtractor', () => {
     it('should assess readability', () => {
       const readableContent = {
         ...mockContent,
-        content: 'This is a simple guide. It has short sentences. Each sentence is easy to understand.'
+        content:
+          'This is a simple guide. It has short sentences. Each sentence is easy to understand.',
       };
 
       const unreadableContent = {
         ...mockContent,
-        content: 'This extraordinarily comprehensive and extensively detailed documentation encompasses numerous sophisticated methodologies and advanced architectural considerations.'
+        content:
+          'This extraordinarily comprehensive and extensively detailed documentation encompasses numerous sophisticated methodologies and advanced architectural considerations.',
       };
 
       const readableFeatures = extractor.extractSemanticFeatures(readableContent);
       const unreadableFeatures = extractor.extractSemanticFeatures(unreadableContent);
 
-      expect(readableFeatures.readabilityScore).toBeGreaterThan(unreadableFeatures.readabilityScore);
+      expect(readableFeatures.readabilityScore).toBeGreaterThan(
+        unreadableFeatures.readabilityScore,
+      );
     });
 
     it('should determine topic purity', () => {
       const focusedContent = {
         ...mockContent,
-        content: 'authentication auth login user password security secure token jwt'
+        content: 'authentication auth login user password security secure token jwt',
       };
 
       const unfocusedContent = {
         ...mockContent,
-        content: 'authentication database performance UI design testing deployment monitoring analytics'
+        content:
+          'authentication database performance UI design testing deployment monitoring analytics',
       };
 
       const focusedFeatures = extractor.extractSemanticFeatures(focusedContent);
@@ -423,7 +441,7 @@ describe('SmartFeatureExtractor', () => {
       const relevantContent = {
         ...mockContent,
         title: 'Fix authentication errors and bugs',
-        content: 'Guide for fixing critical authentication issues'
+        content: 'Guide for fixing critical authentication issues',
       };
 
       const contextFeatures = extractor.extractContextFeatures(mockQuery.context, relevantContent);
@@ -433,7 +451,7 @@ describe('SmartFeatureExtractor', () => {
     it('should assess temporal context', () => {
       const workingHoursContext = {
         ...mockQuery.context,
-        workingHours: true
+        workingHours: true,
       };
 
       const contextFeatures = extractor.extractContextFeatures(workingHoursContext, mockContent);
@@ -449,8 +467,8 @@ describe('SmartFeatureExtractor', () => {
           id: 'urgent-issue',
           title: 'Critical production bug',
           labels: ['critical', 'urgent', 'production'],
-          description: 'System is down'
-        }
+          description: 'System is down',
+        },
       };
 
       const urgentContent = {
@@ -458,8 +476,8 @@ describe('SmartFeatureExtractor', () => {
         metadata: {
           ...mockContent.metadata,
           severity: 'critical' as const,
-          tags: ['urgent', 'hotfix', 'production']
-        }
+          tags: ['urgent', 'hotfix', 'production'],
+        },
       };
 
       const contextFeatures = extractor.extractContextFeatures(urgentContext, urgentContent);
@@ -469,7 +487,7 @@ describe('SmartFeatureExtractor', () => {
     it('should track session and query context', () => {
       const sessionContext = {
         ...mockQuery.context,
-        recentQueries: ['login', 'auth', 'security', 'user management']
+        recentQueries: ['login', 'auth', 'security', 'user management'],
       };
 
       const contextFeatures = extractor.extractContextFeatures(sessionContext, mockContent);
@@ -489,13 +507,13 @@ describe('SmartFeatureExtractor', () => {
     it('should assess uncertainty levels', async () => {
       const ambiguousQuery = {
         ...mockQuery,
-        query: 'stuff things problems'
+        query: 'stuff things problems',
       };
 
       const vagueContent = {
         ...mockContent,
         title: 'General Guide',
-        content: 'Some information about various topics'
+        content: 'Some information about various topics',
       };
 
       const features = await extractor.extractFeatures(ambiguousQuery, vagueContent);
@@ -508,8 +526,8 @@ describe('SmartFeatureExtractor', () => {
         lastModified: new Date(), // Very recent
         metadata: {
           ...mockContent.metadata,
-          usageCount: 1 // Rarely used
-        }
+          usageCount: 1, // Rarely used
+        },
       };
 
       const features = await extractor.extractFeatures(mockQuery, novelContent);
@@ -532,13 +550,13 @@ describe('SmartFeatureExtractor', () => {
       const contents = Array.from({ length: 5 }, (_, i) => ({
         ...mockContent,
         id: `content-${i}`,
-        title: `Test Content ${i}`
+        title: `Test Content ${i}`,
       }));
 
       const features = await extractor.extractBatchFeatures(mockQuery, contents);
-      
+
       expect(features).toHaveLength(5);
-      features.forEach(feature => {
+      features.forEach((feature) => {
         expect(feature.derived.overallRelevance).toBeGreaterThanOrEqual(0);
         expect(feature.derived.overallRelevance).toBeLessThanOrEqual(1);
       });
@@ -563,7 +581,7 @@ describe('SmartFeatureExtractor', () => {
         ...mockContent,
         id: `content-${i}`,
         title: `Content ${i}`,
-        content: `This is test content number ${i} with various keywords and patterns.`
+        content: `This is test content number ${i} with various keywords and patterns.`,
       }));
 
       const features = await extractor.extractBatchFeatures(mockQuery, largeContentSet);
@@ -588,16 +606,16 @@ describe('SmartFeatureExtractor', () => {
     });
 
     it('should handle concurrent feature extraction', async () => {
-      const promises = Array.from({ length: 10 }, (_, i) => 
+      const promises = Array.from({ length: 10 }, (_, i) =>
         extractor.extractFeatures(mockQuery, {
           ...mockContent,
-          id: `concurrent-${i}`
-        })
+          id: `concurrent-${i}`,
+        }),
       );
 
       const results = await Promise.all(promises);
       expect(results).toHaveLength(10);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.basic).toBeDefined();
       });
     });
@@ -611,12 +629,12 @@ describe('SmartFeatureExtractor', () => {
         content: '',
         metadata: {
           ...mockContent.metadata,
-          tags: []
-        }
+          tags: [],
+        },
       };
 
       const features = await extractor.extractFeatures(mockQuery, emptyContent);
-      
+
       expect(features).toBeDefined();
       expect(features.basic.titleMatchScore).toBe(0);
       expect(features.basic.contentMatchScore).toBe(0);
@@ -630,8 +648,8 @@ describe('SmartFeatureExtractor', () => {
           ...mockContent.metadata,
           tags: undefined as any,
           category: null as any,
-          effectiveness: -1 // Invalid value
-        }
+          effectiveness: -1, // Invalid value
+        },
       };
 
       const features = await extractor.extractFeatures(mockQuery, malformedContent);
@@ -642,11 +660,11 @@ describe('SmartFeatureExtractor', () => {
     it('should handle very long content', async () => {
       const longContent = {
         ...mockContent,
-        content: 'word '.repeat(10000) // 50KB of repeated content
+        content: 'word '.repeat(10000), // 50KB of repeated content
       };
 
       const features = await extractor.extractFeatures(mockQuery, longContent);
-      
+
       expect(features).toBeDefined();
       expect(features.semantic.documentLength).toBeGreaterThan(40000);
     });
@@ -655,7 +673,7 @@ describe('SmartFeatureExtractor', () => {
       const unicodeContent = {
         ...mockContent,
         title: '认证错误处理 🔐 Authentication Führer Guide',
-        content: 'Ümlauts and émojis in content 中文 العربية русский'
+        content: 'Ümlauts and émojis in content 中文 العربية русский',
       };
 
       const features = await extractor.extractFeatures(mockQuery, unicodeContent);
@@ -667,8 +685,16 @@ describe('SmartFeatureExtractor', () => {
       const features = await extractor.extractFeatures(mockQuery, mockContent);
 
       // Ensure all required feature categories are present
-      const requiredCategories = ['basic', 'recency', 'proximity', 'affinity', 'semantic', 'context', 'derived'];
-      requiredCategories.forEach(category => {
+      const requiredCategories = [
+        'basic',
+        'recency',
+        'proximity',
+        'affinity',
+        'semantic',
+        'context',
+        'derived',
+      ];
+      requiredCategories.forEach((category) => {
         expect(features[category as keyof typeof features]).toBeDefined();
       });
 

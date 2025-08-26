@@ -1,6 +1,6 @@
 /**
  * ProcessSupervisor Test Suite
- * 
+ *
  * Comprehensive tests for the ProcessSupervisor system including lifecycle management,
  * resource monitoring, health checking, and automatic recovery.
  */
@@ -10,7 +10,8 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
-import { ProcessSupervisor, ProcessSupervisorConfig } from '../process-supervisor';
+import type { ProcessSupervisorConfig } from '../process-supervisor';
+import { ProcessSupervisor } from '../process-supervisor';
 import { PidRegistry } from '../pid-registry';
 import { ProcessMonitor } from '../process-monitor';
 
@@ -38,7 +39,7 @@ describe('ProcessSupervisor', () => {
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Create default configuration
     config = {
       maxProcesses: 5,
@@ -91,7 +92,7 @@ describe('ProcessSupervisor', () => {
 
     // Mock fs operations
     mockFs.ensureDir.mockResolvedValue(undefined);
-    mockFs.pathExists.mockResolvedValue(true);
+    mockFs.pathExists.mockResolvedValue(undefined);
     mockFs.access.mockResolvedValue();
 
     // Create supervisor instance
@@ -121,23 +122,23 @@ describe('ProcessSupervisor', () => {
   describe('Initialization', () => {
     it('should initialize successfully', async () => {
       await expect(supervisor.initialize()).resolves.not.toThrow();
-      
+
       expect(mockPidRegistry.initialize).toHaveBeenCalled();
       expect(mockProcessMonitor.initialize).toHaveBeenCalled();
     });
 
     it('should handle initialization errors', async () => {
       mockPidRegistry.initialize.mockRejectedValue(new Error('Registry init failed'));
-      
+
       await expect(supervisor.initialize()).rejects.toThrow('Registry init failed');
     });
 
     it('should emit initialized event', async () => {
       const initSpy = vi.fn();
       supervisor.on('supervisor:initialized', initSpy);
-      
+
       await supervisor.initialize();
-      
+
       expect(initSpy).toHaveBeenCalled();
     });
   });
@@ -161,15 +162,15 @@ describe('ProcessSupervisor', () => {
       const mockProcess = new EventEmitter();
       (mockProcess as any).pid = 12345;
       (mockProcess as any).kill = vi.fn();
-      
+
       // Mock spawn function
       const originalSpawn = require('child_process').spawn;
       vi.doMock('child_process', () => ({
-        spawn: vi.fn().mockReturnValue(mockProcess)
+        spawn: vi.fn().mockReturnValue(mockProcess),
       }));
 
       const processId = await supervisor.startProcess(options);
-      
+
       expect(processId).toMatch(/test-agent-test-task-1-\d+-\w+/);
       expect(mockPidRegistry.registerProcess).toHaveBeenCalled();
       expect(mockProcessMonitor.registerProcess).toHaveBeenCalledWith(processId, 12345);
@@ -193,7 +194,9 @@ describe('ProcessSupervisor', () => {
         workingDir: testDir,
       };
 
-      await expect(supervisor.startProcess(options)).rejects.toThrow('Maximum process limit reached');
+      await expect(supervisor.startProcess(options)).rejects.toThrow(
+        'Maximum process limit reached',
+      );
     });
 
     it('should validate command security when sandboxing enabled', async () => {
@@ -206,7 +209,9 @@ describe('ProcessSupervisor', () => {
         workingDir: testDir,
       };
 
-      await expect(supervisor.startProcess(options)).rejects.toThrow('Command not allowed: dangerous-command');
+      await expect(supervisor.startProcess(options)).rejects.toThrow(
+        'Command not allowed: dangerous-command',
+      );
     });
 
     it('should stop a process gracefully', async () => {
@@ -275,7 +280,7 @@ describe('ProcessSupervisor', () => {
       expect(supervisor.stopProcess).toHaveBeenCalledWith(processId, 'Test restart');
       expect(supervisor.startProcess).toHaveBeenCalledWith({
         ...options,
-        taskId: 'test-task-restart-restart-0'
+        taskId: 'test-task-restart-restart-0',
       });
       expect(newProcessId).toBe('new-process-id');
     });
@@ -292,18 +297,18 @@ describe('ProcessSupervisor', () => {
           processId: 'process-1',
           pid: 12345,
           status: 'running',
-          startTime: new Date()
+          startTime: new Date(),
         },
         {
           processId: 'process-2',
           pid: 12346,
           status: 'running',
-          startTime: new Date()
-        }
+          startTime: new Date(),
+        },
       ];
 
       mockPidRegistry.getAllProcesses.mockReturnValue(mockProcesses);
-      
+
       // Mock process.kill to simulate running processes
       const originalKill = process.kill;
       process.kill = vi.fn().mockReturnValue(undefined);
@@ -313,7 +318,7 @@ describe('ProcessSupervisor', () => {
       expect(healthStatuses.size).toBe(2);
       expect(healthStatuses.get('process-1')).toBe('healthy');
       expect(healthStatuses.get('process-2')).toBe('healthy');
-      
+
       // Restore original function
       process.kill = originalKill;
     });
@@ -323,11 +328,11 @@ describe('ProcessSupervisor', () => {
         processId: 'crashed-process',
         pid: 99999, // Non-existent PID
         status: 'running',
-        startTime: new Date()
+        startTime: new Date(),
       };
 
       mockPidRegistry.getAllProcesses.mockReturnValue([mockProcess]);
-      
+
       // Mock process.kill to throw ESRCH for non-existent process
       const originalKill = process.kill;
       process.kill = vi.fn().mockImplementation(() => {
@@ -339,8 +344,11 @@ describe('ProcessSupervisor', () => {
       const healthStatuses = await supervisor.performHealthCheck();
 
       expect(healthStatuses.get('crashed-process')).toBe('crashed');
-      expect(mockPidRegistry.updateProcessHealth).toHaveBeenCalledWith('crashed-process', 'crashed');
-      
+      expect(mockPidRegistry.updateProcessHealth).toHaveBeenCalledWith(
+        'crashed-process',
+        'crashed',
+      );
+
       // Restore original function
       process.kill = originalKill;
     });
@@ -351,16 +359,16 @@ describe('ProcessSupervisor', () => {
         processId,
         pid: 12345,
         status: 'running',
-        startTime: new Date(Date.now() - 100000) // Old process
+        startTime: new Date(Date.now() - 100000), // Old process
       };
 
       mockPidRegistry.getAllProcesses.mockReturnValue([mockProcess]);
-      
+
       // Mock resource violations
       mockProcessMonitor.getProcessData.mockReturnValue({
         memoryMB: 2000, // Exceeds limit
         cpuPercent: 50,
-        executionTimeMs: 50000
+        executionTimeMs: 50000,
       });
 
       // Mock restart functionality
@@ -368,7 +376,10 @@ describe('ProcessSupervisor', () => {
 
       await supervisor.performHealthCheck();
 
-      expect(supervisor.restartProcess).toHaveBeenCalledWith(processId, expect.stringContaining('unhealthy'));
+      expect(supervisor.restartProcess).toHaveBeenCalledWith(
+        processId,
+        expect.stringContaining('unhealthy'),
+      );
     });
   });
 
@@ -443,7 +454,7 @@ describe('ProcessSupervisor', () => {
         workingDir: '/invalid/directory',
       };
 
-      mockFs.pathExists.mockResolvedValue(false); // Simulate non-existent directory
+      mockFs.pathExists.mockResolvedValue(undefined); // Simulate non-existent directory
 
       await expect(supervisor.startProcess(options)).rejects.toThrow();
     });
@@ -455,11 +466,11 @@ describe('ProcessSupervisor', () => {
         processId: 'error-health-process',
         pid: 12345,
         status: 'running',
-        startTime: new Date()
+        startTime: new Date(),
       };
 
       mockPidRegistry.getAllProcesses.mockReturnValue([mockProcess]);
-      
+
       // Mock process.kill to throw unexpected error
       const originalKill = process.kill;
       process.kill = vi.fn().mockImplementation(() => {
@@ -470,7 +481,7 @@ describe('ProcessSupervisor', () => {
 
       // Should handle error gracefully and mark as unknown
       expect(healthStatuses.get('error-health-process')).toBe('unknown');
-      
+
       // Restore original function
       process.kill = originalKill;
     });
@@ -545,18 +556,21 @@ describe('ProcessSupervisor', () => {
             handler({
               processId: 'test-process',
               type: 'memory',
-              severity: 'critical'
+              severity: 'critical',
             });
           }, 10);
         }
       });
 
       // Wait for events
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Note: Full event testing would require more complex setup
       // This tests the event handler registration
-      expect(mockProcessMonitor.on).toHaveBeenCalledWith('resource-violation', expect.any(Function));
+      expect(mockProcessMonitor.on).toHaveBeenCalledWith(
+        'resource-violation',
+        expect.any(Function),
+      );
     });
   });
 

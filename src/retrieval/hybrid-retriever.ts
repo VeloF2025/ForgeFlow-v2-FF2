@@ -1,7 +1,7 @@
 // Hybrid Retrieval Engine - ML-Enhanced Multi-Strategy Retrieval System
 // Combines FTS, vector search, and semantic retrieval with learned fusion
 
-import {
+import type {
   HybridRetriever as IHybridRetriever,
   RetrievalQuery,
   RetrievalResults,
@@ -9,16 +9,15 @@ import {
   RetrievalStrategy,
   RetrievalWeights,
   SearchContext,
-  HybridRetrievalMode,
   UserFeedback,
   RetrievalConfig,
-  RetrievalError,
-  RetrievalErrorCode
 } from './types.js';
-import { SearchResult, SearchResults } from '../indexing/types.js';
-import { ISearchEngine } from '../indexing/types.js';
-import { BanditAlgorithm } from './types.js';
-import { FeatureExtractor, SmartFeatureExtractor } from './feature-extractor.js';
+import { HybridRetrievalMode, RetrievalError, RetrievalErrorCode } from './types.js';
+import type { SearchResult } from '../indexing/types.js';
+import { SearchResults } from '../indexing/types.js';
+import type { ISearchEngine } from '../indexing/types.js';
+import type { BanditAlgorithm } from './types.js';
+import { SmartFeatureExtractor } from './feature-extractor.js';
 import { RankFusionEngine } from './rank-fusion.js';
 import { logger } from '../utils/logger.js';
 
@@ -30,24 +29,30 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
   private readonly config: RetrievalConfig;
 
   // Performance tracking
-  private readonly performanceMetrics = new Map<string, {
-    totalTime: number;
-    totalQueries: number;
-    averageFeatures: number;
-    successRate: number;
-  }>();
+  private readonly performanceMetrics = new Map<
+    string,
+    {
+      totalTime: number;
+      totalQueries: number;
+      averageFeatures: number;
+      successRate: number;
+    }
+  >();
 
   // Result caching for performance
-  private readonly resultCache = new Map<string, {
-    results: RetrievalResults;
-    timestamp: Date;
-    ttl: number;
-  }>();
+  private readonly resultCache = new Map<
+    string,
+    {
+      results: RetrievalResults;
+      timestamp: Date;
+      ttl: number;
+    }
+  >();
 
   constructor(
     searchEngine: ISearchEngine,
     banditLearner: BanditAlgorithm,
-    config: RetrievalConfig
+    config: RetrievalConfig,
   ) {
     this.searchEngine = searchEngine;
     this.banditLearner = banditLearner;
@@ -62,7 +67,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       hybridMode: config.hybrid.defaultMode,
       fusionAlgorithm: config.hybrid.fusionAlgorithm,
       vectorSearchEnabled: config.hybrid.enableVectorSearch,
-      cacheEnabled: config.performance.cacheEnabled
+      cacheEnabled: config.performance.cacheEnabled,
     });
   }
 
@@ -82,22 +87,22 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
       // Select optimal retrieval strategy using bandit algorithm
       const strategy = await this.getOptimalStrategy(query.context);
-      
+
       logger.info('Starting hybrid retrieval', {
         queryId,
         strategy,
         mode: query.hybridMode || this.config.hybrid.defaultMode,
-        query: query.query.substring(0, 100)
+        query: query.query.substring(0, 100),
       });
 
       // Execute retrieval based on selected strategy and mode
       const rawResults = await this.executeRetrieval(query, strategy);
-      
+
       // Extract features for all candidates
       const featureStartTime = Date.now();
       const candidateFeatures = await this.featureExtractor.extractBatchFeatures(
         query,
-        rawResults.map(result => result.entry)
+        rawResults.map((result) => result.entry),
       );
       const featureTime = Date.now() - featureStartTime;
 
@@ -106,18 +111,14 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         rawResults,
         candidateFeatures,
         strategy,
-        query
+        query,
       );
 
       // Apply rank fusion and final scoring
-      const fusedResults = await this.rankFusion.fuseAndRerank(
-        [enrichedResults],
-        query,
-        strategy
-      );
+      const fusedResults = await this.rankFusion.fuseAndRerank([enrichedResults], query, strategy);
 
       const totalTime = Date.now() - startTime;
-      
+
       const retrievalResults: RetrievalResults = {
         results: fusedResults.slice(0, query.limit || 20),
         totalMatches: rawResults.length,
@@ -126,14 +127,14 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         executionTime: totalTime,
         facets: { types: [], categories: [], tags: [], projects: [], agents: [], languages: [] }, // Simplified
         suggestions: [],
-        
+
         // ML-specific metadata
         strategyUsed: strategy,
         explorationPerformed: query.explorationRate ? query.explorationRate > 0.1 : false,
         adaptiveLearningActive: query.adaptiveWeights !== false,
         featureExtractionTime: featureTime,
         rankingTime: totalTime - featureTime,
-        totalMLTime: featureTime
+        totalMLTime: featureTime,
       };
 
       // Cache results if enabled
@@ -150,7 +151,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         totalResults: retrievalResults.results.length,
         totalTime,
         featureTime,
-        avgRelevance: this.calculateAverageRelevance(retrievalResults.results)
+        avgRelevance: this.calculateAverageRelevance(retrievalResults.results),
       });
 
       return retrievalResults;
@@ -159,18 +160,17 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       logger.error('Hybrid retrieval failed', {
         queryId,
         error,
-        totalTime
+        totalTime,
       });
 
       // Update performance metrics for failure
       const strategy = 'balanced'; // Default fallback
       this.updatePerformanceMetrics(strategy, totalTime, 0, false);
 
-      throw new RetrievalError(
-        'Hybrid retrieval failed',
-        RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { query: query.query, error }
-      );
+      throw new RetrievalError('Hybrid retrieval failed', RetrievalErrorCode.HYBRID_FUSION_FAILED, {
+        query: query.query,
+        error,
+      });
     }
   }
 
@@ -178,21 +178,20 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     try {
       const searchQuery = this.convertToSearchQuery(query, 'fts');
       const results = await this.searchEngine.search(searchQuery);
-      
+
       logger.debug('FTS retrieval completed', {
         query: query.query,
         results: results.results.length,
-        executionTime: results.executionTime
+        executionTime: results.executionTime,
       });
 
       return results.results;
     } catch (error) {
       logger.error('FTS retrieval failed', error);
-      throw new RetrievalError(
-        'FTS retrieval failed',
-        RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { query: query.query, error }
-      );
+      throw new RetrievalError('FTS retrieval failed', RetrievalErrorCode.HYBRID_FUSION_FAILED, {
+        query: query.query,
+        error,
+      });
     }
   }
 
@@ -209,11 +208,10 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       return [];
     } catch (error) {
       logger.error('Vector retrieval failed', error);
-      throw new RetrievalError(
-        'Vector retrieval failed',
-        RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { query: query.query, error }
-      );
+      throw new RetrievalError('Vector retrieval failed', RetrievalErrorCode.HYBRID_FUSION_FAILED, {
+        query: query.query,
+        error,
+      });
     }
   }
 
@@ -222,11 +220,11 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       // Semantic search using enhanced query processing
       const semanticQuery = this.enhanceQueryForSemantic(query);
       const results = await this.searchEngine.search(semanticQuery);
-      
+
       logger.debug('Semantic retrieval completed', {
         originalQuery: query.query,
         enhancedQuery: semanticQuery.query,
-        results: results.results.length
+        results: results.results.length,
       });
 
       return results.results;
@@ -235,7 +233,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       throw new RetrievalError(
         'Semantic retrieval failed',
         RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { query: query.query, error }
+        { query: query.query, error },
       );
     }
   }
@@ -243,11 +241,11 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
   async fuseResults(
     ftsResults: SearchResult[],
     vectorResults: SearchResult[],
-    weights: RetrievalWeights
+    weights: RetrievalWeights,
   ): Promise<SearchResult[]> {
     try {
-      const rankedLists = [ftsResults, vectorResults].filter(list => list.length > 0);
-      
+      const rankedLists = [ftsResults, vectorResults].filter((list) => list.length > 0);
+
       if (rankedLists.length === 0) return [];
       if (rankedLists.length === 1) return rankedLists[0];
 
@@ -258,17 +256,18 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         case 'borda':
           return this.rankFusion.bordaCount(rankedLists);
         case 'weighted':
-          return this.rankFusion.weightedFusion(rankedLists, [weights.ftsWeight, weights.vectorWeight]);
+          return this.rankFusion.weightedFusion(rankedLists, [
+            weights.ftsWeight,
+            weights.vectorWeight,
+          ]);
         default:
           return this.rankFusion.reciprocalRankFusion(rankedLists);
       }
     } catch (error) {
       logger.error('Result fusion failed', error);
-      throw new RetrievalError(
-        'Result fusion failed',
-        RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { error }
-      );
+      throw new RetrievalError('Result fusion failed', RetrievalErrorCode.HYBRID_FUSION_FAILED, {
+        error,
+      });
     }
   }
 
@@ -283,7 +282,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
   async adaptWeights(
     strategy: RetrievalStrategy,
-    feedback: UserFeedback[]
+    feedback: UserFeedback[],
   ): Promise<RetrievalWeights> {
     try {
       if (feedback.length === 0) {
@@ -291,15 +290,16 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       }
 
       // Calculate average feedback score
-      const avgRelevance = feedback.reduce((sum, fb) => {
-        let score = 0;
-        if (fb.relevanceRating) score += fb.relevanceRating / 5;
-        if (fb.thumbsUp) score += 1;
-        if (fb.thumbsDown) score -= 0.5;
-        if (fb.clicked) score += 0.3;
-        if (fb.usedInSolution) score += 0.7;
-        return sum + Math.max(0, Math.min(1, score));
-      }, 0) / feedback.length;
+      const avgRelevance =
+        feedback.reduce((sum, fb) => {
+          let score = 0;
+          if (fb.relevanceRating) score += fb.relevanceRating / 5;
+          if (fb.thumbsUp) score += 1;
+          if (fb.thumbsDown) score -= 0.5;
+          if (fb.clicked) score += 0.3;
+          if (fb.usedInSolution) score += 0.7;
+          return sum + Math.max(0, Math.min(1, score));
+        }, 0) / feedback.length;
 
       // Update bandit with aggregated feedback
       // Note: This is a simplified approach - in production, you'd want more sophisticated feedback processing
@@ -314,9 +314,9 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
           recentQueries: [],
           recentResults: [],
           successfulPatterns: [],
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
+
         await this.banditLearner.updateReward(strategy, mockContext, reward);
       }
 
@@ -334,7 +334,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         popularityWeight: baseWeights.popularityWeight,
         effectivenessWeight: baseWeights.effectivenessWeight,
         projectRelevanceWeight: baseWeights.projectRelevanceWeight,
-        agentTypeWeight: baseWeights.agentTypeWeight
+        agentTypeWeight: baseWeights.agentTypeWeight,
       };
     } catch (error) {
       logger.error('Failed to adapt weights', error);
@@ -346,10 +346,10 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
   private async executeRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     const mode = query.hybridMode || this.config.hybrid.defaultMode;
-    
+
     switch (mode) {
       case 'parallel':
         return await this.executeParallelRetrieval(query, strategy);
@@ -366,22 +366,22 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
   private async executeParallelRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     const timeout = this.config.hybrid.parallelTimeout;
-    
+
     try {
       // Execute FTS and other retrieval methods in parallel
       const retrievalPromises: Promise<SearchResult[]>[] = [];
-      
+
       // Always include FTS
       retrievalPromises.push(this.performFTSRetrieval(query));
-      
+
       // Add vector search if enabled and strategy supports it
       if (this.shouldUseVectorSearch(strategy)) {
         retrievalPromises.push(this.performVectorRetrieval(query));
       }
-      
+
       // Add semantic search for semantic-focused strategies
       if (strategy === 'semantic-focused') {
         retrievalPromises.push(this.performSemanticRetrieval(query));
@@ -389,14 +389,14 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
       // Execute with timeout
       const results = await Promise.all(
-        retrievalPromises.map(promise => 
+        retrievalPromises.map((promise) =>
           Promise.race([
             promise,
-            new Promise<SearchResult[]>((_, reject) => 
-              setTimeout(() => reject(new Error('Retrieval timeout')), timeout)
-            )
-          ])
-        )
+            new Promise<SearchResult[]>((_, reject) =>
+              setTimeout(() => reject(new Error('Retrieval timeout')), timeout),
+            ),
+          ]),
+        ),
       );
 
       // Fuse results
@@ -410,11 +410,11 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
   private async executeCascadeRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     // Try FTS first
     const ftsResults = await this.performFTSRetrieval(query);
-    
+
     // If we have good results, return them
     const goodResultsThreshold = 5;
     if (ftsResults.length >= goodResultsThreshold) {
@@ -423,7 +423,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         return ftsResults;
       }
     }
-    
+
     // Otherwise, try vector search or semantic search
     if (this.shouldUseVectorSearch(strategy)) {
       const vectorResults = await this.performVectorRetrieval(query);
@@ -432,17 +432,17 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         return await this.fuseResults(ftsResults, vectorResults, weights);
       }
     }
-    
+
     return ftsResults;
   }
 
   private async executeAdaptiveRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     // Use bandit algorithm to decide which retrieval methods to use
     const optimalStrategy = await this.getOptimalStrategy(query.context);
-    
+
     // Adapt the execution based on learned strategy
     if (optimalStrategy === 'fts-heavy') {
       return await this.performFTSRetrieval(query);
@@ -459,14 +459,14 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
 
   private async executeEnsembleRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     // Execute multiple strategies and combine results
     const strategies: RetrievalStrategy[] = ['fts-heavy', 'semantic-focused'];
     if (this.shouldUseVectorSearch(strategy)) {
       strategies.push('vector-heavy');
     }
-    
+
     const allResults: SearchResult[][] = [];
     for (const strat of strategies) {
       try {
@@ -478,18 +478,18 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
         logger.warn(`Strategy ${strat} failed in ensemble`, error);
       }
     }
-    
+
     if (allResults.length === 0) {
       return await this.performFTSRetrieval(query);
     }
-    
+
     // Use advanced fusion for ensemble
     return this.rankFusion.reciprocalRankFusion(allResults);
   }
 
   private async executeStrategySpecificRetrieval(
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<SearchResult[]> {
     switch (strategy) {
       case 'fts-heavy':
@@ -513,7 +513,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     rawResults: SearchResult[],
     features: any[],
     strategy: RetrievalStrategy,
-    query: RetrievalQuery
+    query: RetrievalQuery,
   ): Promise<RetrievalResult[]> {
     return rawResults.map((result, index) => ({
       ...result,
@@ -521,13 +521,14 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       confidenceScore: this.calculateConfidenceScore(result, features[index]),
       explorationBonus: query.explorationRate ? query.explorationRate * 0.1 : 0,
       retrievalStrategy: strategy,
-      rankerUsed: 'base'
+      rankerUsed: 'base',
     }));
   }
 
-  private convertToSearchQuery(query: RetrievalQuery, type: 'fts' | 'semantic') {
+  private convertToSearchQuery(query: RetrievalQuery, type: 'fts' | 'semantic'): RetrievalQuery {
     return {
       query: query.query,
+      context: query.context,
       type: query.type,
       category: query.category,
       tags: query.tags,
@@ -549,20 +550,28 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       createdBefore: query.createdBefore,
       modifiedAfter: query.modifiedAfter,
       modifiedBefore: query.modifiedBefore,
-      usedAfter: query.usedAfter
+      usedAfter: query.usedAfter,
+      explorationRate: query.explorationRate,
+      adaptiveWeights: query.adaptiveWeights,
+      enableReranker: query.enableReranker,
+      vectorSearch: query.vectorSearch,
+      hybridMode: query.hybridMode,
+      sessionId: query.sessionId,
+      userId: query.userId,
+      agentType: query.agentType,
     };
   }
 
   private enhanceQueryForSemantic(query: RetrievalQuery) {
     // Enhance query with semantic expansion
     const enhanced = { ...this.convertToSearchQuery(query, 'semantic') };
-    
+
     // Add semantic keywords based on context
     const semanticKeywords = this.extractSemanticKeywords(query);
     if (semanticKeywords.length > 0) {
       enhanced.query = `${enhanced.query} ${semanticKeywords.join(' ')}`;
     }
-    
+
     return enhanced;
   }
 
@@ -571,7 +580,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     enhanced.boostRecent = true;
     enhanced.customWeights = {
       ...enhanced.customWeights,
-      recency: 2.0
+      recency: 2.0,
     };
     return enhanced;
   }
@@ -581,7 +590,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     enhanced.boostEffective = true;
     enhanced.customWeights = {
       ...enhanced.customWeights,
-      effectiveness: 2.0
+      effectiveness: 2.0,
     };
     return enhanced;
   }
@@ -590,7 +599,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     const enhanced = { ...this.convertToSearchQuery(query, 'fts') };
     enhanced.customWeights = {
       ...enhanced.customWeights,
-      content: 1.5 // Boost content that's been accessed more
+      content: 1.5, // Boost content that's been accessed more
     };
     return enhanced;
   }
@@ -599,24 +608,26 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     // Simple semantic keyword extraction
     const context = query.context;
     const keywords: string[] = [];
-    
+
     // Add issue-related keywords
     if (context.currentIssue) {
       keywords.push(...context.currentIssue.labels);
     }
-    
+
     // Add agent-type specific keywords
     keywords.push(...context.agentTypes);
-    
+
     // Add recent successful patterns
     keywords.push(...context.successfulPatterns);
-    
-    return keywords.filter(k => k.length > 2).slice(0, 5); // Limit to 5 keywords
+
+    return keywords.filter((k) => k.length > 2).slice(0, 5); // Limit to 5 keywords
   }
 
   private shouldUseVectorSearch(strategy: RetrievalStrategy): boolean {
-    return this.config.hybrid.enableVectorSearch && 
-           (strategy === 'vector-heavy' || strategy === 'balanced' || strategy === 'semantic-focused');
+    return (
+      this.config.hybrid.enableVectorSearch &&
+      (strategy === 'vector-heavy' || strategy === 'balanced' || strategy === 'semantic-focused')
+    );
   }
 
   private getDefaultWeights(strategy: RetrievalStrategy): RetrievalWeights {
@@ -630,7 +641,7 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       popularityWeight: 0.3,
       effectivenessWeight: 0.4,
       projectRelevanceWeight: 0.7,
-      agentTypeWeight: 0.5
+      agentTypeWeight: 0.5,
     };
 
     // Adjust weights based on strategy
@@ -655,27 +666,27 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
   private calculateConfidenceScore(result: SearchResult, features: any): number {
     // Simple confidence calculation based on multiple factors
     let confidence = result.score / 10; // Normalize base score
-    
+
     // Add feature-based confidence
     if (features.proximity?.exactPhraseMatch) confidence += 0.3;
     if (features.affinity?.agentTypeRelevance > 0.7) confidence += 0.2;
     if (features.context?.activeProject) confidence += 0.1;
-    
+
     return Math.min(confidence, 1.0);
   }
 
   private calculateRewardFromFeedback(feedback: UserFeedback): number {
     let reward = 0.5; // Base reward
-    
+
     if (feedback.relevanceRating) {
       reward = feedback.relevanceRating / 5; // 1-5 scale to 0-1
     }
-    
+
     if (feedback.thumbsUp) reward = Math.max(reward, 0.8);
     if (feedback.thumbsDown) reward = Math.min(reward, 0.2);
     if (feedback.usedInSolution) reward = Math.max(reward, 0.9);
     if (feedback.clicked && feedback.dwellTime > 10000) reward += 0.1; // 10+ seconds
-    
+
     return Math.max(0, Math.min(1, reward));
   }
 
@@ -691,15 +702,15 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
   private async getCachedResults(query: RetrievalQuery): Promise<RetrievalResults | null> {
     const cacheKey = this.generateCacheKey(query);
     const cached = this.resultCache.get(cacheKey);
-    
+
     if (cached && Date.now() - cached.timestamp.getTime() < cached.ttl) {
       return cached.results;
     }
-    
+
     if (cached) {
       this.resultCache.delete(cacheKey);
     }
-    
+
     return null;
   }
 
@@ -708,11 +719,12 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     this.resultCache.set(cacheKey, {
       results,
       timestamp: new Date(),
-      ttl: this.config.performance.cacheTTL
+      ttl: this.config.performance.cacheTTL,
     });
-    
+
     // Clean up old cache entries
-    if (this.resultCache.size > 1000) { // Max 1000 cached queries
+    if (this.resultCache.size > 1000) {
+      // Max 1000 cached queries
       const oldestKey = this.resultCache.keys().next().value;
       this.resultCache.delete(oldestKey);
     }
@@ -725,23 +737,28 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
       projectId: query.projectId,
       agentTypes: query.agentTypes,
       limit: query.limit,
-      offset: query.offset
+      offset: query.offset,
     });
   }
 
   private initializePerformanceTracking(): void {
     // Initialize performance tracking for all strategies
     const strategies: RetrievalStrategy[] = [
-      'fts-heavy', 'vector-heavy', 'balanced', 'recency-focused',
-      'effectiveness-focused', 'popularity-focused', 'semantic-focused'
+      'fts-heavy',
+      'vector-heavy',
+      'balanced',
+      'recency-focused',
+      'effectiveness-focused',
+      'popularity-focused',
+      'semantic-focused',
     ];
-    
-    strategies.forEach(strategy => {
+
+    strategies.forEach((strategy) => {
       this.performanceMetrics.set(strategy, {
         totalTime: 0,
         totalQueries: 0,
         averageFeatures: 0,
-        successRate: 0
+        successRate: 0,
       });
     });
   }
@@ -750,16 +767,21 @@ export class IntelligentHybridRetriever implements IHybridRetriever {
     strategy: RetrievalStrategy,
     totalTime: number,
     featureTime: number,
-    success: boolean
+    success: boolean,
   ): void {
     const metrics = this.performanceMetrics.get(strategy);
     if (!metrics) return;
-    
+
     metrics.totalQueries++;
     metrics.totalTime += totalTime;
-    metrics.averageFeatures = (metrics.averageFeatures * (metrics.totalQueries - 1) + featureTime) / metrics.totalQueries;
-    metrics.successRate = (metrics.successRate * (metrics.totalQueries - 1) + (success ? 1 : 0)) / metrics.totalQueries;
-    
+    metrics.averageFeatures =
+      (metrics.averageFeatures * (metrics.totalQueries - 1) + featureTime) / metrics.totalQueries;
+    metrics.successRate =
+      (metrics.successRate * (metrics.totalQueries - 1) + (success ? 1 : 0)) / metrics.totalQueries;
+
     this.performanceMetrics.set(strategy, metrics);
   }
 }
+
+// Export alias for backward compatibility
+export { IntelligentHybridRetriever as HybridRetriever };

@@ -3,7 +3,8 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import {
+import { EventEmitter } from 'events';
+import type {
   JobMemory,
   Decision,
   Gotcha,
@@ -17,27 +18,27 @@ import {
   PatternMatch,
   PatternQuery,
   MemoryConfig,
-  IMemoryManager
+  IMemoryManager,
 } from './types';
 import { JobMemoryManager } from './job-memory';
 import { RuntimeLogger } from './runtime-logger';
 import { MemoryAnalytics } from './memory-analytics';
-import { KnowledgeManager } from '../knowledge/knowledge-manager';
+import type { KnowledgeManager } from '../knowledge/knowledge-manager';
 import { logger } from '../utils/logger';
 
 /**
  * Memory Manager - Core orchestrator for the Memory Layer
- * 
+ *
  * Provides centralized access to:
  * - Job Memory Management (per-issue memory persistence)
  * - Runtime Logging (structured event logging)
  * - Memory Analytics (pattern analysis and insights)
  * - Knowledge Layer Integration (gotcha promotion)
- * 
+ *
  * Performance Target: <50ms for all operations
  * Quality Target: Zero data loss with atomic operations
  */
-export class MemoryManager implements IMemoryManager {
+export class MemoryManager extends EventEmitter implements IMemoryManager {
   private config: MemoryConfig;
   private jobMemoryManager: JobMemoryManager;
   private runtimeLogger: RuntimeLogger;
@@ -46,6 +47,7 @@ export class MemoryManager implements IMemoryManager {
   private initialized = false;
 
   constructor(config: MemoryConfig, knowledgeManager?: KnowledgeManager) {
+    super();
     this.config = config;
     this.jobMemoryManager = new JobMemoryManager(config);
     this.runtimeLogger = new RuntimeLogger(config);
@@ -61,31 +63,32 @@ export class MemoryManager implements IMemoryManager {
     if (this.initialized) return;
 
     const startTime = Date.now();
-    
+
     try {
       logger.info('Initializing Memory Layer');
-      
+
       // Ensure directory structure exists
       await this.ensureDirectoryStructure();
-      
+
       // Initialize subsystems in parallel
-      await Promise.all([
-        this.runtimeLogger.initialize(),
-        this.memoryAnalytics.initialize()
-      ]);
+      await Promise.all([this.runtimeLogger.initialize(), this.memoryAnalytics.initialize()]);
 
       this.initialized = true;
-      
+
       const duration = Date.now() - startTime;
       logger.info(`Memory Layer initialized successfully in ${duration}ms`);
-      
+
       // Validate performance target
       if (duration > this.config.performanceThresholds.memoryOperationTimeMs) {
-        logger.warn(`Memory Layer initialization took ${duration}ms (target: ${this.config.performanceThresholds.memoryOperationTimeMs}ms)`);
+        logger.warn(
+          `Memory Layer initialization took ${duration}ms (target: ${this.config.performanceThresholds.memoryOperationTimeMs}ms)`,
+        );
       }
     } catch (error) {
       logger.error('Failed to initialize Memory Layer:', error);
-      throw new Error(`Memory Layer initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Memory Layer initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -99,35 +102,37 @@ export class MemoryManager implements IMemoryManager {
    */
   async initializeJobMemory(issueId: string, sessionId: string): Promise<JobMemory> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       // Log job initialization
       await this.runtimeLogger.info('job_memory_init', {
         issueId,
         sessionId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       const jobMemory = await this.jobMemoryManager.initializeJobMemory(issueId, sessionId);
-      
+
       const duration = Date.now() - startTime;
       logger.debug(`Initialized job memory ${jobMemory.jobId} in ${duration}ms`);
-      
+
       return jobMemory;
     } catch (error) {
       logger.error(`Failed to initialize job memory for issue ${issueId}:`, error);
-      
+
       // Log error
       await this.runtimeLogger.error('job_memory_init_failed', {
         issueId,
         sessionId,
         error: error instanceof Error ? error.message : 'Unknown error',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
-      
-      throw new Error(`Failed to initialize job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      throw new Error(
+        `Failed to initialize job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -138,21 +143,25 @@ export class MemoryManager implements IMemoryManager {
    */
   async getJobMemory(jobId: string): Promise<JobMemory | null> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       const memory = await this.jobMemoryManager.getJobMemory(jobId);
-      
+
       const duration = Date.now() - startTime;
       if (duration > this.config.performanceThresholds.memoryOperationTimeMs) {
-        logger.warn(`Job memory retrieval took ${duration}ms for ${jobId} (target: ${this.config.performanceThresholds.memoryOperationTimeMs}ms)`);
+        logger.warn(
+          `Job memory retrieval took ${duration}ms for ${jobId} (target: ${this.config.performanceThresholds.memoryOperationTimeMs}ms)`,
+        );
       }
-      
+
       return memory;
     } catch (error) {
       logger.error(`Failed to get job memory ${jobId}:`, error);
-      throw new Error(`Failed to get job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -164,34 +173,36 @@ export class MemoryManager implements IMemoryManager {
    */
   async updateJobMemory(jobId: string, updates: Partial<JobMemory>): Promise<JobMemory> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       // Log update operation
       await this.runtimeLogger.debug('job_memory_update', {
         jobId,
         updateKeys: Object.keys(updates),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       const updatedMemory = await this.jobMemoryManager.updateJobMemory(jobId, updates);
-      
+
       const duration = Date.now() - startTime;
       logger.debug(`Updated job memory ${jobId} in ${duration}ms`);
-      
+
       return updatedMemory;
     } catch (error) {
       logger.error(`Failed to update job memory ${jobId}:`, error);
-      
+
       // Log error
       await this.runtimeLogger.error('job_memory_update_failed', {
         jobId,
         error: error instanceof Error ? error.message : 'Unknown error',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
-      
-      throw new Error(`Failed to update job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      throw new Error(
+        `Failed to update job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -203,19 +214,19 @@ export class MemoryManager implements IMemoryManager {
    */
   async completeJobMemory(jobId: string, finalOutcome: Outcome): Promise<JobMemory> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       // Log job completion
       await this.runtimeLogger.info('job_memory_complete', {
         jobId,
         outcomeType: finalOutcome.type,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       const completedMemory = await this.jobMemoryManager.completeJobMemory(jobId, finalOutcome);
-      
+
       // Calculate analytics after completion
       if (this.config.analyticsEnabled) {
         try {
@@ -225,9 +236,13 @@ export class MemoryManager implements IMemoryManager {
           // Don't fail the completion due to analytics errors
         }
       }
-      
+
       // Auto-promote gotchas if enabled
-      if (this.config.autoPromoteGotchas && this.knowledgeManager && completedMemory.gotchas.length > 0) {
+      if (
+        this.config.autoPromoteGotchas &&
+        this.knowledgeManager &&
+        completedMemory.gotchas.length > 0
+      ) {
         try {
           await this.autoPromoteGotchas(completedMemory);
         } catch (promotionError) {
@@ -235,22 +250,24 @@ export class MemoryManager implements IMemoryManager {
           // Don't fail the completion due to promotion errors
         }
       }
-      
+
       const duration = Date.now() - startTime;
       logger.info(`Completed job memory ${jobId} in ${duration}ms`);
-      
+
       return completedMemory;
     } catch (error) {
       logger.error(`Failed to complete job memory ${jobId}:`, error);
-      
+
       // Log error
       await this.runtimeLogger.error('job_memory_complete_failed', {
         jobId,
         error: error instanceof Error ? error.message : 'Unknown error',
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
-      
-      throw new Error(`Failed to complete job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+      throw new Error(
+        `Failed to complete job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -262,22 +279,27 @@ export class MemoryManager implements IMemoryManager {
    * @param decision Decision data without system-generated fields
    * @returns Promise resolving to created decision
    */
-  async recordDecision(jobId: string, decision: Omit<Decision, 'id' | 'timestamp'>): Promise<Decision> {
+  async recordDecision(
+    jobId: string,
+    decision: Omit<Decision, 'id' | 'timestamp'>,
+  ): Promise<Decision> {
     this.ensureInitialized();
-    
+
     try {
       // Log decision recording
       await this.runtimeLogger.debug('decision_recorded', {
         jobId,
         agentType: decision.agentType,
         category: decision.category,
-        description: decision.description.substring(0, 100) + '...'
+        description: decision.description.substring(0, 100) + '...',
       });
 
       return await this.jobMemoryManager.recordDecision(jobId, decision);
     } catch (error) {
       logger.error(`Failed to record decision in job ${jobId}:`, error);
-      throw new Error(`Failed to record decision: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to record decision: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -289,7 +311,7 @@ export class MemoryManager implements IMemoryManager {
    */
   async recordGotcha(jobId: string, gotcha: Omit<Gotcha, 'id' | 'timestamp'>): Promise<Gotcha> {
     this.ensureInitialized();
-    
+
     try {
       // Log gotcha recording
       await this.runtimeLogger.warn('gotcha_recorded', {
@@ -297,13 +319,15 @@ export class MemoryManager implements IMemoryManager {
         agentType: gotcha.agentType,
         severity: gotcha.severity,
         category: gotcha.category,
-        description: gotcha.description.substring(0, 100) + '...'
+        description: gotcha.description.substring(0, 100) + '...',
       });
 
       return await this.jobMemoryManager.recordGotcha(jobId, gotcha);
     } catch (error) {
       logger.error(`Failed to record gotcha in job ${jobId}:`, error);
-      throw new Error(`Failed to record gotcha: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to record gotcha: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -313,9 +337,12 @@ export class MemoryManager implements IMemoryManager {
    * @param context Context data without system-generated fields
    * @returns Promise resolving to created context entry
    */
-  async recordContext(jobId: string, context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>): Promise<ContextEntry> {
+  async recordContext(
+    jobId: string,
+    context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>,
+  ): Promise<ContextEntry> {
     this.ensureInitialized();
-    
+
     try {
       // Log context recording
       await this.runtimeLogger.debug('context_recorded', {
@@ -323,13 +350,15 @@ export class MemoryManager implements IMemoryManager {
         agentType: context.agentType,
         type: context.type,
         source: context.source,
-        relevanceScore: context.relevanceScore
+        relevanceScore: context.relevanceScore,
       });
 
       return await this.jobMemoryManager.recordContext(jobId, context);
     } catch (error) {
       logger.error(`Failed to record context in job ${jobId}:`, error);
-      throw new Error(`Failed to record context: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to record context: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -341,7 +370,7 @@ export class MemoryManager implements IMemoryManager {
    */
   async recordOutcome(jobId: string, outcome: Omit<Outcome, 'id' | 'timestamp'>): Promise<Outcome> {
     this.ensureInitialized();
-    
+
     try {
       // Log outcome recording
       await this.runtimeLogger.info('outcome_recorded', {
@@ -349,13 +378,15 @@ export class MemoryManager implements IMemoryManager {
         agentType: outcome.agentType,
         type: outcome.type,
         category: outcome.category,
-        description: outcome.description.substring(0, 100) + '...'
+        description: outcome.description.substring(0, 100) + '...',
       });
 
       return await this.jobMemoryManager.recordOutcome(jobId, outcome);
     } catch (error) {
       logger.error(`Failed to record outcome in job ${jobId}:`, error);
-      throw new Error(`Failed to record outcome: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to record outcome: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -368,9 +399,13 @@ export class MemoryManager implements IMemoryManager {
    * @param resolution Resolution data
    * @returns Promise resolving to updated gotcha
    */
-  async resolveGotcha(jobId: string, gotchaId: string, resolution: GotchaResolution): Promise<Gotcha> {
+  async resolveGotcha(
+    jobId: string,
+    gotchaId: string,
+    resolution: GotchaResolution,
+  ): Promise<Gotcha> {
     this.ensureInitialized();
-    
+
     try {
       // Log gotcha resolution
       await this.runtimeLogger.info('gotcha_resolved', {
@@ -378,13 +413,15 @@ export class MemoryManager implements IMemoryManager {
         gotchaId,
         resolved: resolution.resolved,
         resolutionTime: resolution.resolutionTime,
-        confidence: resolution.confidence
+        confidence: resolution.confidence,
       });
 
       return await this.jobMemoryManager.resolveGotcha(jobId, gotchaId, resolution);
     } catch (error) {
       logger.error(`Failed to resolve gotcha ${gotchaId} in job ${jobId}:`, error);
-      throw new Error(`Failed to resolve gotcha: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to resolve gotcha: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -395,9 +432,13 @@ export class MemoryManager implements IMemoryManager {
    * @param outcome Outcome data
    * @returns Promise resolving to updated decision
    */
-  async updateDecisionOutcome(jobId: string, decisionId: string, outcome: DecisionOutcome): Promise<Decision> {
+  async updateDecisionOutcome(
+    jobId: string,
+    decisionId: string,
+    outcome: DecisionOutcome,
+  ): Promise<Decision> {
     this.ensureInitialized();
-    
+
     try {
       // Log decision outcome update
       await this.runtimeLogger.debug('decision_outcome_updated', {
@@ -405,13 +446,15 @@ export class MemoryManager implements IMemoryManager {
         decisionId,
         success: outcome.success,
         codeQuality: outcome.metrics.codeQuality,
-        testCoverage: outcome.metrics.testCoverage
+        testCoverage: outcome.metrics.testCoverage,
       });
 
       return await this.jobMemoryManager.updateDecisionOutcome(jobId, decisionId, outcome);
     } catch (error) {
       logger.error(`Failed to update decision outcome ${decisionId} in job ${jobId}:`, error);
-      throw new Error(`Failed to update decision outcome: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to update decision outcome: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -421,9 +464,13 @@ export class MemoryManager implements IMemoryManager {
    * @param contextId Context identifier
    * @param usage Usage data
    */
-  async trackContextUsage(jobId: string, contextId: string, usage: Omit<ContextUsage, 'timestamp'>): Promise<void> {
+  async trackContextUsage(
+    jobId: string,
+    contextId: string,
+    usage: Omit<ContextUsage, 'timestamp'>,
+  ): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       // Log context usage
       await this.runtimeLogger.debug('context_usage_tracked', {
@@ -431,13 +478,15 @@ export class MemoryManager implements IMemoryManager {
         contextId,
         decisionId: usage.decisionId,
         gotchaId: usage.gotchaId,
-        impact: usage.impact
+        impact: usage.impact,
       });
 
       await this.jobMemoryManager.trackContextUsage(jobId, contextId, usage);
     } catch (error) {
       logger.error(`Failed to track context usage ${contextId} in job ${jobId}:`, error);
-      throw new Error(`Failed to track context usage: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to track context usage: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -450,21 +499,25 @@ export class MemoryManager implements IMemoryManager {
    */
   async calculateJobAnalytics(jobId: string): Promise<import('./types').JobAnalytics> {
     this.ensureInitialized();
-    
+
     const startTime = Date.now();
-    
+
     try {
       const analytics = await this.memoryAnalytics.calculateJobAnalytics(jobId);
-      
+
       const duration = Date.now() - startTime;
       if (duration > this.config.performanceThresholds.analyticsCalculationTimeMs) {
-        logger.warn(`Analytics calculation took ${duration}ms for ${jobId} (target: ${this.config.performanceThresholds.analyticsCalculationTimeMs}ms)`);
+        logger.warn(
+          `Analytics calculation took ${duration}ms for ${jobId} (target: ${this.config.performanceThresholds.analyticsCalculationTimeMs}ms)`,
+        );
       }
-      
+
       return analytics;
     } catch (error) {
       logger.error(`Failed to calculate analytics for job ${jobId}:`, error);
-      throw new Error(`Failed to calculate analytics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to calculate analytics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -475,12 +528,14 @@ export class MemoryManager implements IMemoryManager {
    */
   async getMemoryInsights(jobId: string): Promise<MemoryInsights> {
     this.ensureInitialized();
-    
+
     try {
       return await this.memoryAnalytics.getMemoryInsights(jobId);
     } catch (error) {
       logger.error(`Failed to get memory insights for job ${jobId}:`, error);
-      throw new Error(`Failed to get memory insights: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get memory insights: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -491,12 +546,14 @@ export class MemoryManager implements IMemoryManager {
    */
   async searchSimilarPatterns(pattern: PatternQuery): Promise<PatternMatch[]> {
     this.ensureInitialized();
-    
+
     try {
       return await this.memoryAnalytics.searchSimilarPatterns(pattern);
     } catch (error) {
       logger.error('Failed to search similar patterns:', error);
-      throw new Error(`Failed to search patterns: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to search patterns: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -508,12 +565,14 @@ export class MemoryManager implements IMemoryManager {
    */
   async getGlobalJobLog(): Promise<GlobalJobEntry[]> {
     this.ensureInitialized();
-    
+
     try {
       return await this.jobMemoryManager.getGlobalJobLog();
     } catch (error) {
       logger.error('Failed to get global job log:', error);
-      throw new Error(`Failed to get global job log: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get global job log: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -524,12 +583,14 @@ export class MemoryManager implements IMemoryManager {
    */
   async getJobsByIssue(issueId: string): Promise<GlobalJobEntry[]> {
     this.ensureInitialized();
-    
+
     try {
       return await this.jobMemoryManager.getJobsByIssue(issueId);
     } catch (error) {
       logger.error(`Failed to get jobs for issue ${issueId}:`, error);
-      throw new Error(`Failed to get jobs by issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get jobs by issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -540,12 +601,14 @@ export class MemoryManager implements IMemoryManager {
    */
   async getJobsByAgent(agentType: string): Promise<GlobalJobEntry[]> {
     this.ensureInitialized();
-    
+
     try {
       return await this.jobMemoryManager.getJobsByAgent(agentType);
     } catch (error) {
       logger.error(`Failed to get jobs for agent ${agentType}:`, error);
-      throw new Error(`Failed to get jobs by agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get jobs by agent: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -556,32 +619,36 @@ export class MemoryManager implements IMemoryManager {
    */
   async cleanup(): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       logger.info('Starting Memory Layer cleanup');
-      
+
       const startTime = Date.now();
-      
+
       // Cleanup subsystems in parallel
       const [jobsCleanedCount, logsCleanedCount] = await Promise.all([
         this.jobMemoryManager.cleanup(),
-        this.runtimeLogger.cleanupLogs(this.config.logRetentionDays)
+        this.runtimeLogger.cleanupLogs(this.config.logRetentionDays),
       ]);
-      
+
       const duration = Date.now() - startTime;
-      
-      logger.info(`Memory Layer cleanup completed in ${duration}ms: ${jobsCleanedCount} jobs, ${logsCleanedCount} logs`);
-      
+
+      logger.info(
+        `Memory Layer cleanup completed in ${duration}ms: ${jobsCleanedCount} jobs, ${logsCleanedCount} logs`,
+      );
+
       // Log cleanup operation
       await this.runtimeLogger.info('memory_layer_cleanup', {
         jobsCleanedCount,
         logsCleanedCount,
         duration,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       logger.error('Failed to cleanup Memory Layer:', error);
-      throw new Error(`Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -592,20 +659,22 @@ export class MemoryManager implements IMemoryManager {
    */
   async compressOldMemories(daysOld: number): Promise<number> {
     this.ensureInitialized();
-    
+
     try {
       // Implementation will be added based on config.compressionEnabled
       if (!this.config.compressionEnabled) {
         logger.info('Memory compression is disabled');
         return 0;
       }
-      
+
       // TODO: Implement compression logic
       logger.info(`Memory compression not yet implemented (${daysOld} days threshold)`);
       return 0;
     } catch (error) {
       logger.error(`Failed to compress old memories (${daysOld} days):`, error);
-      throw new Error(`Failed to compress memories: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to compress memories: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -615,18 +684,202 @@ export class MemoryManager implements IMemoryManager {
    */
   async archiveJobMemory(jobId: string): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       await this.jobMemoryManager.archiveJobMemory(jobId);
-      
+
       // Log archival
       await this.runtimeLogger.info('job_memory_archived', {
         jobId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       logger.error(`Failed to archive job memory ${jobId}:`, error);
-      throw new Error(`Failed to archive job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to archive job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  // ==================== Additional Search and Recording Methods ====================
+
+  /**
+   * Search memory entries by text query
+   * @param query Search query text
+   * @param options Search options including limit and agentTypes filter
+   * @returns Promise resolving to matching memory entries
+   */
+  async searchEntries(
+    query: string,
+    options?: {
+      limit?: number;
+      agentTypes?: string[];
+    },
+  ): Promise<
+    Array<{
+      content: {
+        summary: string;
+        context: string;
+        learnings: string;
+      };
+      outcome: 'success' | 'failure' | 'partial';
+      tags: string[];
+      category: string;
+    }>
+  > {
+    this.ensureInitialized();
+
+    try {
+      // Get all job entries and search through their memory data
+      const jobEntries = await this.getGlobalJobLog();
+      const results: Array<{
+        content: {
+          summary: string;
+          context: string;
+          learnings: string;
+        };
+        outcome: 'success' | 'failure' | 'partial';
+        tags: string[];
+        category: string;
+      }> = [];
+
+      const limit = options?.limit || 10;
+
+      for (const jobEntry of jobEntries) {
+        if (results.length >= limit) break;
+
+        try {
+          const memory = await this.getJobMemory(jobEntry.jobId);
+          if (!memory) continue;
+
+          // Filter by agent types if specified
+          if (options?.agentTypes && options.agentTypes.length > 0) {
+            const hasMatchingAgent = memory.metadata.agentTypes.some((agent) =>
+              options.agentTypes.includes(agent),
+            );
+            if (!hasMatchingAgent) continue;
+          }
+
+          // Search through outcomes for matching content
+          for (const outcome of memory.outcomes) {
+            if (
+              outcome.description.toLowerCase().includes(query.toLowerCase()) ||
+              outcome.category.toLowerCase().includes(query.toLowerCase())
+            ) {
+              results.push({
+                content: {
+                  summary: outcome.description,
+                  context: memory.metadata.tags.join(', '),
+                  learnings: outcome.lessons.join('; '),
+                },
+                outcome:
+                  outcome.type === 'success'
+                    ? 'success'
+                    : outcome.type === 'failure'
+                      ? 'failure'
+                      : 'partial',
+                tags: memory.metadata.tags,
+                category: outcome.category,
+              });
+
+              if (results.length >= limit) break;
+            }
+          }
+        } catch (error) {
+          logger.warn(`Failed to search memory for job ${jobEntry.jobId}:`, error);
+        }
+      }
+
+      return results;
+    } catch (error) {
+      logger.error(`Failed to search memory entries:`, error);
+      throw new Error(
+        `Failed to search entries: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * Record job memory data for retrieval tracking
+   * @param memoryData Memory data to record
+   */
+  async recordJobMemory(memoryData: {
+    issueId: string;
+    agentType: string;
+    category: string;
+    content: {
+      query: string;
+      strategy: string;
+      resultCount: number;
+      summary: string;
+      context: string;
+      learnings: string;
+    };
+    outcome: 'success' | 'failure' | 'partial';
+    executionTime: number;
+    tags: string[];
+    relatedIssues: string[];
+  }): Promise<void> {
+    this.ensureInitialized();
+
+    try {
+      // Find or create job memory for this issue
+      const existingJobs = await this.getJobsByIssue(memoryData.issueId);
+      let jobMemory: JobMemory;
+
+      if (existingJobs.length > 0) {
+        // Use the most recent active job
+        const activeJob = existingJobs
+          .filter((job) => job.status === 'running')
+          .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())[0];
+
+        if (activeJob) {
+          jobMemory = await this.getJobMemory(activeJob.jobId);
+        } else {
+          // Create new job memory
+          jobMemory = await this.initializeJobMemory(memoryData.issueId, 'retrieval-session');
+        }
+      } else {
+        // Create new job memory
+        jobMemory = await this.initializeJobMemory(memoryData.issueId, 'retrieval-session');
+      }
+
+      // Record the outcome
+      await this.recordOutcome(jobMemory.jobId, {
+        agentType: memoryData.agentType,
+        type: memoryData.outcome,
+        category: 'task-completion',
+        description: memoryData.content.summary,
+        metrics: {
+          duration: memoryData.executionTime,
+          codeChanges: { linesAdded: 0, linesRemoved: 0, filesModified: 0 },
+          qualityMetrics: { testCoverage: 0, lintErrors: 0, typeErrors: 0, complexity: 0 },
+        },
+        relatedDecisions: [],
+        relatedGotchas: [],
+        lessons: [memoryData.content.learnings],
+      });
+
+      // Record context entry
+      await this.recordContext(jobMemory.jobId, {
+        agentType: memoryData.agentType,
+        type: 'knowledge-retrieval',
+        source: `retrieval-query: ${memoryData.content.query}`,
+        content: JSON.stringify({
+          query: memoryData.content.query,
+          strategy: memoryData.content.strategy,
+          resultCount: memoryData.content.resultCount,
+          context: memoryData.content.context,
+        }),
+        relevanceScore: memoryData.outcome === 'success' ? 0.9 : 0.5,
+      });
+
+      logger.debug(`Recorded job memory for retrieval in issue ${memoryData.issueId}`);
+    } catch (error) {
+      logger.error(`Failed to record job memory:`, error);
+      throw new Error(
+        `Failed to record job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -644,12 +897,10 @@ export class MemoryManager implements IMemoryManager {
       path.join(this.config.storageBasePath, 'issues'),
       path.join(this.config.storageBasePath, 'logs'),
       path.join(this.config.storageBasePath, 'analytics'),
-      path.join(this.config.storageBasePath, 'archive')
+      path.join(this.config.storageBasePath, 'archive'),
     ];
 
-    await Promise.all(
-      dirs.map(dir => fs.mkdir(dir, { recursive: true }))
-    );
+    await Promise.all(dirs.map((dir) => fs.mkdir(dir, { recursive: true })));
   }
 
   private async autoPromoteGotchas(memory: JobMemory): Promise<void> {
@@ -660,10 +911,11 @@ export class MemoryManager implements IMemoryManager {
 
     try {
       // Find gotchas that should be promoted (critical/high severity, resolved)
-      const promotionCandidates = memory.gotchas.filter(gotcha => 
-        (gotcha.severity === 'critical' || gotcha.severity === 'high') &&
-        gotcha.resolution?.resolved === true &&
-        gotcha.resolution.confidence >= 0.8
+      const promotionCandidates = memory.gotchas.filter(
+        (gotcha) =>
+          (gotcha.severity === 'critical' || gotcha.severity === 'high') &&
+          gotcha.resolution?.resolved === true &&
+          gotcha.resolution.confidence >= 0.8,
       );
 
       for (const gotcha of promotionCandidates) {
@@ -676,17 +928,20 @@ export class MemoryManager implements IMemoryManager {
             category: gotcha.category,
             solution: gotcha.resolution?.solution,
             preventionSteps: gotcha.resolution?.preventionSteps || [],
-            occurrences: [{
-              issueId: memory.issueId,
-              agentType: gotcha.agentType,
-              timestamp: gotcha.timestamp,
-              resolved: true,
-              resolutionTime: gotcha.resolution?.resolutionTime || 0
-            }]
+            occurrences: [
+              {
+                issueId: memory.issueId,
+                agentType: gotcha.agentType,
+                context: gotcha.context,
+                timestamp: gotcha.timestamp,
+                resolved: true,
+                resolutionTime: gotcha.resolution?.resolutionTime || 0,
+              },
+            ],
           };
 
           await this.knowledgeManager.recordGotcha(gotchaPattern);
-          
+
           logger.info(`Auto-promoted gotcha ${gotcha.id} from job ${memory.jobId}`);
         } catch (promotionError) {
           logger.warn(`Failed to promote gotcha ${gotcha.id}:`, promotionError);

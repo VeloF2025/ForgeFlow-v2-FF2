@@ -4,7 +4,7 @@
 
 import { EventEmitter } from 'events';
 import { performance } from 'perf_hooks';
-import {
+import type {
   PerformanceOptimizer,
   QueryPatternAnalysis,
   IndexOptimization,
@@ -13,20 +13,19 @@ import {
   OptimizationCondition,
   SearchQuery,
   IndexProvider,
-  IndexError,
-  IndexErrorCode
 } from './types.js';
+import { IndexError, IndexErrorCode } from './types.js';
 
 export class IndexPerformanceOptimizer extends EventEmitter implements PerformanceOptimizer {
   private queryAnalytics = new QueryAnalyticsCollector();
   private optimizationHistory: OptimizationResult[] = [];
   private scheduledOptimizations = new Map<string, NodeJS.Timeout>();
   private isOptimizing = false;
-  
+
   // Analysis configuration
   private config: OptimizerConfig;
   private providers = new Map<string, IndexProvider>();
-  
+
   // Performance thresholds
   private readonly slowQueryThreshold = 500; // ms
   private readonly highVolumeThreshold = 1000; // queries per hour
@@ -34,7 +33,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
 
   constructor(config: Partial<OptimizerConfig> = {}) {
     super();
-    
+
     this.config = {
       analysisWindowHours: config.analysisWindowHours || 24,
       optimizationIntervalMinutes: config.optimizationIntervalMinutes || 60,
@@ -42,7 +41,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       autoOptimizeEnabled: config.autoOptimizeEnabled ?? true,
       maxConcurrentOptimizations: config.maxConcurrentOptimizations || 1,
       retentionDays: config.retentionDays || 30,
-      ...config
+      ...config,
     };
 
     // Start periodic analysis
@@ -55,7 +54,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
   registerProvider(name: string, provider: IndexProvider): void {
     this.providers.set(name, provider);
     console.log(`📈 Registered provider ${name} for performance optimization`);
-    
+
     this.emit('provider_registered', { name, provider: provider.name });
   }
 
@@ -69,7 +68,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       resultCount,
       timestamp: new Date(),
       error: error?.message,
-      cacheHit: false // TODO: Get from provider
+      cacheHit: false, // TODO: Get from provider
     });
   }
 
@@ -81,12 +80,12 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
     try {
       const cutoffTime = new Date(Date.now() - this.config.analysisWindowHours * 60 * 60 * 1000);
       const recentQueries = this.queryAnalytics.getQueriesSince(cutoffTime);
-      
+
       if (recentQueries.length < this.config.minQueriesForAnalysis) {
         throw new IndexError(
           `Insufficient queries for analysis: ${recentQueries.length} < ${this.config.minQueriesForAnalysis}`,
           IndexErrorCode.INVALID_QUERY,
-          { queryCount: recentQueries.length, required: this.config.minQueriesForAnalysis }
+          { queryCount: recentQueries.length, required: this.config.minQueriesForAnalysis },
         );
       }
 
@@ -96,7 +95,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       this.emit('analysis_completed', {
         duration,
         queryCount: recentQueries.length,
-        patterns: analysis.mostFrequentQueries.length
+        patterns: analysis.mostFrequentQueries.length,
       });
 
       console.log(`✅ Query pattern analysis completed in ${duration.toFixed(2)}ms`);
@@ -135,14 +134,16 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       optimizations.sort((a, b) => b.expectedImprovement - a.expectedImprovement);
 
       const duration = performance.now() - startTime;
-      
+
       this.emit('suggestions_generated', {
         count: optimizations.length,
         duration,
-        highImpact: optimizations.filter(o => o.expectedImprovement > 30).length
+        highImpact: optimizations.filter((o) => o.expectedImprovement > 30).length,
       });
 
-      console.log(`✅ Generated ${optimizations.length} optimization suggestions in ${duration.toFixed(2)}ms`);
+      console.log(
+        `✅ Generated ${optimizations.length} optimization suggestions in ${duration.toFixed(2)}ms`,
+      );
       return optimizations;
     } catch (error) {
       this.emit('suggestions_error', { error: (error as Error).message });
@@ -155,7 +156,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
     if (this.isOptimizing) {
       throw new IndexError(
         'Optimization already in progress',
-        IndexErrorCode.CONCURRENT_UPDATE_CONFLICT
+        IndexErrorCode.CONCURRENT_UPDATE_CONFLICT,
       );
     }
 
@@ -167,16 +168,16 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       const suggestions = await this.suggestIndexOptimizations();
       const appliedOptimizations: IndexOptimization[] = [];
       const errors: string[] = [];
-      
+
       // Apply optimizations in order of impact
       for (const optimization of suggestions) {
         try {
           await this.applyOptimization(optimization);
           appliedOptimizations.push(optimization);
-          
+
           this.emit('optimization_applied', {
             type: optimization.type,
-            improvement: optimization.expectedImprovement
+            improvement: optimization.expectedImprovement,
           });
         } catch (error) {
           const errorMsg = `Failed to apply ${optimization.type}: ${(error as Error).message}`;
@@ -186,27 +187,29 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       }
 
       const duration = performance.now() - startTime;
-      const totalImprovement = appliedOptimizations.reduce(
-        (sum, opt) => sum + opt.expectedImprovement, 0
-      ) / Math.max(appliedOptimizations.length, 1);
+      const totalImprovement =
+        appliedOptimizations.reduce((sum, opt) => sum + opt.expectedImprovement, 0) /
+        Math.max(appliedOptimizations.length, 1);
 
       const result: OptimizationResult = {
         optimizationsApplied: appliedOptimizations,
         performanceImprovement: totalImprovement,
         duration,
-        errors
+        errors,
       };
 
       // Store in history
       this.optimizationHistory.push(result);
-      
+
       // Keep only recent history
       if (this.optimizationHistory.length > 50) {
         this.optimizationHistory = this.optimizationHistory.slice(-25);
       }
 
       this.emit('optimization_completed', result);
-      console.log(`✅ Index optimization completed: ${appliedOptimizations.length} applied, ${totalImprovement.toFixed(1)}% improvement`);
+      console.log(
+        `✅ Index optimization completed: ${appliedOptimizations.length} applied, ${totalImprovement.toFixed(1)}% improvement`,
+      );
 
       return result;
     } catch (error) {
@@ -214,7 +217,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         optimizationsApplied: [],
         performanceImprovement: 0,
         duration: performance.now() - startTime,
-        errors: [(error as Error).message]
+        errors: [(error as Error).message],
       };
 
       this.emit('optimization_failed', result);
@@ -227,7 +230,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
   // 🟢 WORKING: Schedule automatic optimizations
   scheduleOptimization(schedule: OptimizationSchedule): void {
     const scheduleId = `${schedule.frequency}_${schedule.time}`;
-    
+
     // Clear existing schedule with same ID
     const existingTimeout = this.scheduledOptimizations.get(scheduleId);
     if (existingTimeout) {
@@ -242,7 +245,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
     this.emit('optimization_scheduled', {
       frequency: schedule.frequency,
       time: schedule.time,
-      conditions: schedule.conditions?.length || 0
+      conditions: schedule.conditions?.length || 0,
     });
   }
 
@@ -257,12 +260,18 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
 
     return {
       totalOptimizations: history.length,
-      averageImprovement: history.reduce((sum, opt) => sum + opt.performanceImprovement, 0) / Math.max(history.length, 1),
-      recentImprovement: recentHistory.reduce((sum, opt) => sum + opt.performanceImprovement, 0) / Math.max(recentHistory.length, 1),
+      averageImprovement:
+        history.reduce((sum, opt) => sum + opt.performanceImprovement, 0) /
+        Math.max(history.length, 1),
+      recentImprovement:
+        recentHistory.reduce((sum, opt) => sum + opt.performanceImprovement, 0) /
+        Math.max(recentHistory.length, 1),
       totalOptimizationTime: history.reduce((sum, opt) => sum + opt.duration, 0),
-      successRate: history.filter(opt => opt.errors.length === 0).length / Math.max(history.length, 1) * 100,
+      successRate:
+        (history.filter((opt) => opt.errors.length === 0).length / Math.max(history.length, 1)) *
+        100,
       lastOptimization: history.length > 0 ? new Date() : undefined,
-      scheduledOptimizations: Array.from(this.scheduledOptimizations.keys())
+      scheduledOptimizations: Array.from(this.scheduledOptimizations.keys()),
     };
   }
 
@@ -297,12 +306,12 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       // Count query frequency
       const normalizedQuery = query.query.toLowerCase().trim();
       queryFreq.set(normalizedQuery, (queryFreq.get(normalizedQuery) || 0) + 1);
-      
+
       // Track query times
       if (!queryTimes.has(normalizedQuery)) {
         queryTimes.set(normalizedQuery, []);
       }
-      queryTimes.get(normalizedQuery)!.push(query.executionTime);
+      queryTimes.get(normalizedQuery).push(query.executionTime);
 
       // Count filter usage
       for (const [filter, value] of Object.entries(query.filters || {})) {
@@ -328,11 +337,11 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         query,
         avgTime: times.reduce((sum, time) => sum + time, 0) / times.length,
         maxTime: Math.max(...times),
-        count: times.length
+        count: times.length,
       }))
       .sort((a, b) => b.avgTime - a.avgTime)
       .slice(0, 10)
-      .map(item => item.query);
+      .map((item) => item.query);
 
     // Convert filter frequency map to object
     const commonFilters: Record<string, number> = {};
@@ -345,25 +354,27 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       .map((volume, hour) => ({ hour, volume }))
       .sort((a, b) => b.volume - a.volume)
       .slice(0, 5)
-      .map(item => item.hour);
+      .map((item) => item.hour);
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (slowestQueries.length > 0) {
       recommendations.push(`Optimize ${slowestQueries.length} slow query patterns`);
     }
-    
-    const highVolumeFilters = Object.entries(commonFilters)
-      .filter(([, count]) => count > this.highVolumeThreshold)
-      .length;
-    
+
+    const highVolumeFilters = Object.entries(commonFilters).filter(
+      ([, count]) => count > this.highVolumeThreshold,
+    ).length;
+
     if (highVolumeFilters > 0) {
       recommendations.push(`Create indexes for ${highVolumeFilters} frequently used filters`);
     }
-    
+
     if (peakUsageHours.length > 0) {
-      recommendations.push(`Consider load balancing during peak hours: ${peakUsageHours.join(', ')}`);
+      recommendations.push(
+        `Consider load balancing during peak hours: ${peakUsageHours.join(', ')}`,
+      );
     }
 
     return {
@@ -371,7 +382,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       slowestQueries,
       commonFilters,
       peakUsageHours,
-      recommendations
+      recommendations,
     };
   }
 
@@ -385,7 +396,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         description: `Create filtered index for query pattern: "${query.substring(0, 50)}..."`,
         expectedImprovement: 40,
         effort: 'medium',
-        script: `CREATE INDEX IF NOT EXISTS idx_filtered_search ON entries(type, category) WHERE content MATCH '${query}';`
+        script: `CREATE INDEX IF NOT EXISTS idx_filtered_search ON entries(type, category) WHERE content MATCH '${query}';`,
       });
     }
 
@@ -395,7 +406,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         type: 'schema_change',
         description: `Optimize complex query by breaking into simpler parts`,
         expectedImprovement: 25,
-        effort: 'low'
+        effort: 'low',
       });
     }
 
@@ -408,7 +419,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       description: `Create optimized index for frequently used filter: ${filter} (${count} uses)`,
       expectedImprovement: Math.min(50, Math.log10(count) * 20),
       effort: count > 10000 ? 'high' : 'medium',
-      script: `CREATE INDEX IF NOT EXISTS idx_${filter.replace(/[^a-zA-Z0-9]/g, '_')} ON entries(${filter});`
+      script: `CREATE INDEX IF NOT EXISTS idx_${filter.replace(/[^a-zA-Z0-9]/g, '_')} ON entries(${filter});`,
     };
   }
 
@@ -421,7 +432,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         type: 'cache_tuning',
         description: `Increase cache size for ${analysis.mostFrequentQueries.length} frequent query patterns`,
         expectedImprovement: 30,
-        effort: 'low'
+        effort: 'low',
       });
     }
 
@@ -475,12 +486,12 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
 
   private startPeriodicAnalysis(): void {
     const intervalMs = this.config.optimizationIntervalMinutes * 60 * 1000;
-    
+
     setInterval(async () => {
       try {
         console.log('🔄 Starting periodic optimization analysis...');
         const analysis = await this.analyzeQueryPatterns();
-        
+
         // Auto-optimize if conditions are met
         const shouldOptimize = this.shouldAutoOptimize(analysis);
         if (shouldOptimize) {
@@ -494,17 +505,19 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
 
   private shouldAutoOptimize(analysis: QueryPatternAnalysis): boolean {
     // Auto-optimize if there are high-impact opportunities
-    return analysis.slowestQueries.length > 3 || 
-           Object.values(analysis.commonFilters).some(count => count > this.highVolumeThreshold);
+    return (
+      analysis.slowestQueries.length > 3 ||
+      Object.values(analysis.commonFilters).some((count) => count > this.highVolumeThreshold)
+    );
   }
 
   private createScheduledTimeout(schedule: OptimizationSchedule): NodeJS.Timeout {
     const now = new Date();
     const [hour, minute] = schedule.time.split(':').map(Number);
-    
-    let nextRun = new Date(now);
+
+    const nextRun = new Date(now);
     nextRun.setHours(hour, minute, 0, 0);
-    
+
     // If time has passed today, schedule for next occurrence
     if (nextRun <= now) {
       switch (schedule.frequency) {
@@ -521,7 +534,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
     }
 
     const timeout = nextRun.getTime() - now.getTime();
-    
+
     return setTimeout(async () => {
       try {
         // Check conditions if specified
@@ -534,7 +547,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
         }
 
         await this.optimizeIndex();
-        
+
         // Reschedule for next occurrence
         this.scheduleOptimization(schedule);
       } catch (error) {
@@ -547,13 +560,17 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
     // Check if optimization conditions are met
     for (const condition of conditions) {
       const currentValue = await this.getMetricValue(condition.metric);
-      const conditionMet = this.evaluateCondition(currentValue, condition.threshold, condition.operator);
-      
+      const conditionMet = this.evaluateCondition(
+        currentValue,
+        condition.threshold,
+        condition.operator,
+      );
+
       if (!conditionMet) {
         return false;
       }
     }
-    
+
     return true;
   }
 
@@ -572,10 +589,14 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
 
   private evaluateCondition(value: number, threshold: number, operator: string): boolean {
     switch (operator) {
-      case 'gt': return value > threshold;
-      case 'lt': return value < threshold;
-      case 'eq': return value === threshold;
-      default: return false;
+      case 'gt':
+        return value > threshold;
+      case 'lt':
+        return value < threshold;
+      case 'eq':
+        return value === threshold;
+      default:
+        return false;
     }
   }
 
@@ -585,7 +606,7 @@ export class IndexPerformanceOptimizer extends EventEmitter implements Performan
       category: query.category,
       tags: query.tags,
       projectId: query.projectId,
-      agentTypes: query.agentTypes
+      agentTypes: query.agentTypes,
     };
   }
 }
@@ -597,7 +618,7 @@ class QueryAnalyticsCollector {
 
   recordQuery(record: QueryRecord): void {
     this.queries.push(record);
-    
+
     // Keep only recent queries
     if (this.queries.length > this.maxQueries) {
       this.queries = this.queries.slice(-this.maxQueries / 2);
@@ -605,7 +626,7 @@ class QueryAnalyticsCollector {
   }
 
   getQueriesSince(cutoffTime: Date): QueryRecord[] {
-    return this.queries.filter(q => q.timestamp >= cutoffTime);
+    return this.queries.filter((q) => q.timestamp >= cutoffTime);
   }
 
   getAverageQueryTime(): number {
@@ -615,13 +636,13 @@ class QueryAnalyticsCollector {
 
   getErrorRate(): number {
     if (this.queries.length === 0) return 0;
-    const errorCount = this.queries.filter(q => q.error).length;
+    const errorCount = this.queries.filter((q) => q.error).length;
     return (errorCount / this.queries.length) * 100;
   }
 
   getRecentQueryCount(hoursBack = 1): number {
     const cutoff = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
-    return this.queries.filter(q => q.timestamp >= cutoff).length;
+    return this.queries.filter((q) => q.timestamp >= cutoff).length;
   }
 
   clear(): void {
@@ -650,7 +671,7 @@ interface QueryRecord {
   cacheHit: boolean;
 }
 
-interface OptimizerStats {
+export interface OptimizerStats {
   totalOptimizations: number;
   averageImprovement: number;
   recentImprovement: number;

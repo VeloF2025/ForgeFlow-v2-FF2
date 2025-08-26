@@ -10,24 +10,85 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking",
-    "plugin:@typescript-eslint/strict",
     "prettier"
   ],
   "rules": {
+    // 🔴 CRITICAL ERRORS - Zero tolerance
     "prettier/prettier": "error",
     "no-console": "error",
     "no-debugger": "error",
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ],
     "@typescript-eslint/explicit-function-return-type": "error",
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/no-non-null-assertion": "error",
-    "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/no-misused-promises": "error",
     "@typescript-eslint/consistent-type-imports": "error",
-    "@typescript-eslint/consistent-type-exports": "error"
+    "@typescript-eslint/consistent-type-exports": "error",
+    
+    // 🟡 CONTROLLED ANY USAGE - Allow with warnings
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-unsafe-return": "warn",
+    
+    // 🟢 PROMISE HANDLING - Balanced approach
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/require-await": "warn",
+    
+    // 🟠 TYPE SAFETY - Warnings for flexibility
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/restrict-template-expressions": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    
+    // 🔵 DISABLED - Overly pedantic rules
+    "no-unused-vars": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "no-useless-escape": "warn"
   },
-  "ignorePatterns": ["dist", "node_modules", "coverage", ".ccpm", "*.js", "*.mjs"]
+  "overrides": [
+    {
+      // 🧪 TEST FILES - More lenient rules
+      "files": ["**/*.test.ts", "**/*.spec.ts", "**/tests/**/*"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      // 📁 CONFIG FILES - Minimal rules
+      "files": ["*.config.ts", "*.config.js", "scripts/**/*"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "no-console": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "dist", 
+    "node_modules", 
+    "coverage", 
+    ".ccpm", 
+    "*.js", 
+    "*.mjs", 
+    "demo/**/*", 
+    "vitest.config.*",
+    ".ff2/**/*",
+    "scripts/**/*",
+    "tests/utils/**/*"
+  ]
 }

@@ -1,10 +1,10 @@
 /**
  * ForgeFlow v2 - Claude Code Worker Adapter Bridge
- * 
+ *
  * This module provides the bridge between FF2 orchestration and Claude Code execution,
  * enabling agents to execute tasks in isolated worktree environments with real-time
  * monitoring, resource management, and bidirectional communication.
- * 
+ *
  * Key Components:
  * - ClaudeCodeAdapter: Main bridge interface
  * - TaskExecutor: Task execution in isolated environments
@@ -13,6 +13,10 @@
  * - PidRegistry: Process tracking and metadata management
  * - ProcessMonitor: Real-time process health monitoring
  */
+
+import { ClaudeCodeAdapter } from './claude-code-adapter';
+import { ProcessSupervisor } from './process-supervisor';
+import type { ProcessSupervisorConfig } from './process-supervisor';
 
 export { ClaudeCodeAdapter } from './claude-code-adapter';
 export { TaskExecutor } from './task-executor';
@@ -28,25 +32,22 @@ export type {
   ClaudeCodeAdapterConfig,
   TaskExecutionRequest,
   TaskExecutionResult,
-  TaskProgress
+  TaskProgress,
 } from './claude-code-adapter';
 
-export type {
-  CommunicationMessage,
-  ClientConnection
-} from './communication-protocol';
+export type { CommunicationMessage, ClientConnection } from './communication-protocol';
 
 export type {
   ResourceLimits,
   ProcessResourceUsage,
   SystemResourceUsage,
-  ResourceAlert
+  ResourceAlert,
 } from './resource-monitor';
 
 export type {
   ProcessSupervisorConfig,
   SupervisedProcessOptions,
-  ProcessSupervisorStats
+  ProcessSupervisorStats,
 } from './process-supervisor';
 
 export type {
@@ -55,20 +56,20 @@ export type {
   ProcessHealthStatus,
   ProcessPriority,
   ProcessQueryOptions,
-  ProcessRegistryStats
+  ProcessRegistryStats,
 } from './pid-registry';
 
 export type {
   ProcessResourceLimits,
   ProcessMonitoringData,
   ProcessHealthReport,
-  ProcessMonitorConfig
+  ProcessMonitorConfig,
 } from './process-monitor';
 
 export type {
   SupervisedAgentConfig,
   AgentExecutionRequest,
-  SupervisedAgentResult
+  SupervisedAgentResult,
 } from './supervisor-integration';
 
 // Default configuration for the worker system
@@ -84,7 +85,7 @@ export const DEFAULT_WORKER_CONFIG = {
   worktreeBasePath: '.ff2-worktrees',
   enableSandboxing: true,
   logLevel: 'info' as const,
-  
+
   // Process Supervisor configuration
   processSupervisor: {
     maxProcesses: 10,
@@ -104,14 +105,22 @@ export const DEFAULT_WORKER_CONFIG = {
     processHistoryRetention: 1000,
     enableSandboxing: true,
     allowedCommands: [
-      'node', 'npm', 'yarn', 'pnpm', 'claude',
-      'git', 'python', 'pip',
-      'tsc', 'eslint', 'prettier',
-      'jest', 'vitest', 'playwright'
+      'node',
+      'npm',
+      'yarn',
+      'pnpm',
+      'claude',
+      'git',
+      'python',
+      'pip',
+      'tsc',
+      'eslint',
+      'prettier',
+      'jest',
+      'vitest',
+      'playwright',
     ],
-    restrictedPaths: [
-      '/etc', '/usr', '/var', '/boot', '/sys', '/proc'
-    ],
+    restrictedPaths: ['/etc', '/usr', '/var', '/boot', '/sys', '/proc'],
   },
 };
 
@@ -119,7 +128,7 @@ export const DEFAULT_WORKER_CONFIG = {
 export function createClaudeCodeAdapter(
   config: Partial<typeof DEFAULT_WORKER_CONFIG>,
   worktreeManager: any,
-  agentPool: any
+  agentPool: any,
 ) {
   const finalConfig = { ...DEFAULT_WORKER_CONFIG, ...config };
   return new ClaudeCodeAdapter(finalConfig, worktreeManager, agentPool);
@@ -127,7 +136,7 @@ export function createClaudeCodeAdapter(
 
 // Utility function to create a Process Supervisor instance
 export function createProcessSupervisor(
-  config?: Partial<ProcessSupervisorConfig>
+  config?: Partial<ProcessSupervisorConfig>,
 ): ProcessSupervisor {
   const finalConfig = { ...DEFAULT_WORKER_CONFIG.processSupervisor, ...config };
   return new ProcessSupervisor(finalConfig);

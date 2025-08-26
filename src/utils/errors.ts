@@ -14,12 +14,14 @@ async function getFailurePolicyManager() {
   if (!failurePolicyManagerInstance) {
     const { failurePolicyManager } = await import('../policies/failure-policy-manager');
     failurePolicyManagerInstance = failurePolicyManager;
-    
+
     // Initialize policies if not already loaded
     try {
       await failurePolicyManagerInstance.loadPolicies();
     } catch (error) {
-      enhancedLogger.warn('Failed to load failure policies, using defaults', { error: error.message });
+      enhancedLogger.warn('Failed to load failure policies, using defaults', {
+        error: error.message,
+      });
     }
   }
   return failurePolicyManagerInstance;
@@ -51,6 +53,7 @@ export class ForgeFlowError extends Error {
     recoverable?: boolean;
     userMessage?: string;
     cause?: Error;
+    [key: string]: unknown; // Allow additional properties
   }) {
     super(options.message);
     this.name = 'ForgeFlowError';
@@ -103,6 +106,9 @@ export enum ErrorCategory {
   EXTERNAL_SERVICE = 'external_service',
   CIRCUIT_BREAKER = 'circuit_breaker',
   INTERNAL_ERROR = 'internal_error',
+  DATA_PROTECTION = 'data_protection',
+  SYSTEM_HEALTH = 'system_health',
+  SYSTEM_RESILIENCE = 'system_resilience',
 }
 
 export enum ErrorSeverity {
@@ -110,6 +116,10 @@ export enum ErrorSeverity {
   MEDIUM = 'medium',
   HIGH = 'high',
   CRITICAL = 'critical',
+  // Additional severity levels for compatibility
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
 }
 
 // Specific error classes for common scenarios
@@ -261,8 +271,10 @@ export class ErrorHandler {
     this.lastErrors.set(errorKey, new Date());
 
     // Check for critical error conditions and notify alerts
-    if (forgeFlowError.severity === ErrorSeverity.CRITICAL || 
-        (this.errorCounts.get(errorKey) || 0) >= this.criticalErrorThreshold) {
+    if (
+      forgeFlowError.severity === ErrorSeverity.CRITICAL ||
+      (this.errorCounts.get(errorKey) || 0) >= this.criticalErrorThreshold
+    ) {
       this.notifyAlerts(forgeFlowError);
     }
 
@@ -285,21 +297,24 @@ export class ErrorHandler {
   private operationDurations = new Map<string, number[]>();
   private lastOperationTimes = new Map<string, Date>();
   private fallbackMetrics = new Map<string, { successes: number; failures: number }>();
-  private recoveryMetrics = new Map<string, { attempts: number; successes: number; failures: number }>();
+  private recoveryMetrics = new Map<
+    string,
+    { attempts: number; successes: number; failures: number }
+  >();
   private criticalErrorThreshold = 10;
   private alertCallbacks = new Set<(error: ForgeFlowError) => void>();
 
   recordSuccess(operationName: string, duration: number): void {
     this.successCounts.set(operationName, (this.successCounts.get(operationName) || 0) + 1);
-    
+
     const durations = this.operationDurations.get(operationName) || [];
     durations.push(duration);
-    
+
     // Keep only last 100 duration measurements
     if (durations.length > 100) {
       durations.shift();
     }
-    
+
     this.operationDurations.set(operationName, durations);
     this.lastOperationTimes.set(operationName, new Date());
   }
@@ -315,7 +330,10 @@ export class ErrorHandler {
   getErrorMetrics() {
     return {
       totalErrors: Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0),
-      totalSuccesses: Array.from(this.successCounts.values()).reduce((sum, count) => sum + count, 0),
+      totalSuccesses: Array.from(this.successCounts.values()).reduce(
+        (sum, count) => sum + count,
+        0,
+      ),
       errorsByCategory: this.groupErrorsByCategory(),
       errorsBySeverity: this.groupErrorsBySeverity(),
       recurringErrors: this.getRecurringErrors(),
@@ -374,17 +392,19 @@ export class ErrorHandler {
     for (const metrics of this.fallbackMetrics.values()) {
       const total = metrics.successes + metrics.failures;
       if (total > 0) {
-        fallbackSuccessRate += (metrics.successes / total);
+        fallbackSuccessRate += metrics.successes / total;
         fallbackUsageCount++;
       }
     }
 
-    const recoveryRate = totalRecoveryAttempts > 0 ? (successfulRecoveries / totalRecoveryAttempts) * 100 : 100;
-    const avgFallbackRate = fallbackUsageCount > 0 ? (fallbackSuccessRate / fallbackUsageCount) * 100 : 100;
+    const recoveryRate =
+      totalRecoveryAttempts > 0 ? (successfulRecoveries / totalRecoveryAttempts) * 100 : 100;
+    const avgFallbackRate =
+      fallbackUsageCount > 0 ? (fallbackSuccessRate / fallbackUsageCount) * 100 : 100;
     const healthScore = this.calculateHealthScore();
 
     // Weighted resilience score
-    return Math.round((recoveryRate * 0.4) + (avgFallbackRate * 0.3) + (healthScore * 0.3));
+    return Math.round(recoveryRate * 0.4 + avgFallbackRate * 0.3 + healthScore * 0.3);
   }
 
   // 🟢 NEW: Alert system for critical errors
@@ -402,20 +422,22 @@ export class ErrorHandler {
     }
   }
 
-
   private getOperationMetrics() {
-    const metrics: Record<string, {
-      successCount: number;
-      errorCount: number;
-      successRate: number;
-      averageDuration: number;
-      lastExecution: Date | null;
-    }> = {};
+    const metrics: Record<
+      string,
+      {
+        successCount: number;
+        errorCount: number;
+        successRate: number;
+        averageDuration: number;
+        lastExecution: Date | null;
+      }
+    > = {};
 
     // Collect all operation names
     const operations = new Set([
       ...Array.from(this.successCounts.keys()),
-      ...Array.from(this.errorCounts.keys()).map(key => key.split('-')[0])
+      ...Array.from(this.errorCounts.keys()).map((key) => key.split('-')[0]),
     ]);
 
     for (const operation of operations) {
@@ -423,21 +445,20 @@ export class ErrorHandler {
       const errorCount = Array.from(this.errorCounts.entries())
         .filter(([key]) => key.startsWith(operation + '-'))
         .reduce((sum, [, count]) => sum + count, 0);
-      
+
       const totalCount = successCount + errorCount;
       const successRate = totalCount > 0 ? (successCount / totalCount) * 100 : 100;
-      
+
       const durations = this.operationDurations.get(operation) || [];
-      const averageDuration = durations.length > 0 
-        ? durations.reduce((sum, d) => sum + d, 0) / durations.length 
-        : 0;
+      const averageDuration =
+        durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0;
 
       metrics[operation] = {
         successCount,
         errorCount,
         successRate,
         averageDuration,
-        lastExecution: this.lastOperationTimes.get(operation) || null
+        lastExecution: this.lastOperationTimes.get(operation) || null,
       };
     }
 
@@ -447,18 +468,19 @@ export class ErrorHandler {
   private calculateHealthScore(): number {
     const metrics = this.getOperationMetrics();
     const operations = Object.values(metrics);
-    
+
     if (operations.length === 0) return 100;
-    
-    const averageSuccessRate = operations.reduce((sum, op) => sum + op.successRate, 0) / operations.length;
-    const recentOperations = operations.filter(op => 
-      op.lastExecution && Date.now() - op.lastExecution.getTime() < 24 * 60 * 60 * 1000
+
+    const averageSuccessRate =
+      operations.reduce((sum, op) => sum + op.successRate, 0) / operations.length;
+    const recentOperations = operations.filter(
+      (op) => op.lastExecution && Date.now() - op.lastExecution.getTime() < 24 * 60 * 60 * 1000,
     );
-    
+
     const recencyScore = recentOperations.length > 0 ? 100 : 80;
-    const errorScore = Math.max(0, 100 - (this.getRecurringErrors().length * 10));
-    
-    return Math.round((averageSuccessRate * 0.6) + (recencyScore * 0.2) + (errorScore * 0.2));
+    const errorScore = Math.max(0, 100 - this.getRecurringErrors().length * 10);
+
+    return Math.round(averageSuccessRate * 0.6 + recencyScore * 0.2 + errorScore * 0.2);
   }
 
   private groupErrorsByCategory() {
@@ -471,19 +493,19 @@ export class ErrorHandler {
   }
 
   private errorSeverities = new Map<string, ErrorSeverity>();
-  
+
   setSeverityForError(errorKey: string, severity: ErrorSeverity): void {
     this.errorSeverities.set(errorKey, severity);
   }
 
   private groupErrorsBySeverity() {
     const severities = { low: 0, medium: 0, high: 0, critical: 0 };
-    
+
     for (const [errorKey, count] of this.errorCounts) {
       const severity = this.errorSeverities.get(errorKey) || ErrorSeverity.MEDIUM;
       severities[severity] += count;
     }
-    
+
     return severities;
   }
 
@@ -574,12 +596,13 @@ export class ValidationUtils {
   // New enhanced validation methods
   static validateGitHubToken(value: unknown, fieldName: string): void {
     this.validateString(value, fieldName, 10);
-    const tokenPattern = /^gh[pousr]_[A-Za-z0-9_]{36,255}$|^[A-Fa-f0-9]{40}$|^[A-Za-z0-9_]{40,255}$/;
+    const tokenPattern =
+      /^gh[pousr]_[A-Za-z0-9_]{36,255}$|^[A-Fa-f0-9]{40}$|^[A-Za-z0-9_]{40,255}$/;
     if (!tokenPattern.test(value as string)) {
       throw new ValidationError(
-        fieldName, 
-        '[REDACTED]', 
-        'valid GitHub token (ghp_, gho_, ghu_, ghs_, or ghp format)'
+        fieldName,
+        '[REDACTED]',
+        'valid GitHub token (ghp_, gho_, ghu_, ghs_, or ghp format)',
       );
     }
   }
@@ -587,7 +610,7 @@ export class ValidationUtils {
   static validatePath(value: unknown, fieldName: string, mustExist = false): void {
     this.validateString(value, fieldName, 1);
     const path = value as string;
-    
+
     // Basic path validation
     if (path.includes('..') || path.includes('\0')) {
       throw new ValidationError(fieldName, value, 'safe file path without directory traversal');
@@ -610,7 +633,7 @@ export class ValidationUtils {
   static validateAgentType(value: unknown, fieldName: string): void {
     const validAgentTypes = [
       'strategic-planner',
-      'system-architect', 
+      'system-architect',
       'code-implementer',
       'test-coverage-validator',
       'security-auditor',
@@ -619,7 +642,7 @@ export class ValidationUtils {
       'database-architect',
       'deployment-automation',
       'code-quality-reviewer',
-      'antihallucination-validator'
+      'antihallucination-validator',
     ];
     this.validateEnum(value, fieldName, validAgentTypes);
   }
@@ -631,7 +654,7 @@ export class ValidationUtils {
       'refactoring',
       'security-audit',
       'performance-optimization',
-      'testing-enhancement'
+      'testing-enhancement',
     ];
     this.validateEnum(value, fieldName, validPatterns);
   }
@@ -656,7 +679,7 @@ export class ValidationUtils {
   static validateObject<T>(
     value: unknown,
     fieldName: string,
-    schema: Record<string, (val: unknown) => void>
+    schema: Record<string, (val: unknown) => void>,
   ): T {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
       throw new ValidationError(fieldName, value, 'object');
@@ -674,7 +697,7 @@ export class ValidationUtils {
           throw new ValidationError(
             `${fieldName}.${key}`,
             obj[key],
-            error.userMessage || error.message
+            error.userMessage || error.message,
           );
         }
         throw error;
@@ -720,7 +743,7 @@ export class ValidationUtils {
         severity: ErrorSeverity.MEDIUM,
         context: { identifier, maxRequests, windowMs },
         recoverable: true,
-        userMessage: `Too many requests. Please try again in ${Math.ceil((current.resetTime - now) / 1000)} seconds.`
+        userMessage: `Too many requests. Please try again in ${Math.ceil((current.resetTime - now) / 1000)} seconds.`,
       });
     }
 
@@ -728,42 +751,43 @@ export class ValidationUtils {
   }
 }
 
-
 // 🟢 ENHANCED: Execute operation with failure policy system
 async function executeWithFailurePolicies<T>(
   operation: () => Promise<T>,
   context: any,
-  attemptHistory: Array<{ attempt: number; error: Error; duration: number; timestamp: Date; }>
+  attemptHistory: Array<{ attempt: number; error: Error; duration: number; timestamp: Date }>,
 ): Promise<T> {
   const { operationName, category, timeoutMs } = context;
   const failurePolicyManager = await getFailurePolicyManager();
   const recoveryActionManager = await getRecoveryActionManager();
-  
+
   let attempt = 1;
   let lastError: Error;
 
   while (true) {
     const attemptStartTime = Date.now();
-    
+
     try {
       let result: T;
-      
+
       if (timeoutMs) {
         result = await Promise.race([
           operation(),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
-              reject(new ForgeFlowError({
-                code: 'OPERATION_TIMEOUT',
-                message: `Operation '${operationName}' timed out after ${timeoutMs}ms`,
-                category: ErrorCategory.TIMEOUT,
-                severity: ErrorSeverity.HIGH,
-                context: { operationName, timeoutMs, attempt },
-                recoverable: attempt < 10, // Allow policy to decide on retries
-                userMessage: `Operation timed out. Please try again.`
-              }));
+              reject(
+                new ForgeFlowError({
+                  code: 'OPERATION_TIMEOUT',
+                  message: `Operation '${operationName}' timed out after ${timeoutMs}ms`,
+                  category: ErrorCategory.TIMEOUT,
+                  severity: ErrorSeverity.HIGH,
+                  context: { operationName, timeoutMs, attempt },
+                  recoverable: attempt < 10, // Allow policy to decide on retries
+                  userMessage: `Operation timed out. Please try again.`,
+                }),
+              );
             }, timeoutMs);
-          })
+          }),
         ]);
       } else {
         result = await operation();
@@ -774,22 +798,21 @@ async function executeWithFailurePolicies<T>(
         const firstAttempt = attemptHistory[0];
         const policyId = (firstAttempt as any).policyId || 'unknown';
         const recoveryTime = Date.now() - (attemptHistory[0]?.timestamp?.getTime() || Date.now());
-        
+
         failurePolicyManager.recordPolicyOutcome(operationName, policyId, true, recoveryTime);
       }
 
       return result;
-
     } catch (error) {
       lastError = error as Error;
       const attemptDuration = Date.now() - attemptStartTime;
-      
+
       // Record attempt in history
       attemptHistory.push({
         attempt,
         error: lastError,
         duration: attemptDuration,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Create policy execution context
@@ -799,12 +822,12 @@ async function executeWithFailurePolicies<T>(
         attempt,
         totalAttempts: attempt,
         previousAttempts: attemptHistory,
-        metadata: { category, timeoutMs }
+        metadata: { category, timeoutMs },
       };
 
       // Execute failure policy
       const policyResult = await failurePolicyManager.executePolicy(policyContext);
-      
+
       // Store policy ID for outcome tracking
       (attemptHistory[attemptHistory.length - 1] as any).policyId = policyResult.policyApplied;
 
@@ -814,7 +837,7 @@ async function executeWithFailurePolicies<T>(
         policyApplied: policyResult.policyApplied,
         shouldRetry: policyResult.shouldRetry,
         delayMs: policyResult.delayMs,
-        recoveryActions: policyResult.recoveryActions.length
+        recoveryActions: policyResult.recoveryActions.length,
       });
 
       // Execute recovery actions if any
@@ -824,37 +847,36 @@ async function executeWithFailurePolicies<T>(
           error: lastError,
           attempt,
           totalAttempts: attempt,
-          metadata: { category, timeoutMs, policyResult }
+          metadata: { category, timeoutMs, policyResult },
         };
 
         try {
           const recoveryResults = await recoveryActionManager.executeRecoveryActions(
             policyResult.recoveryActions,
-            recoveryContext
+            recoveryContext,
           );
 
-          const successfulRecoveries = recoveryResults.filter(r => r.success);
+          const successfulRecoveries = recoveryResults.filter((r) => r.success);
           enhancedLogger.info('Recovery actions completed', {
             operationName,
             totalActions: recoveryResults.length,
             successful: successfulRecoveries.length,
-            totalDuration: recoveryResults.reduce((sum, r) => sum + r.duration, 0)
+            totalDuration: recoveryResults.reduce((sum, r) => sum + r.duration, 0),
           });
 
           // If all recovery actions failed, don't retry
           if (successfulRecoveries.length === 0 && recoveryResults.length > 0) {
             enhancedLogger.warn('All recovery actions failed, stopping retries', {
               operationName,
-              attempt
+              attempt,
             });
             break;
           }
-
         } catch (recoveryError) {
-          enhancedLogger.error('Recovery action execution failed', {
-            operationName,
-            error: recoveryError.message,
-            attempt
+          enhancedLogger.error(`Recovery action execution failed for ${operationName}`, undefined, {
+            errorMessage:
+              recoveryError instanceof Error ? recoveryError.message : String(recoveryError),
+            attempt,
           });
           // Continue with normal retry logic
         }
@@ -872,9 +894,9 @@ async function executeWithFailurePolicies<T>(
         enhancedLogger.debug('Waiting before retry', {
           operationName,
           attempt,
-          delayMs: policyResult.delayMs
+          delayMs: policyResult.delayMs,
         });
-        await new Promise(resolve => setTimeout(resolve, policyResult.delayMs));
+        await new Promise((resolve) => setTimeout(resolve, policyResult.delayMs));
       }
 
       attempt++;
@@ -891,16 +913,16 @@ async function executeWithFailurePolicies<T>(
       message: `Operation '${operationName}' failed after ${attempt} attempts using failure policies: ${lastError.message}`,
       category,
       severity: getErrorSeverity(lastError),
-      context: { 
-        operationName, 
-        attempts: attempt, 
+      context: {
+        operationName,
+        attempts: attempt,
         lastError: lastError.message,
         totalDuration: Date.now() - attemptHistory[0].timestamp.getTime(),
-        policyExecutions: attemptHistory.map(h => ({
+        policyExecutions: attemptHistory.map((h) => ({
           attempt: h.attempt,
           duration: h.duration,
-          policyId: (h as any).policyId
-        }))
+          policyId: (h as any).policyId,
+        })),
       },
       recoverable: false,
       userMessage: getUserFriendlyErrorMessage(operationName, lastError),
@@ -927,22 +949,27 @@ export async function withErrorHandling<T>(
     useFailurePolicies?: boolean; // 🟢 NEW: Enable failure policy system
   },
 ): Promise<T> {
-  const { 
-    operationName, 
-    category, 
-    retries = 0, 
-    timeoutMs, 
-    onRetry, 
+  const {
+    operationName,
+    category,
+    retries = 0,
+    timeoutMs,
+    onRetry,
     shouldRetry,
     backoffMultiplier = 2,
     maxBackoffMs = 30000,
     circuitBreaker = false,
-    useFailurePolicies = false // 🟢 NEW: Enable advanced failure policies
+    useFailurePolicies = false, // 🟢 NEW: Enable advanced failure policies
   } = context;
-  
+
   let lastError: Error;
   const startTime = Date.now();
-  const attemptHistory: Array<{ attempt: number; error: Error; duration: number; timestamp: Date; }> = [];
+  const attemptHistory: Array<{
+    attempt: number;
+    error: Error;
+    duration: number;
+    timestamp: Date;
+  }> = [];
 
   // 🟢 ENHANCED: Use failure policy system if enabled
   if (useFailurePolicies) {
@@ -958,30 +985,32 @@ export async function withErrorHandling<T>(
       severity: ErrorSeverity.HIGH,
       context: { operationName },
       recoverable: false,
-      userMessage: `Service temporarily unavailable. Please try again later.`
+      userMessage: `Service temporarily unavailable. Please try again later.`,
     });
   }
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       let result: T;
-      
+
       if (timeoutMs) {
         result = await Promise.race([
           operation(),
           new Promise<never>((_, reject) => {
             const timeoutId = setTimeout(() => {
-              reject(new ForgeFlowError({
-                code: 'OPERATION_TIMEOUT',
-                message: `Operation '${operationName}' timed out after ${timeoutMs}ms`,
-                category: ErrorCategory.TIMEOUT,
-                severity: ErrorSeverity.HIGH,
-                context: { operationName, timeoutMs, attempt },
-                recoverable: attempt < retries,
-                userMessage: `Operation timed out. Please try again.`
-              }));
+              reject(
+                new ForgeFlowError({
+                  code: 'OPERATION_TIMEOUT',
+                  message: `Operation '${operationName}' timed out after ${timeoutMs}ms`,
+                  category: ErrorCategory.TIMEOUT,
+                  severity: ErrorSeverity.HIGH,
+                  context: { operationName, timeoutMs, attempt },
+                  recoverable: attempt < retries,
+                  userMessage: `Operation timed out. Please try again.`,
+                }),
+              );
             }, timeoutMs);
-            
+
             // Store timeout ID for potential cleanup
             (reject as any).timeoutId = timeoutId;
           }),
@@ -993,42 +1022,38 @@ export async function withErrorHandling<T>(
       // Success - record metrics and reset circuit breaker
       const duration = Date.now() - startTime;
       ErrorHandler.getInstance().recordSuccess(operationName, duration);
-      
+
       if (circuitBreaker) {
         CircuitBreaker.recordSuccess(operationName);
       }
-      
+
       return result;
-      
     } catch (error) {
       lastError = error as Error;
       const duration = Date.now() - startTime;
 
       // Record failure metrics
       ErrorHandler.getInstance().recordFailure(operationName, lastError, duration);
-      
+
       if (circuitBreaker) {
         CircuitBreaker.recordFailure(operationName);
       }
 
       // Check if we should retry this error
       const shouldRetryThis = shouldRetry ? shouldRetry(lastError) : isRetryableError(lastError);
-      
+
       if (attempt < retries && shouldRetryThis) {
-        const backoffMs = Math.min(
-          Math.pow(backoffMultiplier, attempt) * 1000,
-          maxBackoffMs
-        );
-        
+        const backoffMs = Math.min(Math.pow(backoffMultiplier, attempt) * 1000, maxBackoffMs);
+
         onRetry?.(attempt + 1, lastError);
-        
+
         // Add jitter to prevent thundering herd
         const jitteredBackoff = backoffMs + Math.random() * 1000;
         await new Promise((resolve) => setTimeout(resolve, jitteredBackoff));
-        
+
         continue;
       }
-      
+
       break; // Don't retry
     }
   }
@@ -1039,11 +1064,11 @@ export async function withErrorHandling<T>(
       message: `Operation '${operationName}' failed after ${retries + 1} attempts: ${lastError.message}`,
       category,
       severity: getErrorSeverity(lastError),
-      context: { 
-        operationName, 
-        attempts: retries + 1, 
+      context: {
+        operationName,
+        attempts: retries + 1,
         lastError: lastError.message,
-        totalDuration: Date.now() - startTime
+        totalDuration: Date.now() - startTime,
       },
       recoverable: false,
       userMessage: getUserFriendlyErrorMessage(operationName, lastError),
@@ -1055,44 +1080,45 @@ export async function withErrorHandling<T>(
 // Helper functions for enhanced error handling
 function isRetryableError(error: Error): boolean {
   if (error instanceof ForgeFlowError) {
-    return error.recoverable && [
-      ErrorCategory.NETWORK,
-      ErrorCategory.EXTERNAL_SERVICE,
-      ErrorCategory.TIMEOUT,
-      ErrorCategory.RATE_LIMITING
-    ].includes(error.category);
+    return (
+      error.recoverable &&
+      [
+        ErrorCategory.NETWORK,
+        ErrorCategory.EXTERNAL_SERVICE,
+        ErrorCategory.TIMEOUT,
+        ErrorCategory.RATE_LIMITING,
+      ].includes(error.category)
+    );
   }
-  
+
   // Network/timeout errors are generally retryable
   const retryableMessages = [
     'timeout',
     'ETIMEDOUT',
-    'ECONNRESET', 
+    'ECONNRESET',
     'ECONNREFUSED',
     'socket hang up',
     'network',
-    'Rate limit'
+    'Rate limit',
   ];
-  
-  return retryableMessages.some(msg => 
-    error.message.toLowerCase().includes(msg.toLowerCase())
-  );
+
+  return retryableMessages.some((msg) => error.message.toLowerCase().includes(msg.toLowerCase()));
 }
 
 function getErrorSeverity(error: Error): ErrorSeverity {
   if (error instanceof ForgeFlowError) {
     return error.severity;
   }
-  
+
   // Determine severity based on error type
   if (error.message.includes('timeout') || error.message.includes('network')) {
     return ErrorSeverity.MEDIUM;
   }
-  
+
   if (error.message.includes('unauthorized') || error.message.includes('forbidden')) {
     return ErrorSeverity.HIGH;
   }
-  
+
   return ErrorSeverity.MEDIUM;
 }
 
@@ -1100,44 +1126,51 @@ function getUserFriendlyErrorMessage(operationName: string, error: Error): strin
   if (error instanceof ForgeFlowError && error.userMessage) {
     return error.userMessage;
   }
-  
+
   // Generate user-friendly messages based on operation and error type
   const friendlyMessages: Record<string, string> = {
     'github-api': 'GitHub API request failed. Please check your token and network connection.',
     'git-operation': 'Git operation failed. Please check repository access and try again.',
     'file-operation': 'File operation failed. Please check file permissions and disk space.',
     'agent-execution': 'Agent task failed. The system will automatically retry.',
-    'worktree-operation': 'Repository worktree operation failed. Please ensure clean repository state.'
+    'worktree-operation':
+      'Repository worktree operation failed. Please ensure clean repository state.',
   };
-  
-  const friendlyMessage = Object.entries(friendlyMessages)
-    .find(([key]) => operationName.includes(key))?.[1];
-    
-  return friendlyMessage || `Operation '${operationName}' failed. Please try again or contact support.`;
+
+  const friendlyMessage = Object.entries(friendlyMessages).find(([key]) =>
+    operationName.includes(key),
+  )?.[1];
+
+  return (
+    friendlyMessage || `Operation '${operationName}' failed. Please try again or contact support.`
+  );
 }
 
 // Circuit breaker implementation for external service calls
 class CircuitBreaker {
-  private static circuits = new Map<string, {
-    failures: number;
-    successes: number;
-    lastFailureTime: number;
-    lastSuccessTime: number;
-    state: 'closed' | 'open' | 'half-open';
-    nextAttemptTime: number;
-    totalRequests: number;
-    halfOpenRequests: number;
-  }>();
-  
+  private static circuits = new Map<
+    string,
+    {
+      failures: number;
+      successes: number;
+      lastFailureTime: number;
+      lastSuccessTime: number;
+      state: 'closed' | 'open' | 'half-open';
+      nextAttemptTime: number;
+      totalRequests: number;
+      halfOpenRequests: number;
+    }
+  >();
+
   private static readonly FAILURE_THRESHOLD = 5;
   private static readonly TIMEOUT_MS = 60000; // 1 minute
-  
+
   static isOpen(operationName: string): boolean {
     const circuit = this.circuits.get(operationName);
     if (!circuit) return false;
-    
+
     const now = Date.now();
-    
+
     if (circuit.state === 'open') {
       if (now > circuit.nextAttemptTime) {
         circuit.state = 'half-open';
@@ -1145,10 +1178,10 @@ class CircuitBreaker {
       }
       return true;
     }
-    
+
     return false;
   }
-  
+
   static recordSuccess(operationName: string): void {
     const circuit = this.circuits.get(operationName);
     if (circuit) {
@@ -1156,7 +1189,7 @@ class CircuitBreaker {
       circuit.state = 'closed';
     }
   }
-  
+
   static recordFailure(operationName: string): void {
     const now = Date.now();
     const circuit = this.circuits.get(operationName) || {
@@ -1167,13 +1200,13 @@ class CircuitBreaker {
       state: 'closed' as const,
       nextAttemptTime: 0,
       totalRequests: 0,
-      halfOpenRequests: 0
+      halfOpenRequests: 0,
     };
-    
+
     circuit.failures++;
     circuit.totalRequests++;
     circuit.lastFailureTime = now;
-    
+
     if (circuit.state === 'closed' && circuit.failures >= this.FAILURE_THRESHOLD) {
       circuit.state = 'open';
       circuit.nextAttemptTime = now + this.TIMEOUT_MS;
@@ -1182,27 +1215,29 @@ class CircuitBreaker {
       circuit.nextAttemptTime = now + this.TIMEOUT_MS;
       circuit.halfOpenRequests = 0;
     }
-    
+
     this.circuits.set(operationName, circuit);
   }
-  
+
   // 🟢 NEW: Get circuit breaker metrics
-  static getMetrics(): Record<string, {
-    state: string;
-    failures: number;
-    successes: number;
-    totalRequests: number;
-    successRate: number;
-    lastFailure: Date | null;
-    lastSuccess: Date | null;
-  }> {
+  static getMetrics(): Record<
+    string,
+    {
+      state: string;
+      failures: number;
+      successes: number;
+      totalRequests: number;
+      successRate: number;
+      lastFailure: Date | null;
+      lastSuccess: Date | null;
+    }
+  > {
     const metrics: Record<string, any> = {};
-    
+
     for (const [operationName, circuit] of this.circuits.entries()) {
-      const successRate = circuit.totalRequests > 0 
-        ? (circuit.successes / circuit.totalRequests) * 100 
-        : 100;
-        
+      const successRate =
+        circuit.totalRequests > 0 ? (circuit.successes / circuit.totalRequests) * 100 : 100;
+
       metrics[operationName] = {
         state: circuit.state,
         failures: circuit.failures,
@@ -1210,18 +1245,18 @@ class CircuitBreaker {
         totalRequests: circuit.totalRequests,
         successRate,
         lastFailure: circuit.lastFailureTime > 0 ? new Date(circuit.lastFailureTime) : null,
-        lastSuccess: circuit.lastSuccessTime > 0 ? new Date(circuit.lastSuccessTime) : null
+        lastSuccess: circuit.lastSuccessTime > 0 ? new Date(circuit.lastSuccessTime) : null,
       };
     }
-    
+
     return metrics;
   }
-  
+
   // 🟢 NEW: Reset circuit breaker for maintenance
   static reset(operationName: string): void {
     this.circuits.delete(operationName);
   }
-  
+
   // 🟢 NEW: Get overall system circuit breaker health
   static getSystemHealth(): {
     totalCircuits: number;
@@ -1229,26 +1264,26 @@ class CircuitBreaker {
     halfOpenCircuits: number;
     overallSuccessRate: number;
   } {
-    let totalCircuits = this.circuits.size;
+    const totalCircuits = this.circuits.size;
     let openCircuits = 0;
     let halfOpenCircuits = 0;
     let totalRequests = 0;
     let totalSuccesses = 0;
-    
+
     for (const circuit of this.circuits.values()) {
       if (circuit.state === 'open') openCircuits++;
       if (circuit.state === 'half-open') halfOpenCircuits++;
       totalRequests += circuit.totalRequests;
       totalSuccesses += circuit.successes;
     }
-    
+
     const overallSuccessRate = totalRequests > 0 ? (totalSuccesses / totalRequests) * 100 : 100;
-    
+
     return {
       totalCircuits,
       openCircuits,
       halfOpenCircuits,
-      overallSuccessRate
+      overallSuccessRate,
     };
   }
 }
@@ -1257,7 +1292,10 @@ class CircuitBreaker {
 export interface ErrorRecoveryStrategy {
   name: string;
   canRecover(error: Error): boolean;
-  recover(error: Error, context: { operationName: string; attempt: number; category: ErrorCategory }): Promise<void>;
+  recover(
+    error: Error,
+    context: { operationName: string; attempt: number; category: ErrorCategory },
+  ): Promise<void>;
   priority?: number; // Higher number = higher priority
 }
 
@@ -1281,39 +1319,49 @@ export const DEFAULT_RECOVERY_STRATEGIES: ErrorRecoveryStrategy[] = [
       } catch {
         throw new Error('Git cleanup recovery failed');
       }
-    }
+    },
   },
   {
     name: 'github-rate-limit-recovery',
     priority: 8,
     canRecover: (error: Error) => {
       const message = error.message.toLowerCase();
-      return message.includes('rate limit') || message.includes('403') || message.includes('secondary rate limit');
+      return (
+        message.includes('rate limit') ||
+        message.includes('403') ||
+        message.includes('secondary rate limit')
+      );
     },
     recover: async (error: Error, context) => {
       // Wait for rate limit to reset
       const waitTime = extractRateLimitWaitTime(error) || 60000; // Default 1 minute
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    },
   },
   {
     name: 'network-connectivity-recovery',
     priority: 6,
     canRecover: (error: Error) => {
       const message = error.message.toLowerCase();
-      return message.includes('network') || message.includes('enotfound') || message.includes('econnrefused');
+      return (
+        message.includes('network') ||
+        message.includes('enotfound') ||
+        message.includes('econnrefused')
+      );
     },
     recover: async (error: Error, context) => {
       // Wait for network connectivity to return
       await waitForNetworkConnectivity();
-    }
+    },
   },
   {
     name: 'file-permission-recovery',
     priority: 7,
     canRecover: (error: Error) => {
       const message = error.message.toLowerCase();
-      return message.includes('permission') || message.includes('eacces') || message.includes('eperm');
+      return (
+        message.includes('permission') || message.includes('eacces') || message.includes('eperm')
+      );
     },
     recover: async (error: Error, context) => {
       const fs = require('fs-extra');
@@ -1322,8 +1370,8 @@ export const DEFAULT_RECOVERY_STRATEGIES: ErrorRecoveryStrategy[] = [
         // This is a basic recovery - in production, this might need admin privileges
         throw new Error('Permission recovery requires manual intervention');
       }
-    }
-  }
+    },
+  },
 ];
 
 // Helper functions for recovery strategies
@@ -1339,20 +1387,24 @@ function extractRateLimitWaitTime(error: Error): number | null {
 async function waitForNetworkConnectivity(timeout = 30000): Promise<void> {
   const https = require('https');
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeout) {
     try {
       await new Promise<void>((resolve, reject) => {
-        const req = https.request('https://api.github.com', { method: 'HEAD', timeout: 5000 }, () => {
-          resolve();
-        });
+        const req = https.request(
+          'https://api.github.com',
+          { method: 'HEAD', timeout: 5000 },
+          () => {
+            resolve();
+          },
+        );
         req.on('error', reject);
         req.on('timeout', () => reject(new Error('Timeout')));
         req.end();
       });
       return; // Success
     } catch {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
     }
   }
   throw new Error('Network connectivity not restored within timeout');
@@ -1363,7 +1415,7 @@ export class GitHubApiErrorHandler {
   static async handleGitHubError<T>(
     operation: () => Promise<T>,
     operationName: string,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ): Promise<T> {
     return withErrorHandling(operation, {
       operationName: `github-${operationName}`,
@@ -1375,12 +1427,20 @@ export class GitHubApiErrorHandler {
       circuitBreaker: true,
       shouldRetry: (error: Error) => {
         const status = (error as any).status;
-        return status >= 500 || status === 403 || status === 429 || 
-               error.message.includes('network') || error.message.includes('timeout');
+        return (
+          status >= 500 ||
+          status === 403 ||
+          status === 429 ||
+          error.message.includes('network') ||
+          error.message.includes('timeout')
+        );
       },
       onRetry: (attempt, error) => {
-        enhancedLogger.warn(`GitHub API retry ${attempt}/3 for ${operationName}`, { error: error.message, context });
-      }
+        enhancedLogger.warn(`GitHub API retry ${attempt}/3 for ${operationName}`, {
+          error: error.message,
+          context,
+        });
+      },
     });
   }
 }
@@ -1389,7 +1449,7 @@ export class GitOperationErrorHandler {
   static async handleGitOperation<T>(
     operation: () => Promise<T>,
     operationName: string,
-    workingDirectory?: string
+    workingDirectory?: string,
   ): Promise<T> {
     return withErrorHandling(operation, {
       operationName: `git-${operationName}`,
@@ -1400,15 +1460,19 @@ export class GitOperationErrorHandler {
       retries: 2,
       shouldRetry: (error: Error) => {
         const message = error.message.toLowerCase();
-        return message.includes('lock') || message.includes('conflict') || 
-               message.includes('merge') || message.includes('fetch');
+        return (
+          message.includes('lock') ||
+          message.includes('conflict') ||
+          message.includes('merge') ||
+          message.includes('fetch')
+        );
       },
       onRetry: (attempt, error) => {
-        enhancedLogger.warn(`Git operation retry ${attempt}/2 for ${operationName}`, { 
-          error: error.message, 
-          workingDirectory 
+        enhancedLogger.warn(`Git operation retry ${attempt}/2 for ${operationName}`, {
+          error: error.message,
+          workingDirectory,
         });
-      }
+      },
     });
   }
 }
@@ -1417,7 +1481,7 @@ export class FileSystemErrorHandler {
   static async handleFileSystemOperation<T>(
     operation: () => Promise<T>,
     operationName: string,
-    filePath?: string
+    filePath?: string,
   ): Promise<T> {
     return withErrorHandling(operation, {
       operationName: `fs-${operationName}`,
@@ -1428,14 +1492,16 @@ export class FileSystemErrorHandler {
       retries: 1,
       shouldRetry: (error: Error) => {
         const message = error.message.toLowerCase();
-        return message.includes('busy') || message.includes('locked') || message.includes('temporary');
+        return (
+          message.includes('busy') || message.includes('locked') || message.includes('temporary')
+        );
       },
       onRetry: (attempt, error) => {
-        enhancedLogger.warn(`File system retry ${attempt}/1 for ${operationName}`, { 
-          error: error.message, 
-          filePath 
+        enhancedLogger.warn(`File system retry ${attempt}/1 for ${operationName}`, {
+          error: error.message,
+          filePath,
         });
-      }
+      },
     });
   }
 }
@@ -1445,28 +1511,33 @@ export class AgentExecutionErrorHandler {
     operation: () => Promise<T>,
     agentId: string,
     taskId: string,
-    priority: 'low' | 'normal' | 'high' | 'critical' = 'normal'
+    priority: 'low' | 'normal' | 'high' | 'critical' = 'normal',
   ): Promise<T> {
     return withErrorHandling(operation, {
       operationName: `agent-${agentId}-${taskId}`,
       category: ErrorCategory.AGENT_EXECUTION,
       useFailurePolicies: true, // 🟢 NEW: Use failure policy system
       timeoutMs: priority === 'critical' ? 600000 : 300000,
-      priority: priority === 'critical' ? 10 : priority === 'high' ? 8 : priority === 'normal' ? 5 : 3,
+      priority:
+        priority === 'critical' ? 10 : priority === 'high' ? 8 : priority === 'normal' ? 5 : 3,
       // Legacy fallback parameters
       retries: priority === 'critical' ? 5 : priority === 'high' ? 3 : 1,
       shouldRetry: (error: Error) => {
         const message = error.message.toLowerCase();
-        return !message.includes('validation') && !message.includes('security') && !message.includes('unauthorized');
+        return (
+          !message.includes('validation') &&
+          !message.includes('security') &&
+          !message.includes('unauthorized')
+        );
       },
       onRetry: (attempt, error) => {
         const maxRetries = priority === 'critical' ? 5 : priority === 'high' ? 3 : 1;
-        enhancedLogger.warn(`Agent execution retry ${attempt}/${maxRetries} for ${agentId}`, { 
-          error: error.message, 
+        enhancedLogger.warn(`Agent execution retry ${attempt}/${maxRetries} for ${agentId}`, {
+          error: error.message,
           taskId,
-          priority 
+          priority,
         });
-      }
+      },
     });
   }
 }
@@ -1485,7 +1556,11 @@ export class SystemStateManager {
     return SystemStateManager.instance;
   }
 
-  registerComponent(componentId: string, initialState: any, validator?: (state: any) => boolean): void {
+  registerComponent(
+    componentId: string,
+    initialState: any,
+    validator?: (state: any) => boolean,
+  ): void {
     this.systemState.set(componentId, initialState);
     if (validator) {
       this.stateValidators.set(componentId, validator);
@@ -1502,7 +1577,7 @@ export class SystemStateManager {
         severity: ErrorSeverity.HIGH,
         context: { componentId, newState },
         recoverable: true,
-        userMessage: `System component ${componentId} attempted an invalid state change`
+        userMessage: `System component ${componentId} attempted an invalid state change`,
       });
     }
     this.systemState.set(componentId, newState);
@@ -1523,20 +1598,20 @@ export class SystemStateManager {
       if (validator && !validator(state)) {
         issues.push({
           componentId,
-          issue: `Component state is invalid: ${JSON.stringify(state)}`
+          issue: `Component state is invalid: ${JSON.stringify(state)}`,
         });
       }
     }
 
     return {
       consistent: issues.length === 0,
-      issues
+      issues,
     };
   }
 
   async recoverSystemConsistency(): Promise<void> {
     const { consistent, issues } = await this.validateSystemConsistency();
-    
+
     if (consistent) {
       return;
     }
@@ -1555,7 +1630,7 @@ export class SystemStateManager {
             context: { componentId: issue.componentId, issue: issue.issue },
             recoverable: false,
             userMessage: `Critical system recovery failed for ${issue.componentId}`,
-            cause: recoveryError as Error
+            cause: recoveryError as Error,
           });
         }
       }
@@ -1577,13 +1652,13 @@ export class EnhancedErrorHandling {
       const failurePolicyManager = await getFailurePolicyManager();
       await failurePolicyManager.loadPolicies();
       this.failurePoliciesEnabled = true;
-      
+
       enhancedLogger.info('Failure policy system enabled globally', {
-        policiesLoaded: failurePolicyManager.getAllPolicies().length
+        policiesLoaded: failurePolicyManager.getAllPolicies().length,
       });
     } catch (error) {
-      enhancedLogger.error('Failed to enable failure policy system', {
-        error: error.message
+      enhancedLogger.error('Failed to enable failure policy system', undefined, {
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -1611,10 +1686,10 @@ export class EnhancedErrorHandling {
       metadata?: Record<string, unknown>;
       workingDirectory?: string;
       fallbackRetries?: number;
-    }
+    },
   ): Promise<T> {
     const useFailurePolicies = this.failurePoliciesEnabled;
-    
+
     return withErrorHandling(operation, {
       operationName,
       category,
@@ -1623,15 +1698,17 @@ export class EnhancedErrorHandling {
       priority: options?.priority,
       // Fallback parameters if policies are disabled
       retries: options?.fallbackRetries || 3,
-      circuitBreaker: category === ErrorCategory.GITHUB_INTEGRATION || category === ErrorCategory.EXTERNAL_SERVICE,
+      circuitBreaker:
+        category === ErrorCategory.GITHUB_INTEGRATION ||
+        category === ErrorCategory.EXTERNAL_SERVICE,
       onRetry: (attempt, error) => {
         enhancedLogger.warn(`Enhanced error handling retry ${attempt} for ${operationName}`, {
           error: error.message,
           category,
           useFailurePolicies,
-          metadata: options?.metadata
+          metadata: options?.metadata,
         });
-      }
+      },
     });
   }
 
@@ -1650,19 +1727,19 @@ export class EnhancedErrorHandling {
           policiesLoaded: 0,
           systemHealth: { status: 'disabled' },
           policyMetrics: {},
-          recoveryMetrics: {}
+          recoveryMetrics: {},
         };
       }
 
       const failurePolicyManager = await getFailurePolicyManager();
       const recoveryActionManager = await getRecoveryActionManager();
-      
+
       return {
         failurePoliciesEnabled: true,
         policiesLoaded: failurePolicyManager.getAllPolicies().length,
         systemHealth: failurePolicyManager.getPolicyMetrics(),
         policyMetrics: failurePolicyManager.getPolicyMetrics(),
-        recoveryMetrics: recoveryActionManager.getActionMetrics()
+        recoveryMetrics: recoveryActionManager.getActionMetrics(),
       };
     } catch (error) {
       return {
@@ -1670,7 +1747,7 @@ export class EnhancedErrorHandling {
         policiesLoaded: 0,
         systemHealth: { status: 'error', error: error.message },
         policyMetrics: {},
-        recoveryMetrics: {}
+        recoveryMetrics: {},
       };
     }
   }
@@ -1684,15 +1761,30 @@ export class EnhancedErrorHandling {
     try {
       const failurePolicyManager = await getFailurePolicyManager();
       await failurePolicyManager.reloadPolicies();
-      
+
       enhancedLogger.info('Failure policies reloaded successfully', {
-        policiesLoaded: failurePolicyManager.getAllPolicies().length
+        policiesLoaded: failurePolicyManager.getAllPolicies().length,
       });
     } catch (error) {
-      enhancedLogger.error('Failed to reload failure policies', {
-        error: error.message
+      enhancedLogger.error('Failed to reload failure policies', undefined, {
+        errorMessage: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
+  }
+}
+
+// Installation-specific error class
+export class InstallationError extends ForgeFlowError {
+  constructor(message: string, context?: Record<string, unknown>) {
+    super({
+      code: 'INSTALLATION_ERROR',
+      message,
+      category: ErrorCategory.VALIDATION,
+      severity: ErrorSeverity.HIGH,
+      context,
+      recoverable: true,
+      userMessage: message,
+    });
   }
 }

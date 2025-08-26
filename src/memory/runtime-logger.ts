@@ -3,7 +3,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import {
+import type {
   RuntimeLog,
   LogData,
   LogFilters,
@@ -11,19 +11,19 @@ import {
   ErrorPattern,
   TimeRange,
   MemoryConfig,
-  IRuntimeLogger
+  IRuntimeLogger,
 } from './types';
 import { logger as systemLogger } from '../utils/logger';
 
 /**
  * Runtime Logger
- * 
+ *
  * High-performance structured logging for memory events with:
  * - Session correlation and tracking
  * - Performance metrics capture
  * - Error pattern analysis
  * - Log rotation and cleanup
- * 
+ *
  * Performance Target: <10ms for log writes
  */
 export class RuntimeLogger implements IRuntimeLogger {
@@ -52,10 +52,10 @@ export class RuntimeLogger implements IRuntimeLogger {
     try {
       // Ensure log directories exist
       await this.ensureLogDirectoryStructure();
-      
+
       // Start periodic buffer flushing
       this.startBufferFlushing();
-      
+
       this.initialized = true;
       systemLogger.debug('Runtime Logger initialized');
     } catch (error) {
@@ -92,31 +92,37 @@ export class RuntimeLogger implements IRuntimeLogger {
       const logEntry: RuntimeLog = {
         timestamp: new Date(),
         level,
-        agentType: data.agentType as string || this.currentAgentType || 'unknown',
-        jobId: data.jobId as string || this.currentJobId || 'unknown',
-        sessionId: data.sessionId as string || this.currentSessionId || 'unknown',
+        agentType: (data.agentType as string) || this.currentAgentType || 'unknown',
+        jobId: (data.jobId as string) || this.currentJobId || 'unknown',
+        sessionId: (data.sessionId as string) || this.currentSessionId || 'unknown',
         event,
         data: {
           ...data,
           // Remove redundant fields to avoid duplication
           agentType: undefined,
           jobId: undefined,
-          sessionId: undefined
+          sessionId: undefined,
         },
-        correlationId: this.generateCorrelationId()
+        correlationId: this.generateCorrelationId(),
       };
 
       // Add to buffer
       this.logBuffer.push(logEntry);
 
       // Flush buffer if it's full or on critical events
-      if (this.logBuffer.length >= RuntimeLogger.BUFFER_SIZE || level === 'critical' || level === 'error') {
+      if (
+        this.logBuffer.length >= RuntimeLogger.BUFFER_SIZE ||
+        level === 'critical' ||
+        level === 'error'
+      ) {
         await this.flushBuffer();
       }
 
       const duration = Date.now() - startTime;
       if (duration > this.config.performanceThresholds.logWriteTimeMs) {
-        systemLogger.warn(`Log write took ${duration}ms (target: ${this.config.performanceThresholds.logWriteTimeMs}ms)`);
+        systemLogger.warn(
+          `Log write took ${duration}ms (target: ${this.config.performanceThresholds.logWriteTimeMs}ms)`,
+        );
       }
     } catch (error) {
       systemLogger.error(`Failed to log ${level} event ${event}:`, error);
@@ -170,17 +176,19 @@ export class RuntimeLogger implements IRuntimeLogger {
   async getLogsForJob(jobId: string, filters?: LogFilters): Promise<RuntimeLog[]> {
     try {
       const allLogs = await this.readAllLogs();
-      
-      let filteredLogs = allLogs.filter(log => log.jobId === jobId);
-      
+
+      let filteredLogs = allLogs.filter((log) => log.jobId === jobId);
+
       if (filters) {
         filteredLogs = this.applyFilters(filteredLogs, filters);
       }
-      
+
       return filteredLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     } catch (error) {
       systemLogger.error(`Failed to get logs for job ${jobId}:`, error);
-      throw new Error(`Failed to get job logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get job logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -193,17 +201,19 @@ export class RuntimeLogger implements IRuntimeLogger {
   async getLogsForSession(sessionId: string, filters?: LogFilters): Promise<RuntimeLog[]> {
     try {
       const allLogs = await this.readAllLogs();
-      
-      let filteredLogs = allLogs.filter(log => log.sessionId === sessionId);
-      
+
+      let filteredLogs = allLogs.filter((log) => log.sessionId === sessionId);
+
       if (filters) {
         filteredLogs = this.applyFilters(filteredLogs, filters);
       }
-      
+
       return filteredLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     } catch (error) {
       systemLogger.error(`Failed to get logs for session ${sessionId}:`, error);
-      throw new Error(`Failed to get session logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get session logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -216,17 +226,19 @@ export class RuntimeLogger implements IRuntimeLogger {
   async getLogsForAgent(agentType: string, filters?: LogFilters): Promise<RuntimeLog[]> {
     try {
       const allLogs = await this.readAllLogs();
-      
-      let filteredLogs = allLogs.filter(log => log.agentType === agentType);
-      
+
+      let filteredLogs = allLogs.filter((log) => log.agentType === agentType);
+
       if (filters) {
         filteredLogs = this.applyFilters(filteredLogs, filters);
       }
-      
+
       return filteredLogs.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     } catch (error) {
       systemLogger.error(`Failed to get logs for agent ${agentType}:`, error);
-      throw new Error(`Failed to get agent logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get agent logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -240,36 +252,43 @@ export class RuntimeLogger implements IRuntimeLogger {
   async analyzePerformance(jobId: string): Promise<PerformanceAnalysis> {
     try {
       const jobLogs = await this.getLogsForJob(jobId);
-      
+
       if (jobLogs.length === 0) {
         throw new Error(`No logs found for job ${jobId}`);
       }
 
       // Calculate performance metrics
-      const eventsWithDuration = jobLogs.filter(log => log.data.duration && typeof log.data.duration === 'number');
-      const avgEventDuration = eventsWithDuration.length > 0
-        ? eventsWithDuration.reduce((sum, log) => sum + (log.data.duration as number), 0) / eventsWithDuration.length
-        : 0;
+      const eventsWithDuration = jobLogs.filter(
+        (log) => log.data.duration && typeof log.data.duration === 'number',
+      );
+      const avgEventDuration =
+        eventsWithDuration.length > 0
+          ? eventsWithDuration.reduce((sum, log) => sum + log.data.duration, 0) /
+            eventsWithDuration.length
+          : 0;
 
       // Find slowest events
       const slowestEvents = eventsWithDuration
-        .sort((a, b) => (b.data.duration as number) - (a.data.duration as number))
+        .sort((a, b) => b.data.duration - a.data.duration)
         .slice(0, 5)
-        .map(log => ({
+        .map((log) => ({
           event: log.event,
-          duration: log.data.duration as number,
-          timestamp: log.timestamp
+          duration: log.data.duration,
+          timestamp: log.timestamp,
         }));
 
       // Calculate error and warning rates
-      const errorLogs = jobLogs.filter(log => log.level === 'error' || log.level === 'critical');
-      const warningLogs = jobLogs.filter(log => log.level === 'warn');
-      
+      const errorLogs = jobLogs.filter((log) => log.level === 'error' || log.level === 'critical');
+      const warningLogs = jobLogs.filter((log) => log.level === 'warn');
+
       const errorRate = jobLogs.length > 0 ? errorLogs.length / jobLogs.length : 0;
       const warningRate = jobLogs.length > 0 ? warningLogs.length / jobLogs.length : 0;
 
       // Calculate performance score (0-1, higher is better)
-      const performanceScore = Math.max(0, 1 - (errorRate * 0.5) - (warningRate * 0.2) - (avgEventDuration > 1000 ? 0.3 : 0));
+      const performanceScore = Math.max(
+        0,
+        1 - errorRate * 0.5 - warningRate * 0.2 - (avgEventDuration > 1000 ? 0.3 : 0),
+      );
 
       // Generate recommendations
       const recommendations: string[] = [];
@@ -294,11 +313,13 @@ export class RuntimeLogger implements IRuntimeLogger {
         errorRate,
         warningRate,
         performanceScore,
-        recommendations
+        recommendations,
       };
     } catch (error) {
       systemLogger.error(`Failed to analyze performance for job ${jobId}:`, error);
-      throw new Error(`Failed to analyze performance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to analyze performance: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -311,47 +332,50 @@ export class RuntimeLogger implements IRuntimeLogger {
   async findErrorPatterns(agentType?: string, timeRange?: TimeRange): Promise<ErrorPattern[]> {
     try {
       let logs = await this.readAllLogs();
-      
+
       // Filter by agent type if specified
       if (agentType) {
-        logs = logs.filter(log => log.agentType === agentType);
+        logs = logs.filter((log) => log.agentType === agentType);
       }
-      
+
       // Filter by time range if specified
       if (timeRange) {
-        logs = logs.filter(log => 
-          log.timestamp >= timeRange.start && log.timestamp <= timeRange.end
+        logs = logs.filter(
+          (log) => log.timestamp >= timeRange.start && log.timestamp <= timeRange.end,
         );
       }
-      
+
       // Get error logs only
-      const errorLogs = logs.filter(log => log.level === 'error' || log.level === 'critical');
-      
+      const errorLogs = logs.filter((log) => log.level === 'error' || log.level === 'critical');
+
       // Group errors by pattern (event + error message)
-      const patternMap = new Map<string, {
-        pattern: string;
-        occurrences: number;
-        agentTypes: Set<string>;
-        avgResolutionTime?: number;
-        commonContext: string[];
-        logs: RuntimeLog[];
-      }>();
+      const patternMap = new Map<
+        string,
+        {
+          pattern: string;
+          occurrences: number;
+          agentTypes: Set<string>;
+          avgResolutionTime?: number;
+          commonContext: string[];
+          logs: RuntimeLog[];
+        }
+      >();
 
       for (const log of errorLogs) {
-        const errorMsg = log.data.error as string || 'Unknown error';
+        const errorMsg = log.data.error || 'Unknown error';
         const pattern = `${log.event}: ${errorMsg.substring(0, 100)}`;
-        
+
         if (!patternMap.has(pattern)) {
           patternMap.set(pattern, {
             pattern,
             occurrences: 0,
             agentTypes: new Set(),
             commonContext: [],
-            logs: []
+            logs: [],
           });
         }
-        
-        const entry = patternMap.get(pattern)!;
+
+        const entry = patternMap.get(pattern);
         entry.occurrences++;
         entry.agentTypes.add(log.agentType);
         entry.logs.push(log);
@@ -363,18 +387,19 @@ export class RuntimeLogger implements IRuntimeLogger {
         .map(([_, entry]) => {
           // Calculate average resolution time (if available)
           const resolutionTimes = entry.logs
-            .map(log => log.data.resolutionTime as number)
-            .filter(time => typeof time === 'number');
-          
-          const avgResolutionTime = resolutionTimes.length > 0
-            ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
-            : undefined;
+            .map((log) => log.data.resolutionTime as number)
+            .filter((time) => typeof time === 'number');
+
+          const avgResolutionTime =
+            resolutionTimes.length > 0
+              ? resolutionTimes.reduce((sum, time) => sum + time, 0) / resolutionTimes.length
+              : undefined;
 
           // Extract common context
           const contextEntries = entry.logs
-            .map(log => log.data.context as string)
-            .filter(context => typeof context === 'string');
-          
+            .map((log) => log.data.context)
+            .filter((context) => typeof context === 'string');
+
           const commonContext = [...new Set(contextEntries)].slice(0, 5);
 
           // Generate recommendations
@@ -395,7 +420,7 @@ export class RuntimeLogger implements IRuntimeLogger {
             agentTypes: Array.from(entry.agentTypes),
             avgResolutionTime,
             commonContext,
-            recommendations
+            recommendations,
           };
         })
         .sort((a, b) => b.occurrences - a.occurrences); // Sort by frequency
@@ -403,7 +428,9 @@ export class RuntimeLogger implements IRuntimeLogger {
       return errorPatterns;
     } catch (error) {
       systemLogger.error('Failed to find error patterns:', error);
-      throw new Error(`Failed to find error patterns: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to find error patterns: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -417,35 +444,37 @@ export class RuntimeLogger implements IRuntimeLogger {
     try {
       // Flush any pending logs first
       await this.flushBuffer();
-      
+
       const logDir = path.join(this.config.storageBasePath, 'logs');
       const files = await fs.readdir(logDir);
-      const logFiles = files.filter(file => file.endsWith('.log'));
-      
+      const logFiles = files.filter((file) => file.endsWith('.log'));
+
       let rotatedCount = 0;
       const now = new Date();
       const rotationSuffix = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`;
-      
+
       for (const file of logFiles) {
         const filePath = path.join(logDir, file);
         const stats = await fs.stat(filePath);
-        
+
         // Rotate files older than 24 hours
         if (Date.now() - stats.mtime.getTime() > 24 * 60 * 60 * 1000) {
           const baseName = file.replace('.log', '');
           const rotatedName = `${baseName}.${rotationSuffix}.log`;
           const rotatedPath = path.join(logDir, rotatedName);
-          
+
           await fs.rename(filePath, rotatedPath);
           rotatedCount++;
         }
       }
-      
+
       systemLogger.info(`Rotated ${rotatedCount} log files`);
       return rotatedCount;
     } catch (error) {
       systemLogger.error('Failed to rotate logs:', error);
-      throw new Error(`Failed to rotate logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to rotate logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -458,25 +487,27 @@ export class RuntimeLogger implements IRuntimeLogger {
     try {
       const logDir = path.join(this.config.storageBasePath, 'logs');
       const files = await fs.readdir(logDir);
-      const cutoffTime = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
-      
+      const cutoffTime = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
+
       let deletedCount = 0;
-      
+
       for (const file of files) {
         const filePath = path.join(logDir, file);
         const stats = await fs.stat(filePath);
-        
+
         if (stats.mtime.getTime() < cutoffTime) {
           await fs.unlink(filePath);
           deletedCount++;
         }
       }
-      
+
       systemLogger.info(`Cleaned up ${deletedCount} old log files`);
       return deletedCount;
     } catch (error) {
       systemLogger.error(`Failed to cleanup logs older than ${olderThanDays} days:`, error);
-      throw new Error(`Failed to cleanup logs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -489,7 +520,7 @@ export class RuntimeLogger implements IRuntimeLogger {
         clearInterval(this.flushTimer);
         this.flushTimer = undefined;
       }
-      
+
       await this.flushBuffer();
       systemLogger.debug('Runtime Logger shutdown complete');
     } catch (error) {
@@ -520,20 +551,20 @@ export class RuntimeLogger implements IRuntimeLogger {
     try {
       // Group logs by job/session for efficient writing
       const logsByJob = new Map<string, RuntimeLog[]>();
-      
+
       for (const log of this.logBuffer) {
         const key = `${log.jobId}_${log.sessionId}`;
         if (!logsByJob.has(key)) {
           logsByJob.set(key, []);
         }
-        logsByJob.get(key)!.push(log);
+        logsByJob.get(key).push(log);
       }
-      
+
       // Write logs to files
       const writePromises = Array.from(logsByJob.entries()).map(async ([key, logs]) => {
         const logFilePath = this.getLogFilePath(key);
-        const logLines = logs.map(log => JSON.stringify(log) + '\n').join('');
-        
+        const logLines = logs.map((log) => JSON.stringify(log) + '\n').join('');
+
         try {
           await fs.appendFile(logFilePath, logLines);
         } catch (error) {
@@ -545,9 +576,9 @@ export class RuntimeLogger implements IRuntimeLogger {
           }
         }
       });
-      
+
       await Promise.all(writePromises);
-      
+
       // Clear buffer
       this.logBuffer.length = 0;
     } catch (error) {
@@ -560,15 +591,18 @@ export class RuntimeLogger implements IRuntimeLogger {
     try {
       const logDir = path.join(this.config.storageBasePath, 'logs');
       const files = await fs.readdir(logDir);
-      const logFiles = files.filter(file => file.endsWith('.log'));
-      
+      const logFiles = files.filter((file) => file.endsWith('.log'));
+
       const allLogs: RuntimeLog[] = [];
-      
+
       for (const file of logFiles) {
         const filePath = path.join(logDir, file);
         const content = await fs.readFile(filePath, 'utf-8');
-        const lines = content.trim().split('\n').filter(line => line);
-        
+        const lines = content
+          .trim()
+          .split('\n')
+          .filter((line) => line);
+
         for (const line of lines) {
           try {
             const log = JSON.parse(line, this.dateReviver) as RuntimeLog;
@@ -578,7 +612,7 @@ export class RuntimeLogger implements IRuntimeLogger {
           }
         }
       }
-      
+
       return allLogs;
     } catch (error) {
       systemLogger.error('Failed to read all logs:', error);
@@ -588,35 +622,35 @@ export class RuntimeLogger implements IRuntimeLogger {
 
   private applyFilters(logs: RuntimeLog[], filters: LogFilters): RuntimeLog[] {
     let filtered = logs;
-    
+
     if (filters.level) {
-      filtered = filtered.filter(log => filters.level!.includes(log.level));
+      filtered = filtered.filter((log) => filters.level.includes(log.level));
     }
-    
+
     if (filters.event) {
-      filtered = filtered.filter(log => filters.event!.includes(log.event));
+      filtered = filtered.filter((log) => filters.event.includes(log.event));
     }
-    
+
     if (filters.startTime) {
-      filtered = filtered.filter(log => log.timestamp >= filters.startTime!);
+      filtered = filtered.filter((log) => log.timestamp >= filters.startTime);
     }
-    
+
     if (filters.endTime) {
-      filtered = filtered.filter(log => log.timestamp <= filters.endTime!);
+      filtered = filtered.filter((log) => log.timestamp <= filters.endTime);
     }
-    
+
     if (filters.hasError !== undefined) {
-      filtered = filtered.filter(log => 
-        filters.hasError ? (log.data.error !== undefined) : (log.data.error === undefined)
+      filtered = filtered.filter((log) =>
+        filters.hasError ? log.data.error !== undefined : log.data.error === undefined,
       );
     }
-    
+
     if (filters.minDuration !== undefined) {
-      filtered = filtered.filter(log => 
-        log.data.duration !== undefined && (log.data.duration as number) >= filters.minDuration!
+      filtered = filtered.filter(
+        (log) => log.data.duration !== undefined && log.data.duration >= filters.minDuration,
       );
     }
-    
+
     return filtered;
   }
 

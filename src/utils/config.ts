@@ -41,7 +41,7 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
     gotchaPromotionThreshold: 3,
     effectivenessDecayRate: 0.05,
     cleanupIntervalDays: 90,
-    autoPromoteGotchas: true
+    autoPromoteGotchas: true,
   },
   memory: {
     storageBasePath: './memory',
@@ -55,7 +55,7 @@ const DEFAULT_CONFIG: OrchestratorConfig = {
       memoryOperationTimeMs: 100,
       logWriteTimeMs: 50,
       analyticsCalculationTimeMs: 200,
-    }
+    },
   },
 };
 

@@ -1,6 +1,6 @@
 /**
  * SupervisorIntegration - Integration layer for ProcessSupervisor with AgentPool
- * 
+ *
  * Provides seamless integration between the ProcessSupervisor and existing
  * AgentPool system, enabling supervised agent execution with comprehensive
  * process management and monitoring.
@@ -8,18 +8,19 @@
 
 import { EventEmitter } from 'events';
 import { LogContext } from '../utils/logger';
-import { ProcessSupervisor, ProcessSupervisorConfig, SupervisedProcessOptions } from './process-supervisor';
+import type { ProcessSupervisorConfig, SupervisedProcessOptions } from './process-supervisor';
+import { ProcessSupervisor } from './process-supervisor';
 import type { Agent, AgentConfig } from '../types';
 
 export interface SupervisedAgentConfig extends AgentConfig {
   // Process supervisor settings
   processSupervisor: ProcessSupervisorConfig;
-  
+
   // Integration settings
   autoRestartAgents: boolean;
   maxAgentRestarts: number;
   agentHealthCheckInterval: number;
-  
+
   // Agent-specific resource limits
   agentResourceOverrides: Record<string, Partial<ProcessSupervisorConfig['resourceLimits']>>;
 }
@@ -54,12 +55,12 @@ export class SupervisorIntegration extends EventEmitter {
   private logger: LogContext;
   private config: SupervisedAgentConfig;
   private processSupervisor: ProcessSupervisor;
-  
+
   // Agent tracking
   private runningAgents: Map<string, { processId: string; agentType: string; startTime: Date }>;
   private agentProcessMap: Map<string, string>; // processId -> agentId
   private agentRestartCounts: Map<string, number>;
-  
+
   // Integration state
   private initialized: boolean = false;
   private shutdownInProgress: boolean = false;
@@ -69,11 +70,11 @@ export class SupervisorIntegration extends EventEmitter {
     this.logger = new LogContext('SupervisorIntegration');
     this.config = config;
     this.processSupervisor = new ProcessSupervisor(config.processSupervisor);
-    
+
     this.runningAgents = new Map();
     this.agentProcessMap = new Map();
     this.agentRestartCounts = new Map();
-    
+
     this.setupSupervisorEventHandlers();
   }
 
@@ -91,16 +92,15 @@ export class SupervisorIntegration extends EventEmitter {
     try {
       // Initialize the process supervisor
       await this.processSupervisor.initialize();
-      
+
       // Setup health monitoring for agents
       if (this.config.agentHealthCheckInterval > 0) {
         this.startAgentHealthMonitoring();
       }
-      
+
       this.initialized = true;
       this.logger.info('Supervisor Integration initialized successfully');
       this.emit('integration:initialized');
-
     } catch (error) {
       this.logger.error('Failed to initialize Supervisor Integration', error);
       throw error;
@@ -116,7 +116,9 @@ export class SupervisorIntegration extends EventEmitter {
     }
 
     const startTime = Date.now();
-    this.logger.info(`Starting supervised agent execution: ${request.agentType} for task ${request.taskId}`);
+    this.logger.info(
+      `Starting supervised agent execution: ${request.agentType} for task ${request.taskId}`,
+    );
 
     // Prepare supervised process options
     const processOptions: SupervisedProcessOptions = {
@@ -137,27 +139,30 @@ export class SupervisorIntegration extends EventEmitter {
         taskId: request.taskId,
         agentType: request.agentType,
         startTime: new Date(),
-        ...request.context
-      }
+        ...request.context,
+      },
     };
 
     try {
       // Start the supervised process
       const processId = await this.processSupervisor.startProcess(processOptions);
-      
+
       // Track the running agent
       this.runningAgents.set(request.agentId, {
         processId,
         agentType: request.agentType,
-        startTime: new Date()
+        startTime: new Date(),
       });
       this.agentProcessMap.set(processId, request.agentId);
-      
+
       this.emit('agent:started', { agentId: request.agentId, processId, taskId: request.taskId });
-      
+
       // Wait for process completion
-      const result = await this.waitForProcessCompletion(processId, request.timeout || this.config.timeout);
-      
+      const result = await this.waitForProcessCompletion(
+        processId,
+        request.timeout || this.config.timeout,
+      );
+
       // Calculate final result
       const executionTime = Date.now() - startTime;
       const finalResult: SupervisedAgentResult = {
@@ -168,15 +173,14 @@ export class SupervisorIntegration extends EventEmitter {
         output: result.output,
         error: result.error,
         executionTime,
-        resourceUsage: result.resourceUsage
+        resourceUsage: result.resourceUsage,
       };
-      
+
       this.emit('agent:completed', finalResult);
       return finalResult;
-      
     } catch (error) {
       this.logger.error(`Agent execution failed: ${request.agentId}`, error);
-      
+
       const executionTime = Date.now() - startTime;
       const errorResult: SupervisedAgentResult = {
         agentId: request.agentId,
@@ -186,12 +190,11 @@ export class SupervisorIntegration extends EventEmitter {
         output: '',
         error: String(error),
         executionTime,
-        resourceUsage: { memoryMB: 0, cpuPercent: 0, fileHandles: 0 }
+        resourceUsage: { memoryMB: 0, cpuPercent: 0, fileHandles: 0 },
       };
-      
+
       this.emit('agent:failed', errorResult);
       return errorResult;
-      
     } finally {
       // Clean up tracking
       this.runningAgents.delete(request.agentId);
@@ -214,7 +217,6 @@ export class SupervisorIntegration extends EventEmitter {
     try {
       await this.processSupervisor.stopProcess(agentInfo.processId, reason);
       this.emit('agent:killed', { agentId, processId: agentInfo.processId, reason });
-      
     } catch (error) {
       this.logger.error(`Failed to kill agent: ${agentId}`, error);
       throw error;
@@ -241,28 +243,27 @@ export class SupervisorIntegration extends EventEmitter {
     try {
       const newProcessId = await this.processSupervisor.restartProcess(
         agentInfo.processId,
-        `Agent restart ${restartCount + 1}`
+        `Agent restart ${restartCount + 1}`,
       );
-      
+
       // Update tracking
       this.agentProcessMap.delete(agentInfo.processId);
       this.runningAgents.set(agentId, {
         ...agentInfo,
         processId: newProcessId,
-        startTime: new Date()
+        startTime: new Date(),
       });
       this.agentProcessMap.set(newProcessId, agentId);
       this.agentRestartCounts.set(agentId, restartCount + 1);
-      
-      this.emit('agent:restarted', { 
-        agentId, 
-        oldProcessId: agentInfo.processId, 
+
+      this.emit('agent:restarted', {
+        agentId,
+        oldProcessId: agentInfo.processId,
         newProcessId,
-        restartCount: restartCount + 1 
+        restartCount: restartCount + 1,
       });
-      
+
       return newProcessId;
-      
     } catch (error) {
       this.logger.error(`Failed to restart agent: ${agentId}`, error);
       throw error;
@@ -291,14 +292,14 @@ export class SupervisorIntegration extends EventEmitter {
 
     for (const [agentId, agentInfo] of this.runningAgents) {
       const processInfo = this.processSupervisor.getProcessInfo(agentInfo.processId);
-      
+
       result.push({
         agentId,
         processId: agentInfo.processId,
         agentType: agentInfo.agentType,
         startTime: agentInfo.startTime,
         executionTime: Date.now() - agentInfo.startTime.getTime(),
-        status: processInfo?.status || 'unknown'
+        status: processInfo?.status || 'unknown',
       });
     }
 
@@ -311,7 +312,7 @@ export class SupervisorIntegration extends EventEmitter {
   public getProcessMonitoringData(processId: string): any | null {
     const processInfo = this.processSupervisor.getProcessInfo(processId);
     if (!processInfo) return null;
-    
+
     // This would need to be implemented properly with access to process monitor
     return null; // Placeholder
   }
@@ -326,12 +327,12 @@ export class SupervisorIntegration extends EventEmitter {
     processStats: any;
   } {
     const processStats = this.processSupervisor.getStats();
-    
+
     return {
       runningAgents: this.runningAgents.size,
       totalAgentsExecuted: processStats.processesStarted,
       restartedAgents: Array.from(this.agentRestartCounts.values()).reduce((a, b) => a + b, 0),
-      processStats
+      processStats,
     };
   }
 
@@ -356,19 +357,18 @@ export class SupervisorIntegration extends EventEmitter {
           this.logger.error(`Failed to kill agent during shutdown: ${agentId}`, error);
         }
       }
-      
+
       // Shutdown the process supervisor
       await this.processSupervisor.shutdown();
-      
+
       // Clear tracking data
       this.runningAgents.clear();
       this.agentProcessMap.clear();
       this.agentRestartCounts.clear();
-      
+
       this.initialized = false;
       this.logger.info('Supervisor Integration shutdown complete');
       this.emit('integration:shutdown');
-      
     } catch (error) {
       this.logger.error('Error during Supervisor Integration shutdown', error);
       throw error;
@@ -420,22 +420,22 @@ export class SupervisorIntegration extends EventEmitter {
 
   private buildClaudeArgs(request: AgentExecutionRequest): string[] {
     const args: string[] = [];
-    
+
     // Add basic arguments
     args.push('--task', request.instructions);
     args.push('--agent-type', request.agentType);
     args.push('--task-id', request.taskId);
-    
+
     // Add timeout if specified
     if (request.timeout) {
       args.push('--timeout', String(request.timeout));
     }
-    
+
     // Add priority if not normal
     if (request.priority !== 'normal') {
       args.push('--priority', request.priority);
     }
-    
+
     return args;
   }
 
@@ -443,28 +443,34 @@ export class SupervisorIntegration extends EventEmitter {
     return {
       // Inherit system environment
       ...process.env,
-      
+
       // Add FF2 context
       FF2_AGENT_ID: request.agentId,
       FF2_TASK_ID: request.taskId,
       FF2_AGENT_TYPE: request.agentType,
       FF2_PRIORITY: request.priority,
       FF2_SUPERVISED: 'true',
-      
+
       // Add request context
       ...Object.fromEntries(
         Object.entries(request.context || {}).map(([key, value]) => [
-          `FF2_${key.toUpperCase()}`, String(value)
-        ])
-      )
+          `FF2_${key.toUpperCase()}`,
+          String(value),
+        ]),
+      ),
     };
   }
 
-  private getAgentResourceLimits(agentType: string): Partial<ProcessSupervisorConfig['resourceLimits']> | undefined {
+  private getAgentResourceLimits(
+    agentType: string,
+  ): Partial<ProcessSupervisorConfig['resourceLimits']> | undefined {
     return this.config.agentResourceOverrides[agentType];
   }
 
-  private async waitForProcessCompletion(processId: string, timeout: number): Promise<{
+  private async waitForProcessCompletion(
+    processId: string,
+    timeout: number,
+  ): Promise<{
     success: boolean;
     output: string;
     error?: string;
@@ -472,21 +478,23 @@ export class SupervisorIntegration extends EventEmitter {
   }> {
     return new Promise((resolve, reject) => {
       let completed = false;
-      
+
       const handleCompletion = (success: boolean, output: string = '', error?: string) => {
         if (completed) return;
         completed = true;
-        
+
         // Get final resource usage
         const processInfo = this.processSupervisor.getProcessInfo(processId);
         const monitoringData = this.processSupervisor.getProcessMonitoringData(processId);
-        
-        const resourceUsage = monitoringData ? {
-          memoryMB: monitoringData.memoryMB,
-          cpuPercent: monitoringData.cpuPercent,
-          fileHandles: monitoringData.fileHandles
-        } : { memoryMB: 0, cpuPercent: 0, fileHandles: 0 };
-        
+
+        const resourceUsage = monitoringData
+          ? {
+              memoryMB: monitoringData.memoryMB,
+              cpuPercent: monitoringData.cpuPercent,
+              fileHandles: monitoringData.fileHandles,
+            }
+          : { memoryMB: 0, cpuPercent: 0, fileHandles: 0 };
+
         resolve({ success, output, error, resourceUsage });
       };
 
@@ -516,11 +524,14 @@ export class SupervisorIntegration extends EventEmitter {
           completed = true;
           this.processSupervisor.off('process:stopped', onStopped);
           this.processSupervisor.off('process:error', onError);
-          
+
           // Try to kill the process
-          this.processSupervisor.stopProcess(processId, 'Execution timeout')
-            .catch(error => this.logger.error(`Failed to stop timed out process: ${processId}`, error));
-          
+          this.processSupervisor
+            .stopProcess(processId, 'Execution timeout')
+            .catch((error) =>
+              this.logger.error(`Failed to stop timed out process: ${processId}`, error),
+            );
+
           handleCompletion(false, '', 'Execution timeout');
         }
       }, timeout);
@@ -530,26 +541,26 @@ export class SupervisorIntegration extends EventEmitter {
   private startAgentHealthMonitoring(): void {
     setInterval(async () => {
       if (this.shutdownInProgress) return;
-      
+
       try {
         await this.performAgentHealthCheck();
       } catch (error) {
         this.logger.error('Agent health check failed', error);
       }
     }, this.config.agentHealthCheckInterval);
-    
+
     this.logger.debug('Agent health monitoring started');
   }
 
   private async performAgentHealthCheck(): Promise<void> {
     const healthStatuses = await this.processSupervisor.performHealthCheck();
-    
+
     for (const [processId, healthStatus] of healthStatuses) {
       const agentId = this.agentProcessMap.get(processId);
-      
+
       if (agentId && (healthStatus === 'unhealthy' || healthStatus === 'crashed')) {
         this.logger.warning(`Unhealthy agent detected: ${agentId} (${healthStatus})`);
-        
+
         if (this.config.autoRestartAgents) {
           try {
             await this.restartAgent(agentId);
@@ -557,7 +568,7 @@ export class SupervisorIntegration extends EventEmitter {
             this.logger.error(`Failed to restart unhealthy agent: ${agentId}`, error);
           }
         }
-        
+
         this.emit('agent:unhealthy', { agentId, processId, healthStatus });
       }
     }

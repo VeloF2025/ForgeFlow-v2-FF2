@@ -52,7 +52,7 @@ export interface ResourceAlert {
 
 /**
  * Resource Monitor - Advanced Resource Management and Monitoring
- * 
+ *
  * Provides comprehensive resource monitoring, limit enforcement, and alerting
  * for task execution processes with real-time tracking and automatic throttling.
  */
@@ -96,10 +96,10 @@ export class ResourceMonitor extends EventEmitter {
         async () => {
           // Establish system baseline
           this.systemBaseline = await this.collectSystemMetrics();
-          
+
           // Start monitoring
           this.startMonitoring();
-          
+
           // Setup cleanup handlers
           this.setupCleanupHandlers();
         },
@@ -108,12 +108,11 @@ export class ResourceMonitor extends EventEmitter {
           category: ErrorCategory.CONFIGURATION,
           retries: 2,
           timeoutMs: 10000,
-        }
+        },
       );
 
       this.logger.info('Resource Monitor initialized successfully');
       this.emit('monitor:initialized', this.systemBaseline);
-
     } catch (error) {
       this.logger.error('Failed to initialize Resource Monitor', error);
       throw error;
@@ -132,12 +131,12 @@ export class ResourceMonitor extends EventEmitter {
       diskWriteMB: 0,
       fileHandles: 0,
       executionTimeMs: 0,
-      startTime
+      startTime,
     };
 
     this.processTracking.set(pid, usage);
     this.taskProcessMapping.set(taskId, pid);
-    
+
     this.logger.debug(`Registered process ${pid} for task ${taskId}`);
     this.emit('process:registered', { taskId, pid, startTime });
   }
@@ -152,7 +151,7 @@ export class ResourceMonitor extends EventEmitter {
       this.taskProcessMapping.delete(taskId);
       this.throttledProcesses.delete(pid);
       this.terminatedProcesses.delete(pid);
-      
+
       this.logger.debug(`Unregistered process ${pid} for task ${taskId}`);
       this.emit('process:unregistered', { taskId, pid });
     }
@@ -210,7 +209,7 @@ export class ResourceMonitor extends EventEmitter {
         type: 'maxMemoryMB',
         current: usage.memoryMB,
         limit: this.limits.maxMemoryMB,
-        percentage: (usage.memoryMB / this.limits.maxMemoryMB) * 100
+        percentage: (usage.memoryMB / this.limits.maxMemoryMB) * 100,
       });
     }
 
@@ -220,7 +219,7 @@ export class ResourceMonitor extends EventEmitter {
         type: 'maxCpuPercent',
         current: usage.cpuPercent,
         limit: this.limits.maxCpuPercent,
-        percentage: (usage.cpuPercent / this.limits.maxCpuPercent) * 100
+        percentage: (usage.cpuPercent / this.limits.maxCpuPercent) * 100,
       });
     }
 
@@ -230,7 +229,7 @@ export class ResourceMonitor extends EventEmitter {
         type: 'maxExecutionTimeMs',
         current: usage.executionTimeMs,
         limit: this.limits.maxExecutionTimeMs,
-        percentage: (usage.executionTimeMs / this.limits.maxExecutionTimeMs) * 100
+        percentage: (usage.executionTimeMs / this.limits.maxExecutionTimeMs) * 100,
       });
     }
 
@@ -241,7 +240,7 @@ export class ResourceMonitor extends EventEmitter {
         type: 'maxDiskUsageMB',
         current: totalDiskUsage,
         limit: this.limits.maxDiskUsageMB,
-        percentage: (totalDiskUsage / this.limits.maxDiskUsageMB) * 100
+        percentage: (totalDiskUsage / this.limits.maxDiskUsageMB) * 100,
       });
     }
 
@@ -251,13 +250,13 @@ export class ResourceMonitor extends EventEmitter {
         type: 'maxFileHandles',
         current: usage.fileHandles,
         limit: this.limits.maxFileHandles,
-        percentage: (usage.fileHandles / this.limits.maxFileHandles) * 100
+        percentage: (usage.fileHandles / this.limits.maxFileHandles) * 100,
       });
     }
 
     return {
       withinLimits: violations.length === 0,
-      violations
+      violations,
     };
   }
 
@@ -266,7 +265,7 @@ export class ResourceMonitor extends EventEmitter {
    */
   public getRecentAlerts(maxAge?: number): ResourceAlert[] {
     const cutoff = maxAge ? Date.now() - maxAge : 0;
-    return this.alertHistory.filter(alert => alert.timestamp.getTime() > cutoff);
+    return this.alertHistory.filter((alert) => alert.timestamp.getTime() > cutoff);
   }
 
   /**
@@ -285,7 +284,7 @@ export class ResourceMonitor extends EventEmitter {
 
       // Send SIGTERM first
       process.kill(pid, 'SIGTERM');
-      
+
       // Force kill after timeout
       setTimeout(() => {
         try {
@@ -298,7 +297,7 @@ export class ResourceMonitor extends EventEmitter {
       }, 5000);
 
       this.logger.warning(`Terminated task ${taskId} (PID: ${pid}) - Reason: ${reason}`);
-      
+
       const alert: ResourceAlert = {
         type: 'execution_time',
         severity: 'emergency',
@@ -308,12 +307,11 @@ export class ResourceMonitor extends EventEmitter {
         currentValue: 0,
         limitValue: 0,
         timestamp: new Date(),
-        context: { reason, action: 'force_terminate' }
+        context: { reason, action: 'force_terminate' },
       };
-      
+
       this.addAlert(alert);
       this.emit('task:terminated', { taskId, pid, reason, alert });
-
     } catch (error) {
       this.logger.error(`Failed to terminate task ${taskId}`, error);
     }
@@ -331,7 +329,7 @@ export class ResourceMonitor extends EventEmitter {
     try {
       // Collect system metrics
       const systemUsage = await this.collectSystemMetrics();
-      
+
       // Update process metrics
       for (const [pid, usage] of this.processTracking) {
         await this.updateProcessMetrics(pid, usage);
@@ -344,9 +342,8 @@ export class ResourceMonitor extends EventEmitter {
       this.emit('system:usage', {
         system: systemUsage,
         processes: Array.from(this.processTracking.values()),
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-
     } catch (error) {
       this.logger.error('Error during monitoring cycle', error);
     }
@@ -382,7 +379,7 @@ export class ResourceMonitor extends EventEmitter {
       networkTxMB: 0, // Simplified
       loadAverage: cpuLoad,
       uptimeSeconds: os.uptime(),
-      activeProcesses: this.processTracking.size
+      activeProcesses: this.processTracking.size,
     };
   }
 
@@ -391,21 +388,20 @@ export class ResourceMonitor extends EventEmitter {
       // Get process memory usage (simplified - in production use more sophisticated monitoring)
       const memUsage = process.memoryUsage();
       usage.memoryMB = Math.round(memUsage.rss / (1024 * 1024));
-      
+
       // Get CPU usage (simplified)
       const cpuUsage = process.cpuUsage();
       usage.cpuPercent = Math.min(100, Math.round((cpuUsage.user + cpuUsage.system) / 10000));
-      
+
       // Calculate execution time
       usage.executionTimeMs = Date.now() - usage.startTime.getTime();
-      
+
       // Estimate file handles (simplified)
       usage.fileHandles = Math.floor(Math.random() * 10) + 1; // Mock data
-      
+
       // Estimate disk I/O (simplified)
       usage.diskReadMB = Math.floor(Math.random() * 5);
       usage.diskWriteMB = Math.floor(Math.random() * 5);
-
     } catch (error) {
       this.logger.debug(`Failed to update metrics for PID ${pid}:`, error);
     }
@@ -419,18 +415,22 @@ export class ResourceMonitor extends EventEmitter {
       }
 
       const limitsCheck = this.isWithinLimits(taskId);
-      
+
       for (const violation of limitsCheck.violations) {
         // Check if we should throttle
-        if (violation.percentage >= this.THROTTLE_THRESHOLD * 100 && 
-            !this.throttledProcesses.has(pid)) {
+        if (
+          violation.percentage >= this.THROTTLE_THRESHOLD * 100 &&
+          !this.throttledProcesses.has(pid)
+        ) {
           await this.throttleProcess(taskId, pid, violation);
         }
 
         // Check if we should terminate
         if (violation.percentage >= this.TERMINATE_THRESHOLD * 100) {
-          await this.forceTerminateTask(taskId, 
-            `${violation.type} exceeded ${violation.percentage.toFixed(1)}% of limit`);
+          await this.forceTerminateTask(
+            taskId,
+            `${violation.type} exceeded ${violation.percentage.toFixed(1)}% of limit`,
+          );
           return; // Skip further processing for this task
         }
 
@@ -443,12 +443,16 @@ export class ResourceMonitor extends EventEmitter {
   private async throttleProcess(taskId: string, pid: number, violation: any): Promise<void> {
     try {
       this.throttledProcesses.add(pid);
-      
+
       // Send SIGUSR1 as throttling signal (process should handle gracefully)
       process.kill(pid, 'SIGUSR1');
-      
+
       const alert: ResourceAlert = {
-        type: violation.type.replace('max', '').replace('MB', '').replace('Percent', '').toLowerCase(),
+        type: violation.type
+          .replace('max', '')
+          .replace('MB', '')
+          .replace('Percent', '')
+          .toLowerCase(),
         severity: 'warning',
         message: `Process throttled due to ${violation.type} usage: ${violation.percentage.toFixed(1)}%`,
         processId: pid,
@@ -456,14 +460,15 @@ export class ResourceMonitor extends EventEmitter {
         currentValue: violation.current,
         limitValue: violation.limit,
         timestamp: new Date(),
-        context: { action: 'throttle', percentage: violation.percentage }
+        context: { action: 'throttle', percentage: violation.percentage },
       };
 
       this.addAlert(alert);
       this.emit('process:throttled', { taskId, pid, violation, alert });
-      
-      this.logger.warning(`Throttled task ${taskId} (PID: ${pid}) - ${violation.type}: ${violation.percentage.toFixed(1)}%`);
 
+      this.logger.warning(
+        `Throttled task ${taskId} (PID: ${pid}) - ${violation.type}: ${violation.percentage.toFixed(1)}%`,
+      );
     } catch (error) {
       this.logger.error(`Failed to throttle process ${pid}`, error);
     }
@@ -471,22 +476,26 @@ export class ResourceMonitor extends EventEmitter {
 
   private async generateResourceAlert(taskId: string, pid: number, violation: any): Promise<void> {
     // Check for alert cooldown
-    const recentAlert = this.alertHistory.find(alert => 
-      alert.taskId === taskId && 
-      alert.type === violation.type &&
-      Date.now() - alert.timestamp.getTime() < this.ALERT_COOLDOWN_MS
+    const recentAlert = this.alertHistory.find(
+      (alert) =>
+        alert.taskId === taskId &&
+        alert.type === violation.type &&
+        Date.now() - alert.timestamp.getTime() < this.ALERT_COOLDOWN_MS,
     );
 
     if (recentAlert) {
       return; // Skip duplicate alert
     }
 
-    const severity: ResourceAlert['severity'] = 
-      violation.percentage >= 90 ? 'critical' :
-      violation.percentage >= 75 ? 'warning' : 'warning';
+    const severity: ResourceAlert['severity'] =
+      violation.percentage >= 90 ? 'critical' : violation.percentage >= 75 ? 'warning' : 'warning';
 
     const alert: ResourceAlert = {
-      type: violation.type.replace('max', '').replace('MB', '').replace('Percent', '').toLowerCase(),
+      type: violation.type
+        .replace('max', '')
+        .replace('MB', '')
+        .replace('Percent', '')
+        .toLowerCase(),
       severity,
       message: `Resource limit exceeded: ${violation.type} at ${violation.percentage.toFixed(1)}%`,
       processId: pid,
@@ -494,10 +503,10 @@ export class ResourceMonitor extends EventEmitter {
       currentValue: violation.current,
       limitValue: violation.limit,
       timestamp: new Date(),
-      context: { 
+      context: {
         percentage: violation.percentage,
-        usage: this.processTracking.get(pid)
-      }
+        usage: this.processTracking.get(pid),
+      },
     };
 
     this.addAlert(alert);
@@ -506,7 +515,7 @@ export class ResourceMonitor extends EventEmitter {
 
   private addAlert(alert: ResourceAlert): void {
     this.alertHistory.push(alert);
-    
+
     // Trim history if too large
     if (this.alertHistory.length > this.MAX_ALERT_HISTORY) {
       this.alertHistory = this.alertHistory.slice(-Math.floor(this.MAX_ALERT_HISTORY / 2));
@@ -519,7 +528,7 @@ export class ResourceMonitor extends EventEmitter {
     // Handle process exit
     process.on('SIGINT', () => this.shutdown());
     process.on('SIGTERM', () => this.shutdown());
-    
+
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
       this.logger.error('Uncaught exception in ResourceMonitor', error);
@@ -553,7 +562,7 @@ export class ResourceMonitor extends EventEmitter {
       totalAlerts: this.alertHistory.length,
       alertsByType,
       alertsBySeverity,
-      uptimeMs: this.systemBaseline ? Date.now() - this.systemBaseline.uptimeSeconds * 1000 : 0
+      uptimeMs: this.systemBaseline ? Date.now() - this.systemBaseline.uptimeSeconds * 1000 : 0,
     };
   }
 
@@ -578,7 +587,6 @@ export class ResourceMonitor extends EventEmitter {
 
       this.logger.info('Resource Monitor shutdown complete');
       this.emit('monitor:shutdown');
-
     } catch (error) {
       this.logger.error('Error during Resource Monitor shutdown', error);
       throw error;

@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { rmSync, existsSync } from 'fs';
 import { ForgeFlowIndexManager } from '../index-manager.js';
-import { IndexConfig, IndexEntry } from '../types.js';
+import type { IndexConfig, IndexEntry } from '../types.js';
 
 describe('Index Layer Performance Benchmarks', () => {
   let indexManager: ForgeFlowIndexManager;
@@ -37,7 +37,7 @@ describe('Index Layer Performance Benchmarks', () => {
       defaultLimit: 20,
       maxLimit: 1000,
       snippetLength: 150,
-      maxSnippets: 5
+      maxSnippets: 5,
     };
 
     indexManager = new ForgeFlowIndexManager(config);
@@ -54,7 +54,7 @@ describe('Index Layer Performance Benchmarks', () => {
   describe('Indexing Performance', () => {
     it('should index 10k entries in under 60 seconds', async () => {
       const entries = createLargeDataset(10000);
-      
+
       const startTime = Date.now();
       await indexManager.indexContent(entries);
       const endTime = Date.now();
@@ -76,13 +76,13 @@ describe('Index Layer Performance Benchmarks', () => {
 
     it('should handle batch indexing efficiently', async () => {
       await clearIndex();
-      
+
       const batchSizes = [100, 500, 1000];
       const performanceResults: Array<{ batchSize: number; entriesPerSecond: number }> = [];
 
       for (const batchSize of batchSizes) {
         await clearIndex();
-        
+
         const entries = createLargeDataset(5000);
         const originalBatchSize = config.batchSize;
         config.batchSize = batchSize;
@@ -96,12 +96,12 @@ describe('Index Layer Performance Benchmarks', () => {
         performanceResults.push({ batchSize, entriesPerSecond });
 
         console.log(`\n📊 Batch Size ${batchSize}: ${entriesPerSecond.toFixed(2)} entries/second`);
-        
+
         config.batchSize = originalBatchSize;
       }
 
       // Larger batch sizes should generally perform better
-      const bestPerformance = Math.max(...performanceResults.map(r => r.entriesPerSecond));
+      const bestPerformance = Math.max(...performanceResults.map((r) => r.entriesPerSecond));
       expect(bestPerformance).toBeGreaterThan(150);
     }, 180000); // 3 minute timeout
   });
@@ -111,7 +111,7 @@ describe('Index Layer Performance Benchmarks', () => {
       // Index a large dataset for search testing
       await clearIndex();
       console.log('\n🔄 Setting up large dataset for search performance tests...');
-      
+
       const startTime = Date.now();
       const largeDataset = createLargeDataset(50000); // 50k entries
       await indexManager.indexContent(largeDataset);
@@ -132,7 +132,7 @@ describe('Index Layer Performance Benchmarks', () => {
         'testing strategy',
         'code review process',
         'monitoring and alerting',
-        'scalability patterns'
+        'scalability patterns',
       ];
 
       let totalSearchTime = 0;
@@ -145,14 +145,14 @@ describe('Index Layer Performance Benchmarks', () => {
 
       for (const query of testQueries) {
         const startTime = Date.now();
-        
+
         const results = await searchEngine.search({
           query,
           limit: 20,
           includeSnippets: true,
-          highlightResults: true
+          highlightResults: true,
         });
-        
+
         const searchTime = Date.now() - startTime;
         searchTimes.push(searchTime);
         totalSearchTime += searchTime;
@@ -196,31 +196,31 @@ describe('Index Layer Performance Benchmarks', () => {
         'database optimization',
         'security best practices',
         'api design guidelines',
-        'performance monitoring'
+        'performance monitoring',
       ];
 
       // Simulate concurrent users
       const userSessions = Array.from({ length: concurrentQueries }, async (_, userId) => {
         const userSearchTimes: number[] = [];
-        
+
         for (let i = 0; i < queriesPerUser; i++) {
           const query = queries[i % queries.length];
           const startTime = Date.now();
-          
+
           const results = await searchEngine.search({
             query,
             limit: 20,
-            includeSnippets: true
+            includeSnippets: true,
           });
-          
+
           const searchTime = Date.now() - startTime;
           userSearchTimes.push(searchTime);
-          
+
           // Each search should still meet performance requirement
           expect(searchTime).toBeLessThan(1000); // Relaxed under load
           expect(results.results.length).toBeGreaterThan(0);
         }
-        
+
         return userSearchTimes;
       });
 
@@ -249,52 +249,52 @@ describe('Index Layer Performance Benchmarks', () => {
 
     it('should scale efficiently with dataset growth', async () => {
       const searchEngine = indexManager.getSearchEngine();
-      
+
       // Test search performance after adding more data
       console.log('\n📈 Scaling Test: Adding more entries to existing dataset');
-      
+
       const additionalEntries = createLargeDataset(25000, 'scale-test'); // Add 25k more
-      
+
       const indexStartTime = Date.now();
       await indexManager.indexContent(additionalEntries);
       const indexEndTime = Date.now();
-      
+
       const indexTime = indexEndTime - indexStartTime;
       console.log(`  Indexed additional 25k entries in ${indexTime}ms`);
-      
+
       const stats = await indexManager.getStats();
       console.log(`  Total entries now: ${stats.totalEntries}`);
       expect(stats.totalEntries).toBe(75000); // 50k + 25k
-      
+
       // Test search performance on larger dataset
       const testQueries = [
         'authentication error handling',
         'database performance tuning',
-        'api security validation'
+        'api security validation',
       ];
-      
+
       const searchTimes: number[] = [];
-      
+
       for (const query of testQueries) {
         const startTime = Date.now();
         const results = await searchEngine.search({
           query,
           limit: 20,
-          includeSnippets: true
+          includeSnippets: true,
         });
         const searchTime = Date.now() - startTime;
         searchTimes.push(searchTime);
-        
+
         console.log(`  "${query}": ${searchTime}ms (${results.totalMatches} results)`);
-        
+
         // Should still meet performance requirement with larger dataset
         expect(searchTime).toBeLessThan(600); // Slightly relaxed for 75k entries
         expect(results.results.length).toBeGreaterThan(0);
       }
-      
+
       const avgSearchTime = searchTimes.reduce((a, b) => a + b, 0) / searchTimes.length;
       console.log(`  Average search time with 75k entries: ${avgSearchTime.toFixed(2)}ms`);
-      
+
       expect(avgSearchTime).toBeLessThan(400); // Should remain reasonable
     }, 180000); // 3 minute timeout
   });
@@ -302,31 +302,31 @@ describe('Index Layer Performance Benchmarks', () => {
   describe('Memory and Resource Usage', () => {
     it('should maintain reasonable memory usage during large operations', async () => {
       const initialMemory = process.memoryUsage();
-      
+
       // Perform memory-intensive operations
       await clearIndex();
       const largeDataset = createLargeDataset(20000);
       await indexManager.indexContent(largeDataset);
-      
+
       // Perform multiple searches
       const searchEngine = indexManager.getSearchEngine();
       for (let i = 0; i < 100; i++) {
         await searchEngine.search({
           query: `test query ${i}`,
           limit: 50,
-          includeSnippets: true
+          includeSnippets: true,
         });
       }
-      
+
       const finalMemory = process.memoryUsage();
       const memoryIncrease = finalMemory.heapUsed - initialMemory.heapUsed;
       const memoryMB = memoryIncrease / (1024 * 1024);
-      
+
       console.log(`\n💾 Memory Usage Analysis:`);
       console.log(`  Initial heap: ${(initialMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Final heap: ${(finalMemory.heapUsed / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Memory increase: ${memoryMB.toFixed(2)}MB`);
-      
+
       // Memory increase should be reasonable for 20k entries
       expect(memoryMB).toBeLessThan(200); // <200MB increase
     });
@@ -336,12 +336,12 @@ describe('Index Layer Performance Benchmarks', () => {
       const entriesCount = stats.totalEntries;
       const dbSize = stats.databaseSize;
       const bytesPerEntry = dbSize / entriesCount;
-      
+
       console.log(`\n💽 Disk Usage Analysis:`);
       console.log(`  Entries: ${entriesCount.toLocaleString()}`);
       console.log(`  Database size: ${(dbSize / 1024 / 1024).toFixed(2)}MB`);
       console.log(`  Bytes per entry: ${bytesPerEntry.toFixed(2)}`);
-      
+
       // Database should be reasonably sized
       expect(bytesPerEntry).toBeLessThan(10000); // <10KB per entry average
       expect(dbSize).toBeLessThan(config.maxDatabaseSize);
@@ -351,33 +351,33 @@ describe('Index Layer Performance Benchmarks', () => {
   describe('Performance Under Stress', () => {
     it('should maintain performance during maintenance operations', async () => {
       const searchEngine = indexManager.getSearchEngine();
-      
+
       // Start a vacuum operation (maintenance)
       const vacuumPromise = indexManager.vacuum();
-      
+
       // Perform searches during vacuum
       const searchPromises = Array.from({ length: 10 }, (_, i) =>
         searchEngine.search({
           query: `concurrent search ${i}`,
-          limit: 20
-        })
+          limit: 20,
+        }),
       );
-      
+
       const startTime = Date.now();
       const [vacuumResult, ...searchResults] = await Promise.all([
         vacuumPromise,
-        ...searchPromises
+        ...searchPromises,
       ]);
       const endTime = Date.now();
-      
+
       console.log(`\n🔧 Performance During Maintenance:`);
       console.log(`  Vacuum completed: ${vacuumResult.vacuumPerformed}`);
       console.log(`  Concurrent operations time: ${endTime - startTime}ms`);
       console.log(`  Searches completed: ${searchResults.length}`);
-      
+
       // All operations should complete successfully
       expect(vacuumResult.vacuumPerformed).toBe(true);
-      searchResults.forEach(result => {
+      searchResults.forEach((result) => {
         expect(result.results).toBeDefined();
       });
     });
@@ -395,21 +395,29 @@ describe('Index Layer Performance Benchmarks', () => {
   function createLargeDataset(size: number, prefix = 'perf'): IndexEntry[] {
     const entries: IndexEntry[] = [];
     const categories = [
-      'authentication', 'database', 'api', 'performance', 'security', 
-      'ui', 'testing', 'deployment', 'monitoring', 'scalability'
+      'authentication',
+      'database',
+      'api',
+      'performance',
+      'security',
+      'ui',
+      'testing',
+      'deployment',
+      'monitoring',
+      'scalability',
     ];
     const types = ['knowledge', 'gotcha', 'adr'] as const;
     const difficulties = ['low', 'medium', 'high'] as const;
     const scopes = ['global', 'project'] as const;
 
     console.log(`  Generating ${size.toLocaleString()} test entries...`);
-    
+
     for (let i = 0; i < size; i++) {
       const category = categories[i % categories.length];
       const type = types[i % types.length];
       const difficulty = difficulties[i % difficulties.length];
       const scope = scopes[i % scopes.length];
-      
+
       // Create realistic content with varying lengths
       const baseContent = `This is ${type} content for entry ${i} about ${category}. `;
       const contentVariations = [
@@ -417,17 +425,19 @@ describe('Index Layer Performance Benchmarks', () => {
         'Common issues include configuration problems, integration challenges, and performance bottlenecks.',
         'The solution involves careful analysis of requirements, proper architecture design, and thorough testing.',
         'Key considerations include security implications, scalability requirements, and maintainability aspects.',
-        'Implementation requires understanding of the underlying technology, proper error handling, and monitoring.'
+        'Implementation requires understanding of the underlying technology, proper error handling, and monitoring.',
       ];
-      
-      const content = baseContent + contentVariations[i % contentVariations.length].repeat(1 + (i % 5));
-      
+
+      const content =
+        baseContent + contentVariations[i % contentVariations.length].repeat(1 + (i % 5));
+
       entries.push({
         id: `${prefix}-entry-${i}`,
         type,
         title: `${category} ${type} example ${i}`,
         content,
         path: `test/${prefix}/entry-${i}`,
+        hash: `hash-${prefix}-entry-${i}`,
         metadata: {
           tags: [category, type, `tag-${i % 20}`],
           category,
@@ -440,17 +450,17 @@ describe('Index Layer Performance Benchmarks', () => {
           fileSize: content.length,
           relatedIds: [],
           parentId: i > 0 && i % 10 === 0 ? `${prefix}-entry-${i - 10}` : undefined,
-          childIds: []
+          childIds: [],
         },
-        lastModified: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000)
+        lastModified: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
       });
-      
+
       // Progress indicator for large datasets
       if (i > 0 && i % 10000 === 0) {
         console.log(`    Generated ${i.toLocaleString()} / ${size.toLocaleString()} entries...`);
       }
     }
-    
+
     return entries;
   }
 

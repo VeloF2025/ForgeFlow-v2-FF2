@@ -6,7 +6,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
-import { IdempotencyManager, IdempotencyKey, IdempotencyRecord } from '../idempotency-manager';
+import type { IdempotencyKey } from '../idempotency-manager';
+import { IdempotencyManager, IdempotencyRecord } from '../idempotency-manager';
 
 const TEST_STORAGE_DIR = path.join(__dirname, 'test-idempotency');
 
@@ -84,7 +85,7 @@ describe('IdempotencyManager', () => {
     it('should handle nested objects and null values', () => {
       const key1: IdempotencyKey = {
         operation: 'test',
-        parameters: { 
+        parameters: {
           nested: { x: 1, y: null },
           empty: undefined,
           array: [1, 2, 3],
@@ -166,8 +167,8 @@ describe('IdempotencyManager', () => {
       await manager.failOperation(trackingKey1, 'Test failure');
 
       // Wait a bit to avoid immediate retry
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       const result = await manager.shouldExecute(keyData);
       expect(result.execute).toBe(true);
       expect(result.reason).toBe('Retrying after failure');
@@ -191,9 +192,9 @@ describe('IdempotencyManager', () => {
       for (let i = 0; i < 3; i++) {
         const trackingKey = await manager.startOperation(keyData);
         await manager.failOperation(trackingKey, `Failure ${i + 1}`);
-        
+
         // Wait to avoid backoff
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise((resolve) => setTimeout(resolve, 150));
       }
 
       // Should not allow execution
@@ -218,7 +219,7 @@ describe('IdempotencyManager', () => {
       expect(result.reason).toContain('Retry backoff period not elapsed');
 
       // Wait for backoff period to elapse (first failure should have 1000ms backoff)
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       // Should allow retry after backoff
       const result2 = await manager.shouldExecute(keyData);
@@ -251,7 +252,7 @@ describe('IdempotencyManager', () => {
       };
 
       const rollbackData = { test: 'data' };
-      
+
       // Start operation
       const trackingKey = await manager.startOperation(keyData, rollbackData);
       expect(trackingKey).toBeTruthy();
@@ -280,7 +281,7 @@ describe('IdempotencyManager', () => {
 
       const trackingKey = await manager.startOperation(keyData);
       const error = new Error('Test operation failed');
-      
+
       await manager.failOperation(trackingKey, error);
 
       const record = await manager.getRecord(trackingKey);
@@ -297,7 +298,7 @@ describe('IdempotencyManager', () => {
 
       const rollbackData = { path: '/test/path', created: true };
       const trackingKey = await manager.startOperation(keyData, rollbackData);
-      
+
       await manager.completeOperation(trackingKey, 'success');
 
       let rollbackCalled = false;
@@ -307,7 +308,7 @@ describe('IdempotencyManager', () => {
         rollbackCalled = true;
         rollbackDataReceived = data;
         // Simulate cleanup work
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       };
 
       await manager.rollbackOperation(trackingKey, rollbackFn);
@@ -332,8 +333,9 @@ describe('IdempotencyManager', () => {
         throw new Error('Rollback failed');
       };
 
-      await expect(manager.rollbackOperation(trackingKey, rollbackFn))
-        .rejects.toThrow(/Rollback failed/);
+      await expect(manager.rollbackOperation(trackingKey, rollbackFn)).rejects.toThrow(
+        /Rollback failed/,
+      );
     });
   });
 
@@ -346,7 +348,7 @@ describe('IdempotencyManager', () => {
 
       const trackingKey = await manager.startOperation(keyData);
       const key = manager.generateKey(keyData);
-      
+
       // Check that file was created
       const recordPath = path.join(TEST_STORAGE_DIR, `${key}.json`);
       expect(await fs.pathExists(recordPath)).toBe(true);
@@ -384,7 +386,7 @@ describe('IdempotencyManager', () => {
     it('should handle corrupted record files gracefully', async () => {
       const key = 'corrupted-key';
       const recordPath = path.join(TEST_STORAGE_DIR, `${key}.json`);
-      
+
       await fs.ensureDir(TEST_STORAGE_DIR);
       await fs.writeFile(recordPath, 'invalid json content');
 
@@ -429,7 +431,7 @@ describe('IdempotencyManager', () => {
       // Old record should be gone, new record should remain
       const oldRecordAfter = await manager.getRecord(oldTrackingKey);
       const newRecordAfter = await manager.getRecord(newTrackingKey);
-      
+
       expect(oldRecordAfter).toBeNull();
       expect(newRecordAfter).toBeTruthy();
     });
@@ -442,7 +444,7 @@ describe('IdempotencyManager', () => {
 
       // Create old pending record
       const trackingKey = await manager.startOperation(keyData);
-      
+
       // Manually age the record
       const record = await manager.getRecord(trackingKey);
       if (record) {
@@ -483,7 +485,7 @@ describe('IdempotencyManager', () => {
         if (op.action === 'complete') {
           await manager.completeOperation(trackingKey, op.result);
         } else if (op.action === 'fail') {
-          await manager.failOperation(trackingKey, op.error!);
+          await manager.failOperation(trackingKey, op.error);
         }
         // 'pending' operations are left as is
       }
@@ -516,9 +518,9 @@ describe('IdempotencyManager', () => {
 
       expect(createWorktreeRecords).toHaveLength(2);
       expect(deleteWorktreeRecords).toHaveLength(1);
-      
-      expect(createWorktreeRecords.every(r => r.operation === 'createWorktree')).toBe(true);
-      expect(deleteWorktreeRecords.every(r => r.operation === 'deleteWorktree')).toBe(true);
+
+      expect(createWorktreeRecords.every((r) => r.operation === 'createWorktree')).toBe(true);
+      expect(deleteWorktreeRecords.every((r) => r.operation === 'deleteWorktree')).toBe(true);
     });
   });
 
@@ -526,20 +528,21 @@ describe('IdempotencyManager', () => {
     it('should handle non-existent record operations', async () => {
       const fakeKey = 'non-existent-key';
 
-      await expect(manager.completeOperation(fakeKey, 'result'))
-        .rejects.toThrow('No operation record found');
+      await expect(manager.completeOperation(fakeKey, 'result')).rejects.toThrow(
+        'No operation record found',
+      );
 
-      await expect(manager.failOperation(fakeKey, 'error'))
-        .rejects.toThrow('No operation record found');
+      await expect(manager.failOperation(fakeKey, 'error')).rejects.toThrow(
+        'No operation record found',
+      );
 
-      await expect(manager.rollbackOperation(fakeKey))
-        .rejects.toThrow('No operation record found');
+      await expect(manager.rollbackOperation(fakeKey)).rejects.toThrow('No operation record found');
     });
 
     it('should handle storage permission errors', async () => {
       // Create manager with invalid storage path (if possible on current platform)
       const invalidPath = path.join('/root/invalid/path/idempotency');
-      
+
       // This test may behave differently on different platforms
       try {
         const invalidManager = new IdempotencyManager({
@@ -551,8 +554,7 @@ describe('IdempotencyManager', () => {
           parameters: { id: 'permission-test' },
         };
 
-        await expect(invalidManager.startOperation(keyData))
-          .rejects.toThrow();
+        await expect(invalidManager.startOperation(keyData)).rejects.toThrow();
       } catch (error) {
         // Expected on some platforms
       }
@@ -565,7 +567,7 @@ describe('IdempotencyManager', () => {
       };
 
       const trackingKey = await manager.startOperation(keyData);
-      
+
       // Simulate concurrent modification by manually changing the record
       const record = await manager.getRecord(trackingKey);
       if (record) {
@@ -577,8 +579,7 @@ describe('IdempotencyManager', () => {
       }
 
       // Should still handle operations gracefully
-      await expect(manager.completeOperation(trackingKey, 'result'))
-        .resolves.not.toThrow();
+      await expect(manager.completeOperation(trackingKey, 'result')).resolves.not.toThrow();
     });
 
     it('should detect stuck pending operations', async () => {
@@ -590,9 +591,9 @@ describe('IdempotencyManager', () => {
       // Create old pending record (simulating stuck operation)
       const trackingKey = await manager.startOperation(keyData);
       const record = await manager.getRecord(trackingKey);
-      
+
       if (record) {
-        record.startTime = Date.now() - (11 * 60 * 1000); // 11 minutes ago
+        record.startTime = Date.now() - 11 * 60 * 1000; // 11 minutes ago
         const key = manager.generateKey(keyData);
         const recordPath = path.join(TEST_STORAGE_DIR, `${key}.json`);
         await fs.writeJson(recordPath, record);

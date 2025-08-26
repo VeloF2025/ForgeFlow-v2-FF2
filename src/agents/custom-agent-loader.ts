@@ -195,7 +195,7 @@ export class CustomAgentLoader extends EventEmitter {
       // 🟢 WORKING: Validate definition
       const validation = await this.validateDefinition(definition);
       if (!validation.valid) {
-        const errorMsg = validation.errors.map(e => `${e.path}: ${e.message}`).join('; ');
+        const errorMsg = validation.errors.map((e) => `${e.path}: ${e.message}`).join('; ');
         throw new Error(`Invalid agent definition: ${errorMsg}`);
       }
 
@@ -302,14 +302,19 @@ export class CustomAgentLoader extends EventEmitter {
   }
 
   // 🟢 WORKING: Load Python implementation (placeholder)
-  private async loadPythonImplementation(plugin: CustomAgentPlugin, basePath: string): Promise<void> {
+  private async loadPythonImplementation(
+    plugin: CustomAgentPlugin,
+    basePath: string,
+  ): Promise<void> {
     const { definition } = plugin;
     const { implementation } = definition;
 
     // 🟡 PARTIAL: Python implementation loading
     // TODO: Implement Python subprocess execution wrapper
-    this.logger.warning(`Python implementation loading not yet implemented for: ${definition.type}`);
-    
+    this.logger.warning(
+      `Python implementation loading not yet implemented for: ${definition.type}`,
+    );
+
     plugin.implementation = {
       executeFunction: async (...args: any[]) => {
         throw new Error('Python implementation execution not yet supported');
@@ -318,14 +323,17 @@ export class CustomAgentLoader extends EventEmitter {
   }
 
   // 🟢 WORKING: Load Shell implementation (placeholder)
-  private async loadShellImplementation(plugin: CustomAgentPlugin, basePath: string): Promise<void> {
+  private async loadShellImplementation(
+    plugin: CustomAgentPlugin,
+    basePath: string,
+  ): Promise<void> {
     const { definition } = plugin;
     const { implementation } = definition;
 
     // 🟡 PARTIAL: Shell implementation loading
     // TODO: Implement shell script execution wrapper
     this.logger.warning(`Shell implementation loading not yet implemented for: ${definition.type}`);
-    
+
     plugin.implementation = {
       executeFunction: async (...args: any[]) => {
         throw new Error('Shell implementation execution not yet supported');
@@ -334,14 +342,19 @@ export class CustomAgentLoader extends EventEmitter {
   }
 
   // 🟢 WORKING: Load Docker implementation (placeholder)
-  private async loadDockerImplementation(plugin: CustomAgentPlugin, basePath: string): Promise<void> {
+  private async loadDockerImplementation(
+    plugin: CustomAgentPlugin,
+    basePath: string,
+  ): Promise<void> {
     const { definition } = plugin;
     const { implementation } = definition;
 
     // 🟡 PARTIAL: Docker implementation loading
     // TODO: Implement Docker container execution wrapper
-    this.logger.warning(`Docker implementation loading not yet implemented for: ${definition.type}`);
-    
+    this.logger.warning(
+      `Docker implementation loading not yet implemented for: ${definition.type}`,
+    );
+
     plugin.implementation = {
       executeFunction: async (...args: any[]) => {
         throw new Error('Docker implementation execution not yet supported');
@@ -357,7 +370,7 @@ export class CustomAgentLoader extends EventEmitter {
     try {
       // 🟢 WORKING: JSON Schema validation
       const valid = this.ajv.validate('custom-agent-definition', definition);
-      
+
       if (!valid && this.ajv.errors) {
         for (const error of this.ajv.errors) {
           errors.push({
@@ -401,7 +414,7 @@ export class CustomAgentLoader extends EventEmitter {
   ): Promise<void> {
     // 🟢 WORKING: Check for duplicate agent types
     if (this.loadedAgents.has(definition.type)) {
-      const existing = this.loadedAgents.get(definition.type)!;
+      const existing = this.loadedAgents.get(definition.type);
       if (existing.definition.version !== definition.version) {
         warnings.push({
           path: 'type',
@@ -454,7 +467,10 @@ export class CustomAgentLoader extends EventEmitter {
   }
 
   // 🟢 WORKING: Create agent instance from plugin
-  async createAgentInstance(agentType: string, config?: Record<string, unknown>): Promise<Agent | null> {
+  async createAgentInstance(
+    agentType: string,
+    config?: Record<string, unknown>,
+  ): Promise<Agent | null> {
     const plugin = this.loadedAgents.get(agentType);
     if (!plugin) {
       this.logger.error(`Agent type not found: ${agentType}`);
@@ -584,8 +600,10 @@ export class CustomAgentLoader extends EventEmitter {
 
   // 🟢 WORKING: Utility methods
   private isDefinitionFile(filename: string): boolean {
-    return /\.(json|yaml|yml)$/.test(filename) && 
-           (filename.includes('agent') || filename === 'package.json');
+    return (
+      /\.(json|yaml|yml)$/.test(filename) &&
+      (filename.includes('agent') || filename === 'package.json')
+    );
   }
 
   private isImplementationFile(filename: string): boolean {
@@ -611,7 +629,12 @@ export class CustomAgentLoader extends EventEmitter {
     };
   }
 
-  private emitLoadEvent(type: AgentLoadEvent['type'], agentType: string, message?: string, error?: Error): void {
+  private emitLoadEvent(
+    type: AgentLoadEvent['type'],
+    agentType: string,
+    message?: string,
+    error?: Error,
+  ): void {
     const event: AgentLoadEvent = {
       type,
       agentType,
@@ -658,9 +681,9 @@ class CustomAgentWrapper extends BaseAgent {
   private config: Record<string, unknown>;
 
   constructor(
-    definition: CustomAgentDefinition, 
+    definition: CustomAgentDefinition,
     AgentClass: new (...args: any[]) => any,
-    config: Record<string, unknown> = {}
+    config: Record<string, unknown> = {},
   ) {
     super(definition.type, definition.capabilities);
     this.AgentClass = AgentClass;
@@ -691,7 +714,7 @@ class FunctionAgentWrapper extends BaseAgent {
   constructor(
     definition: CustomAgentDefinition,
     executeFunction: (...args: any[]) => Promise<any>,
-    config: Record<string, unknown> = {}
+    config: Record<string, unknown> = {},
   ) {
     super(definition.type, definition.capabilities);
     this.executeFunction = executeFunction;

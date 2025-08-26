@@ -1,22 +1,24 @@
 import { EventEmitter } from 'events';
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 import { LogContext } from '../utils/logger';
 import { withErrorHandling, ErrorCategory, AgentExecutionError } from '../utils/errors';
-import { ResourceMonitor, ResourceAlert } from './resource-monitor';
+import type { ResourceAlert } from './resource-monitor';
+import { ResourceMonitor } from './resource-monitor';
 import type { WorktreeInfo } from '../types';
-import type { 
+import type {
   ClaudeCodeAdapterConfig,
   TaskExecutionRequest,
   TaskExecutionResult,
-  TaskProgress
+  TaskProgress,
 } from './claude-code-adapter';
 
 /**
  * Task Execution Interface
- * 
+ *
  * Handles the actual execution of agent tasks in isolated worktree environments
  * with comprehensive monitoring, resource management, and secure sandboxing.
  */
@@ -35,7 +37,7 @@ export class TaskExecutor extends EventEmitter {
     this.adapter = adapter;
     this.activeProcesses = new Map();
     this.resourceTracking = new Map();
-    
+
     // Initialize resource monitor
     this.resourceMonitor = new ResourceMonitor({
       maxMemoryMB: config.resourceLimits.maxMemoryMB,
@@ -50,17 +52,19 @@ export class TaskExecutor extends EventEmitter {
 
   private setupResourceMonitorEvents(): void {
     this.resourceMonitor.on('resource:alert', (alert: ResourceAlert) => {
-      this.logger.warning(`Resource alert: ${alert.message}`, alert);
+      this.logger.warning(`Resource alert: ${alert.message} - ${JSON.stringify(alert)}`);
       this.emit('executor:resource-alert', alert);
     });
 
     this.resourceMonitor.on('process:throttled', (event: any) => {
-      this.logger.warning(`Process throttled: ${event.taskId}`, event);
+      this.logger.warning(`Process throttled: ${event.taskId} - ${JSON.stringify(event)}`);
       this.emit('executor:process-throttled', event);
     });
 
     this.resourceMonitor.on('task:terminated', (event: any) => {
-      this.logger.error(`Task terminated due to resource violation: ${event.taskId}`, event);
+      this.logger.error(
+        `Task terminated due to resource violation: ${event.taskId} - ${JSON.stringify(event)}`,
+      );
       this.emit('executor:task-terminated', event);
     });
   }
@@ -78,7 +82,7 @@ export class TaskExecutor extends EventEmitter {
    */
   public async executeInWorktree(
     request: TaskExecutionRequest,
-    worktreeInfo: WorktreeInfo
+    worktreeInfo: WorktreeInfo,
   ): Promise<TaskExecutionResult> {
     const startTime = Date.now();
     this.logger.info(`Executing task ${request.taskId} in worktree ${request.worktreeId}`);
@@ -100,22 +104,26 @@ export class TaskExecutor extends EventEmitter {
           category: ErrorCategory.AGENT_EXECUTION,
           retries: 1,
           timeoutMs: request.timeout || this.config.taskTimeout,
-        }
+        },
       );
 
-      this.logger.info(`Task ${request.taskId} completed successfully in ${Date.now() - startTime}ms`);
+      this.logger.info(
+        `Task ${request.taskId} completed successfully in ${Date.now() - startTime}ms`,
+      );
       return result;
-
     } catch (error) {
-      this.logger.error(`Task ${request.taskId} failed`, error);
+      this.logger.error(
+        `Task ${request.taskId} failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw new AgentExecutionError(
+        request.agentType,
         request.taskId,
         `Task execution failed: ${String(error)}`,
         {
           worktreeId: request.worktreeId,
           agentType: request.agentType,
-          originalError: error
-        }
+          originalError: error,
+        },
       );
     } finally {
       // Cleanup resources
@@ -127,9 +135,10 @@ export class TaskExecutor extends EventEmitter {
     // Check if worktree path exists and is accessible
     if (!(await fs.pathExists(worktreeInfo.path))) {
       throw new AgentExecutionError(
-        'worktree-not-accessible',
+        'task-executor',
+        worktreeInfo.id,
         `Worktree path does not exist: ${worktreeInfo.path}`,
-        { worktreeId: worktreeInfo.id, path: worktreeInfo.path }
+        { worktreeId: worktreeInfo.id, path: worktreeInfo.path },
       );
     }
 
@@ -137,9 +146,10 @@ export class TaskExecutor extends EventEmitter {
     const gitDir = path.join(worktreeInfo.path, '.git');
     if (!(await fs.pathExists(gitDir))) {
       throw new AgentExecutionError(
-        'invalid-git-worktree',
+        'task-executor',
+        worktreeInfo.id,
         `Invalid git worktree: ${worktreeInfo.path}`,
-        { worktreeId: worktreeInfo.id }
+        { worktreeId: worktreeInfo.id },
       );
     }
 
@@ -148,9 +158,10 @@ export class TaskExecutor extends EventEmitter {
       await fs.access(worktreeInfo.path, fs.constants.R_OK | fs.constants.W_OK);
     } catch (error) {
       throw new AgentExecutionError(
-        'worktree-permission-denied',
+        'task-executor',
+        worktreeInfo.id,
         `Insufficient permissions for worktree: ${worktreeInfo.path}`,
-        { worktreeId: worktreeInfo.id, error }
+        { worktreeId: worktreeInfo.id, error },
       );
     }
 
@@ -159,7 +170,7 @@ export class TaskExecutor extends EventEmitter {
 
   private async prepareExecutionContext(
     request: TaskExecutionRequest,
-    worktreeInfo: WorktreeInfo
+    worktreeInfo: WorktreeInfo,
   ): Promise<{
     workingDir: string;
     logFile: string;
@@ -196,22 +207,40 @@ export class TaskExecutor extends EventEmitter {
       FF2_MAX_EXECUTION_TIME: String(this.config.resourceLimits.maxExecutionTimeMs),
       // Additional context
       ...process.env, // Inherit system environment
-      ...(request.context || {}) // Request-specific context
+      ...(request.context || {}), // Request-specific context
     };
 
     // Security context for sandboxing
     const securityContext = {
       allowedCommands: [
-        'git', 'npm', 'node', 'python', 'pip', 'yarn', 'pnpm',
-        'tsc', 'eslint', 'prettier', 'jest', 'vitest', 'playwright',
-        'docker', 'kubectl', 'terraform'
+        'git',
+        'npm',
+        'node',
+        'python',
+        'pip',
+        'yarn',
+        'pnpm',
+        'tsc',
+        'eslint',
+        'prettier',
+        'jest',
+        'vitest',
+        'playwright',
+        'docker',
+        'kubectl',
+        'terraform',
       ],
       restrictedPaths: [
-        '/etc', '/usr', '/var', '/boot', '/sys', '/proc',
+        '/etc',
+        '/usr',
+        '/var',
+        '/boot',
+        '/sys',
+        '/proc',
         path.resolve(os.homedir()), // User home directory
-        path.resolve('/') // Root directory
-      ].filter(p => !p.startsWith(workingDir)), // Allow access to worktree
-      maxFileSize: 100 * 1024 * 1024 // 100MB max file size
+        path.resolve('/'), // Root directory
+      ].filter((p) => !p.startsWith(workingDir)), // Allow access to worktree
+      maxFileSize: 100 * 1024 * 1024, // 100MB max file size
     };
 
     this.logger.debug(`Execution context prepared for task ${request.taskId}`);
@@ -221,7 +250,7 @@ export class TaskExecutor extends EventEmitter {
       logFile,
       resourceFile,
       environmentVars,
-      securityContext
+      securityContext,
     };
   }
 
@@ -233,13 +262,13 @@ export class TaskExecutor extends EventEmitter {
       resourceFile: string;
       environmentVars: Record<string, string>;
       securityContext: any;
-    }
+    },
   ): Promise<TaskExecutionResult> {
     const startTime = Date.now();
-    
+
     // Create Claude Code command
     const claudeCommand = this.buildClaudeCodeCommand(request, context);
-    
+
     // Update progress
     this.emitProgress(request.taskId, 'execution', 10, 'Starting Claude Code execution');
 
@@ -248,7 +277,7 @@ export class TaskExecutor extends EventEmitter {
       request.taskId,
       claudeCommand.command,
       claudeCommand.args,
-      context
+      context,
     );
 
     const executionTime = Date.now() - startTime;
@@ -262,10 +291,10 @@ export class TaskExecutor extends EventEmitter {
 
     // Update final progress
     this.emitProgress(
-      request.taskId, 
-      'completed', 
-      100, 
-      status === 'success' ? 'Task completed successfully' : 'Task completed with errors'
+      request.taskId,
+      'completed',
+      100,
+      status === 'success' ? 'Task completed successfully' : 'Task completed with errors',
     );
 
     return {
@@ -276,13 +305,13 @@ export class TaskExecutor extends EventEmitter {
       executionTime,
       resourceUsage,
       artifacts,
-      metrics
+      metrics,
     };
   }
 
   private buildClaudeCodeCommand(
     request: TaskExecutionRequest,
-    context: { workingDir: string; environmentVars: Record<string, string> }
+    context: { workingDir: string; environmentVars: Record<string, string> },
   ): { command: string; args: string[] } {
     // Build Claude Code command based on agent type and instructions
     const baseCommand = 'claude'; // Assuming 'claude' is the CLI command
@@ -293,7 +322,7 @@ export class TaskExecutor extends EventEmitter {
     args.push('--working-directory', context.workingDir);
     args.push('--agent-type', request.agentType);
     args.push('--issue-id', request.issueId);
-    
+
     // Add priority if specified
     if (request.priority !== 'normal') {
       args.push('--priority', request.priority);
@@ -330,7 +359,7 @@ export class TaskExecutor extends EventEmitter {
       resourceFile: string;
       environmentVars: Record<string, string>;
       securityContext: any;
-    }
+    },
   ): Promise<{
     output: string;
     errorOutput: string;
@@ -350,18 +379,22 @@ export class TaskExecutor extends EventEmitter {
         cwd: context.workingDir,
         env: context.environmentVars,
         stdio: ['pipe', 'pipe', 'pipe'],
-        timeout: this.config.resourceLimits.maxExecutionTimeMs
+        timeout: this.config.resourceLimits.maxExecutionTimeMs,
       });
 
       // Register process for monitoring
       this.activeProcesses.set(taskId, process);
       this.adapter.registerTaskProcess(taskId, process);
-      
+
       // 🔧 ENHANCED: Register with resource monitor
-      this.resourceMonitor.registerProcess(taskId, process.pid!, new Date());
+      this.resourceMonitor.registerProcess(taskId, process.pid, new Date());
 
       // Start resource monitoring
-      const resourceMonitor = this.startResourceMonitoring(taskId, process.pid, context.resourceFile);
+      const resourceMonitor = this.startResourceMonitoring(
+        taskId,
+        process.pid,
+        context.resourceFile,
+      );
       this.resourceTracking.set(taskId, resourceMonitor);
 
       // Handle stdout
@@ -369,7 +402,7 @@ export class TaskExecutor extends EventEmitter {
         const chunk = data.toString();
         output += chunk;
         this.logger.debug(`Task ${taskId} stdout: ${chunk.trim()}`);
-        
+
         // Parse progress from output if available
         this.parseProgressFromOutput(taskId, chunk);
       });
@@ -394,11 +427,15 @@ export class TaskExecutor extends EventEmitter {
 
         // Collect final resource usage from resource monitor
         const monitoredUsage = this.resourceMonitor.getTaskResourceUsage(taskId);
-        resourceUsage = monitoredUsage ? {
-          memoryPeak: monitoredUsage.memoryMB,
-          cpuTime: Math.round(monitoredUsage.cpuPercent / 100 * monitoredUsage.executionTimeMs),
-          diskIO: monitoredUsage.diskReadMB + monitoredUsage.diskWriteMB
-        } : await this.collectResourceUsage(context.resourceFile);
+        resourceUsage = monitoredUsage
+          ? {
+              memoryPeak: monitoredUsage.memoryMB,
+              cpuTime: Math.round(
+                (monitoredUsage.cpuPercent / 100) * monitoredUsage.executionTimeMs,
+              ),
+              diskIO: monitoredUsage.diskReadMB + monitoredUsage.diskWriteMB,
+            }
+          : await this.collectResourceUsage(context.resourceFile);
 
         // Clean up
         this.activeProcesses.delete(taskId);
@@ -413,8 +450,10 @@ export class TaskExecutor extends EventEmitter {
 
       // Handle process errors
       process.on('error', (error: Error) => {
-        this.logger.error(`Task ${taskId} process error`, error);
-        
+        this.logger.error(
+          `Task ${taskId} process error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+
         // Clean up
         const monitor = this.resourceTracking.get(taskId);
         if (monitor) {
@@ -423,7 +462,7 @@ export class TaskExecutor extends EventEmitter {
         }
         this.activeProcesses.delete(taskId);
         this.resourceMonitor.unregisterProcess(taskId);
-        
+
         reject(error);
       });
 
@@ -433,7 +472,7 @@ export class TaskExecutor extends EventEmitter {
           if (!process.killed) {
             this.logger.warning(`Task ${taskId} timed out, killing process`);
             process.kill('SIGTERM');
-            
+
             setTimeout(() => {
               if (!process.killed) {
                 process.kill('SIGKILL');
@@ -448,7 +487,7 @@ export class TaskExecutor extends EventEmitter {
   private startResourceMonitoring(
     taskId: string,
     pid: number | undefined,
-    resourceFile: string
+    resourceFile: string,
   ): NodeJS.Timeout {
     return setInterval(async () => {
       if (!pid) return;
@@ -457,7 +496,7 @@ export class TaskExecutor extends EventEmitter {
         // Get process statistics (simplified - in production use proper monitoring)
         const memUsage = process.memoryUsage();
         const cpuUsage = process.cpuUsage();
-        
+
         const stats = {
           timestamp: new Date().toISOString(),
           pid,
@@ -465,12 +504,12 @@ export class TaskExecutor extends EventEmitter {
             rss: memUsage.rss,
             heapTotal: memUsage.heapTotal,
             heapUsed: memUsage.heapUsed,
-            external: memUsage.external
+            external: memUsage.external,
           },
           cpu: {
             user: cpuUsage.user,
-            system: cpuUsage.system
-          }
+            system: cpuUsage.system,
+          },
         };
 
         // Write to resource file
@@ -484,12 +523,13 @@ export class TaskExecutor extends EventEmitter {
             taskId,
             type: 'memory',
             current: memoryMB,
-            limit: this.config.resourceLimits.maxMemoryMB
+            limit: this.config.resourceLimits.maxMemoryMB,
           });
         }
-
       } catch (error) {
-        this.logger.debug(`Resource monitoring error for task ${taskId}:`, error);
+        this.logger.debug(
+          `Resource monitoring error for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }, 1000); // Monitor every second
   }
@@ -500,7 +540,7 @@ export class TaskExecutor extends EventEmitter {
     const progressPatterns = [
       /Progress:\s*(\d+)%\s*-\s*(.+)/i,
       /\[(\d+)%\]\s*(.+)/i,
-      /(\d+)%\s*complete/i
+      /(\d+)%\s*complete/i,
     ];
 
     for (const pattern of progressPatterns) {
@@ -508,7 +548,7 @@ export class TaskExecutor extends EventEmitter {
       if (match) {
         const progress = parseInt(match[1], 10);
         const message = match[2] || 'Processing...';
-        
+
         this.emitProgress(taskId, 'execution', progress, message);
         break;
       }
@@ -519,7 +559,7 @@ export class TaskExecutor extends EventEmitter {
       /Starting\s+(.+)/i,
       /Executing\s+(.+)/i,
       /Completing\s+(.+)/i,
-      /Finished\s+(.+)/i
+      /Finished\s+(.+)/i,
     ];
 
     for (const pattern of phasePatterns) {
@@ -544,10 +584,10 @@ export class TaskExecutor extends EventEmitter {
 
       const content = await fs.readFile(resourceFile, 'utf8');
       const lines = content.trim().split('\n').filter(Boolean);
-      
+
       let memoryPeak = 0;
       let totalCpuTime = 0;
-      
+
       for (const line of lines) {
         try {
           const stats = JSON.parse(line);
@@ -561,10 +601,12 @@ export class TaskExecutor extends EventEmitter {
       return {
         memoryPeak: Math.round(memoryPeak / (1024 * 1024)), // Convert to MB
         cpuTime: Math.round(totalCpuTime / 1000), // Convert to ms
-        diskIO: 0 // Simplified - would need more sophisticated monitoring
+        diskIO: 0, // Simplified - would need more sophisticated monitoring
       };
     } catch (error) {
-      this.logger.debug('Error collecting resource usage:', error);
+      this.logger.debug(
+        `Error collecting resource usage: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return { memoryPeak: 0, cpuTime: 0, diskIO: 0 };
     }
   }
@@ -585,7 +627,7 @@ export class TaskExecutor extends EventEmitter {
         '**/package.json',
         '**/tsconfig.json',
         '**/.eslintrc*',
-        '**/README.md'
+        '**/README.md',
       ];
 
       // Use glob to find artifacts (simplified - would use actual glob library)
@@ -601,14 +643,18 @@ export class TaskExecutor extends EventEmitter {
 
       // Remove duplicates and sort
       return [...new Set(artifacts)].sort();
-      
     } catch (error) {
-      this.logger.debug('Error collecting artifacts:', error);
+      this.logger.debug(
+        `Error collecting artifacts: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return [];
     }
   }
 
-  private async calculateMetrics(workingDir: string, output: string): Promise<{
+  private async calculateMetrics(
+    workingDir: string,
+    output: string,
+  ): Promise<{
     linesOfCode: number;
     filesModified: number;
     testsRun: number;
@@ -618,7 +664,7 @@ export class TaskExecutor extends EventEmitter {
       linesOfCode: 0,
       filesModified: 0,
       testsRun: 0,
-      coveragePercent: 0
+      coveragePercent: 0,
     };
 
     try {
@@ -649,9 +695,10 @@ export class TaskExecutor extends EventEmitter {
         const stats = await fs.readJSON(statsFile);
         Object.assign(metrics, stats);
       }
-
     } catch (error) {
-      this.logger.debug('Error calculating metrics:', error);
+      this.logger.debug(
+        `Error calculating metrics: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     return metrics;
@@ -660,7 +707,7 @@ export class TaskExecutor extends EventEmitter {
   private startProgressTracking(taskId: string, workingDir: string): void {
     // Initialize progress tracking
     this.emitProgress(taskId, 'initialization', 5, 'Initializing task execution environment');
-    
+
     // Monitor for progress files
     const progressFile = path.join(workingDir, '.ff2-logs', 'progress.json');
     const progressWatcher = setInterval(async () => {
@@ -687,8 +734,8 @@ export class TaskExecutor extends EventEmitter {
       timestamp: new Date(),
       resources: {
         memoryUsage: 0, // Would be calculated from actual monitoring
-        cpuUsage: 0     // Would be calculated from actual monitoring
-      }
+        cpuUsage: 0, // Would be calculated from actual monitoring
+      },
     };
 
     this.emit('executor:progress', progressUpdate);
@@ -700,7 +747,7 @@ export class TaskExecutor extends EventEmitter {
       workingDir: string;
       logFile: string;
       resourceFile: string;
-    }
+    },
   ): Promise<void> {
     try {
       // Stop all monitoring for this task
@@ -729,15 +776,16 @@ export class TaskExecutor extends EventEmitter {
       }
 
       this.logger.debug(`Execution cleanup completed for task ${taskId}`);
-      
     } catch (error) {
-      this.logger.error(`Error during execution cleanup for task ${taskId}`, error);
+      this.logger.error(
+        `Error during execution cleanup for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   private async archiveLogs(
     taskId: string,
-    context: { workingDir: string; logFile: string; resourceFile: string }
+    context: { workingDir: string; logFile: string; resourceFile: string },
   ): Promise<void> {
     try {
       const archiveDir = path.join(context.workingDir, '.ff2-archive', taskId);
@@ -754,7 +802,9 @@ export class TaskExecutor extends EventEmitter {
 
       this.logger.debug(`Logs archived for task ${taskId}`);
     } catch (error) {
-      this.logger.debug(`Failed to archive logs for task ${taskId}:`, error);
+      this.logger.debug(
+        `Failed to archive logs for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -778,7 +828,7 @@ export class TaskExecutor extends EventEmitter {
       system: await this.resourceMonitor.getCurrentSystemUsage(),
       limits: this.config.resourceLimits,
       monitored: this.resourceMonitor.getAllProcessUsages(),
-      alerts: this.resourceMonitor.getRecentAlerts(300000) // Last 5 minutes
+      alerts: this.resourceMonitor.getRecentAlerts(300000), // Last 5 minutes
     };
   }
 
@@ -792,7 +842,7 @@ export class TaskExecutor extends EventEmitter {
   }> {
     const systemUsage = await this.resourceMonitor.getCurrentSystemUsage();
     const reasons: string[] = [];
-    
+
     // Check memory availability (leave 20% buffer)
     if (systemUsage.usedMemoryMB / systemUsage.totalMemoryMB > 0.8) {
       reasons.push('System memory usage above 80%');
@@ -811,7 +861,7 @@ export class TaskExecutor extends EventEmitter {
     return {
       canAccept: reasons.length === 0,
       reasons,
-      systemUsage
+      systemUsage,
     };
   }
 
@@ -848,7 +898,9 @@ export class TaskExecutor extends EventEmitter {
 
       this.logger.info('TaskExecutor shutdown complete');
     } catch (error) {
-      this.logger.error('Error during TaskExecutor shutdown', error);
+      this.logger.error(
+        `Error during TaskExecutor shutdown: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import { LogContext } from '../utils/logger';
 import { withErrorHandling, ErrorCategory, AgentExecutionError } from '../utils/errors';
 import type { WorktreeManager } from '../core/worktree-manager';
@@ -69,7 +70,7 @@ export interface TaskProgress {
 
 /**
  * Claude Code Worker Adapter Bridge
- * 
+ *
  * Main bridge component that connects FF2 orchestration with Claude Code execution.
  * Manages task execution in isolated worktree environments with real-time monitoring.
  */
@@ -80,13 +81,13 @@ export class ClaudeCodeAdapter extends EventEmitter {
   private agentPool: AgentPool;
   private taskExecutor: TaskExecutor;
   private communicationProtocol: CommunicationProtocol;
-  
+
   // Task management
   private activeTasks: Map<string, TaskExecutionRequest>;
   private taskProcesses: Map<string, ChildProcess>;
   private taskResults: Map<string, TaskExecutionResult>;
   private taskProgressTracking: Map<string, TaskProgress>;
-  
+
   // Resource monitoring
   private resourceMonitor: NodeJS.Timeout | null = null;
   private systemLoad: {
@@ -99,30 +100,30 @@ export class ClaudeCodeAdapter extends EventEmitter {
   constructor(
     config: ClaudeCodeAdapterConfig,
     worktreeManager: WorktreeManager,
-    agentPool: AgentPool
+    agentPool: AgentPool,
   ) {
     super();
     this.config = config;
     this.logger = new LogContext('ClaudeCodeAdapter');
     this.worktreeManager = worktreeManager;
     this.agentPool = agentPool;
-    
+
     // Initialize components
     this.activeTasks = new Map();
     this.taskProcesses = new Map();
     this.taskResults = new Map();
     this.taskProgressTracking = new Map();
-    
+
     this.systemLoad = {
       memoryUsage: 0,
       cpuUsage: 0,
       taskCount: 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     this.taskExecutor = new TaskExecutor(config, this);
     this.communicationProtocol = new CommunicationProtocol(config.communicationPort, this);
-    
+
     this.initializeAdapter();
   }
 
@@ -134,13 +135,13 @@ export class ClaudeCodeAdapter extends EventEmitter {
         async () => {
           // Initialize task executor with resource monitoring
           await this.taskExecutor.initialize();
-          
+
           // Initialize communication protocol
           await this.communicationProtocol.initialize();
-          
+
           // Start resource monitoring
           this.startResourceMonitoring();
-          
+
           // Setup event listeners
           this.setupEventListeners();
         },
@@ -149,18 +150,20 @@ export class ClaudeCodeAdapter extends EventEmitter {
           category: ErrorCategory.CONFIGURATION,
           retries: 2,
           timeoutMs: 15000,
-        }
+        },
       );
 
       this.logger.info('Claude Code Adapter Bridge initialized successfully');
       this.emit('adapter:initialized');
-      
     } catch (error) {
-      this.logger.error('Failed to initialize Claude Code Adapter', error);
+      this.logger.error(
+        `Failed to initialize Claude Code Adapter: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw new AgentExecutionError(
-        'adapter-initialization',
+        'claude-code-adapter',
+        'initialization',
         `Adapter initialization failed: ${String(error)}`,
-        { originalError: error }
+        { originalError: error },
       );
     }
   }
@@ -174,20 +177,21 @@ export class ClaudeCodeAdapter extends EventEmitter {
 
     // Validate system capacity
     await this.validateSystemCapacity();
-    
+
     // Check worktree availability
     const worktreeInfo = this.worktreeManager.getWorktreeInfo(request.worktreeId);
     if (!worktreeInfo) {
       throw new AgentExecutionError(
-        'worktree-not-found',
+        request.agentType || 'claude-code-adapter',
+        request.taskId,
         `Worktree not found: ${request.worktreeId}`,
-        { worktreeId: request.worktreeId }
+        { worktreeId: request.worktreeId },
       );
     }
 
     // Register active task
     this.activeTasks.set(request.taskId, request);
-    
+
     // Initialize progress tracking
     const initialProgress: TaskProgress = {
       taskId: request.taskId,
@@ -195,9 +199,9 @@ export class ClaudeCodeAdapter extends EventEmitter {
       progress: 0,
       message: 'Initializing task execution',
       timestamp: new Date(),
-      resources: { memoryUsage: 0, cpuUsage: 0 }
+      resources: { memoryUsage: 0, cpuUsage: 0 },
     };
-    
+
     this.taskProgressTracking.set(request.taskId, initialProgress);
     this.emit('task:progress', initialProgress);
 
@@ -209,7 +213,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
           category: ErrorCategory.AGENT_EXECUTION,
           retries: 1,
           timeoutMs: request.timeout || this.config.taskTimeout,
-        }
+        },
       );
 
       // Update agent pool metrics
@@ -219,14 +223,15 @@ export class ClaudeCodeAdapter extends EventEmitter {
       // Store result and emit event
       this.taskResults.set(request.taskId, result);
       this.emit('task:completed', result);
-      
-      this.logger.info(`Task completed: ${request.taskId} (${result.status}) in ${executionTime}ms`);
+
+      this.logger.info(
+        `Task completed: ${request.taskId} (${result.status}) in ${executionTime}ms`,
+      );
       return result;
-      
     } catch (error) {
       const executionTime = Date.now() - startTime;
       this.agentPool.updateMetrics(request.agentType, false, executionTime);
-      
+
       const failedResult: TaskExecutionResult = {
         taskId: request.taskId,
         status: 'failure',
@@ -235,15 +240,16 @@ export class ClaudeCodeAdapter extends EventEmitter {
         executionTime,
         resourceUsage: { memoryPeak: 0, cpuTime: 0, diskIO: 0 },
         artifacts: [],
-        metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 }
+        metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 },
       };
-      
+
       this.taskResults.set(request.taskId, failedResult);
       this.emit('task:failed', failedResult);
-      
-      this.logger.error(`Task failed: ${request.taskId}`, error);
+
+      this.logger.error(
+        `Task failed: ${request.taskId} - ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
-      
     } finally {
       // Cleanup
       this.activeTasks.delete(request.taskId);
@@ -266,7 +272,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
     const process = this.taskProcesses.get(taskId);
     if (process && !process.killed) {
       process.kill('SIGTERM');
-      
+
       // Force kill after timeout
       setTimeout(() => {
         if (!process.killed) {
@@ -282,7 +288,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
       executionTime: 0,
       resourceUsage: { memoryPeak: 0, cpuTime: 0, diskIO: 0 },
       artifacts: [],
-      metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 }
+      metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 },
     };
 
     this.taskResults.set(taskId, cancelledResult);
@@ -306,7 +312,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
       request: this.activeTasks.get(taskId),
       progress: this.taskProgressTracking.get(taskId),
       result: this.taskResults.get(taskId),
-      isActive: this.activeTasks.has(taskId)
+      isActive: this.activeTasks.has(taskId),
     };
   }
 
@@ -348,16 +354,17 @@ export class ClaudeCodeAdapter extends EventEmitter {
     };
   } {
     const availableSlots = Math.max(0, this.config.maxConcurrentTasks - this.activeTasks.size);
-    
+
     return {
       activeTasks: this.activeTasks.size,
       systemLoad: { ...this.systemLoad },
       capacity: {
-        canAcceptNewTasks: availableSlots > 0 && this.systemLoad.memoryUsage < 80 && this.systemLoad.cpuUsage < 80,
+        canAcceptNewTasks:
+          availableSlots > 0 && this.systemLoad.memoryUsage < 80 && this.systemLoad.cpuUsage < 80,
         availableSlots,
         memoryAvailable: 100 - this.systemLoad.memoryUsage,
-        cpuAvailable: 100 - this.systemLoad.cpuUsage
-      }
+        cpuAvailable: 100 - this.systemLoad.cpuUsage,
+      },
     };
   }
 
@@ -367,7 +374,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
   public updateTaskProgress(progress: TaskProgress): void {
     this.taskProgressTracking.set(progress.taskId, progress);
     this.emit('task:progress', progress);
-    
+
     // Send to communication protocol for real-time updates
     this.communicationProtocol.broadcastProgress(progress);
   }
@@ -377,7 +384,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
    */
   public registerTaskProcess(taskId: string, process: ChildProcess): void {
     this.taskProcesses.set(taskId, process);
-    
+
     process.on('exit', (code, signal) => {
       this.logger.debug(`Task process exited: ${taskId} (code: ${code}, signal: ${signal})`);
       this.taskProcesses.delete(taskId);
@@ -387,25 +394,28 @@ export class ClaudeCodeAdapter extends EventEmitter {
   private async validateSystemCapacity(): Promise<void> {
     if (this.activeTasks.size >= this.config.maxConcurrentTasks) {
       throw new AgentExecutionError(
-        'system-capacity-exceeded',
+        'claude-code-adapter',
+        'capacity-check',
         `Maximum concurrent tasks exceeded: ${this.config.maxConcurrentTasks}`,
-        { activeTasks: this.activeTasks.size }
+        { activeTasks: this.activeTasks.size },
       );
     }
 
     if (this.systemLoad.memoryUsage > 90) {
       throw new AgentExecutionError(
-        'memory-limit-exceeded',
+        'claude-code-adapter',
+        'memory-check',
         `System memory usage too high: ${this.systemLoad.memoryUsage}%`,
-        { memoryUsage: this.systemLoad.memoryUsage }
+        { memoryUsage: this.systemLoad.memoryUsage },
       );
     }
 
     if (this.systemLoad.cpuUsage > 95) {
       throw new AgentExecutionError(
-        'cpu-limit-exceeded',
+        'claude-code-adapter',
+        'cpu-check',
         `System CPU usage too high: ${this.systemLoad.cpuUsage}%`,
-        { cpuUsage: this.systemLoad.cpuUsage }
+        { cpuUsage: this.systemLoad.cpuUsage },
       );
     }
   }
@@ -421,12 +431,12 @@ export class ClaudeCodeAdapter extends EventEmitter {
   private updateSystemLoad(): void {
     const memUsage = process.memoryUsage();
     const totalMem = require('os').totalmem();
-    
+
     this.systemLoad = {
       memoryUsage: Math.round((memUsage.heapUsed / totalMem) * 100),
       cpuUsage: this.getCpuUsage(), // Simplified CPU usage estimation
       taskCount: this.activeTasks.size,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     this.emit('system:load', this.systemLoad);
@@ -437,21 +447,21 @@ export class ClaudeCodeAdapter extends EventEmitter {
     // In production, you might want to use a more sophisticated approach
     const usage = process.cpuUsage();
     const total = usage.user + usage.system;
-    return Math.min(Math.round((total / 1000000) * 100 / this.config.maxConcurrentTasks), 100);
+    return Math.min(Math.round(((total / 1000000) * 100) / this.config.maxConcurrentTasks), 100);
   }
 
   private setupEventListeners(): void {
     // Agent pool events
-    this.agentPool.on?.('agent:started', (event: any) => {
+    this.agentPool.on('agent:started', (event: any) => {
       this.emit('agent:started', event);
     });
 
-    this.agentPool.on?.('agent:completed', (event: any) => {
+    this.agentPool.on('agent:completed', (event: any) => {
       this.emit('agent:completed', event);
     });
 
     // Worktree manager events
-    this.worktreeManager.on?.('worktree:created', (event: any) => {
+    this.worktreeManager.on('worktree:created', (event: any) => {
       this.emit('worktree:created', event);
     });
 
@@ -466,19 +476,21 @@ export class ClaudeCodeAdapter extends EventEmitter {
 
     // Resource monitoring events from task executor
     this.taskExecutor.on('executor:resource-alert', (alert: any) => {
-      this.logger.warning(`Resource alert from executor: ${alert.message}`, alert);
+      this.logger.warning(
+        `Resource alert from executor: ${alert.message} - ${JSON.stringify(alert)}`,
+      );
       this.emit('resource:alert', alert);
     });
 
     this.taskExecutor.on('executor:process-throttled', (event: any) => {
-      this.logger.warning(`Process throttled: ${event.taskId}`, event);
+      this.logger.warning(`Process throttled: ${event.taskId} - ${JSON.stringify(event)}`);
       this.emit('process:throttled', event);
     });
 
     this.taskExecutor.on('executor:task-terminated', (event: any) => {
-      this.logger.error(`Task terminated: ${event.taskId}`, event);
+      this.logger.error(`Task terminated: ${event.taskId} - ${JSON.stringify(event)}`);
       this.emit('task:terminated', event);
-      
+
       // Clean up internal tracking
       this.activeTasks.delete(event.taskId);
       this.taskProgressTracking.delete(event.taskId);
@@ -490,7 +502,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
         executionTime: 0,
         resourceUsage: { memoryPeak: 0, cpuTime: 0, diskIO: 0 },
         artifacts: [],
-        metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 }
+        metrics: { linesOfCode: 0, filesModified: 0, testsRun: 0, coveragePercent: 0 },
       };
       this.taskResults.set(event.taskId, taskResult);
     });
@@ -512,10 +524,12 @@ export class ClaudeCodeAdapter extends EventEmitter {
       }
 
       // Cancel all active tasks
-      const cancelPromises = Array.from(this.activeTasks.keys()).map(taskId => 
-        this.cancelTask(taskId).catch(error => 
-          this.logger.error(`Error cancelling task ${taskId}`, error)
-        )
+      const cancelPromises = Array.from(this.activeTasks.keys()).map((taskId) =>
+        this.cancelTask(taskId).catch((error) =>
+          this.logger.error(
+            `Error cancelling task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+          ),
+        ),
       );
 
       await Promise.all(cancelPromises);
@@ -534,9 +548,10 @@ export class ClaudeCodeAdapter extends EventEmitter {
 
       this.logger.info('Claude Code Adapter shutdown complete');
       this.emit('adapter:shutdown');
-
     } catch (error) {
-      this.logger.error('Error during adapter shutdown', error);
+      this.logger.error(
+        `Error during adapter shutdown: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -553,14 +568,19 @@ export class ClaudeCodeAdapter extends EventEmitter {
     resourceUtilization: typeof this.systemLoad;
     uptimeMs: number;
   } {
-    const successful = Array.from(this.taskResults.values()).filter(r => r.status === 'success').length;
-    const failed = Array.from(this.taskResults.values()).filter(r => r.status === 'failure').length;
+    const successful = Array.from(this.taskResults.values()).filter(
+      (r) => r.status === 'success',
+    ).length;
+    const failed = Array.from(this.taskResults.values()).filter(
+      (r) => r.status === 'failure',
+    ).length;
     const total = this.taskResults.size;
-    
-    const executionTimes = Array.from(this.taskResults.values()).map(r => r.executionTime);
-    const avgExecutionTime = executionTimes.length > 0 
-      ? executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length 
-      : 0;
+
+    const executionTimes = Array.from(this.taskResults.values()).map((r) => r.executionTime);
+    const avgExecutionTime =
+      executionTimes.length > 0
+        ? executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length
+        : 0;
 
     return {
       totalTasksExecuted: total,
@@ -569,7 +589,7 @@ export class ClaudeCodeAdapter extends EventEmitter {
       averageExecutionTime: Math.round(avgExecutionTime),
       currentActiveTasks: this.activeTasks.size,
       resourceUtilization: { ...this.systemLoad },
-      uptimeMs: process.uptime() * 1000
+      uptimeMs: process.uptime() * 1000,
     };
   }
 }

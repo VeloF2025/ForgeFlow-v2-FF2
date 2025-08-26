@@ -6,7 +6,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { rmSync, existsSync, writeFileSync, mkdirSync } from 'fs';
 import { ForgeFlowIndexManager } from '../index-manager.js';
-import { IndexConfig, IndexEntry, IndexBatch, IndexUpdateOperation, ContentChange } from '../types.js';
+import type { IndexConfig, IndexEntry, IndexBatch, ContentChange } from '../types.js';
+import { IndexUpdateOperation } from '../types.js';
 
 describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
   let indexManager: ForgeFlowIndexManager;
@@ -18,15 +19,15 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     // 🟢 WORKING: Setup test environment
     testDbPath = join(tmpdir(), 'ff2-enhanced-index-manager-test.db');
     testWatchDir = join(tmpdir(), 'ff2-watch-test');
-    
+
     if (existsSync(testDbPath)) {
       rmSync(testDbPath);
     }
-    
+
     if (existsSync(testWatchDir)) {
       rmSync(testWatchDir, { recursive: true });
     }
-    
+
     mkdirSync(testWatchDir, { recursive: true });
 
     config = {
@@ -47,7 +48,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
       defaultLimit: 50,
       maxLimit: 1000,
       snippetLength: 200,
-      maxSnippets: 10
+      maxSnippets: 10,
     };
 
     indexManager = new ForgeFlowIndexManager(config);
@@ -68,7 +69,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     it('should initialize with SQLite FTS5 engine', async () => {
       const fts5Engine = indexManager.getFTS5Engine();
       expect(fts5Engine).toBeDefined();
-      
+
       const health = await fts5Engine.getHealth();
       expect(health.status).toMatch(/healthy|degraded/);
     });
@@ -79,8 +80,10 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
           id: 'fts5-test-1',
           type: 'knowledge',
           title: 'Advanced React Patterns',
-          content: 'This knowledge card covers advanced React patterns including hooks, context, and performance optimization.',
+          content:
+            'This knowledge card covers advanced React patterns including hooks, context, and performance optimization.',
           path: '/test/react-patterns.md',
+          hash: 'hash-fts5-test-1',
           metadata: {
             tags: ['react', 'patterns', 'hooks'],
             agentTypes: ['frontend'],
@@ -89,16 +92,18 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
             fileSize: 1024,
             relatedIds: [],
             childIds: [],
-            effectiveness: 0.9
+            effectiveness: 0.9,
           },
-          lastModified: new Date()
+          lastModified: new Date(),
         },
         {
           id: 'fts5-test-2',
           type: 'code',
           title: 'TypeScript Utility Types',
-          content: 'Comprehensive guide to TypeScript utility types like Partial, Pick, Record, and custom type utilities.',
+          content:
+            'Comprehensive guide to TypeScript utility types like Partial, Pick, Record, and custom type utilities.',
           path: '/test/typescript-utils.ts',
+          hash: 'hash-fts5-test-2',
           metadata: {
             tags: ['typescript', 'types', 'utilities'],
             agentTypes: ['backend', 'frontend'],
@@ -107,10 +112,10 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
             fileSize: 2048,
             relatedIds: [],
             childIds: [],
-            effectiveness: 0.95
+            effectiveness: 0.95,
           },
-          lastModified: new Date()
-        }
+          lastModified: new Date(),
+        },
       ];
 
       // Index content using FTS5 engine
@@ -121,7 +126,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
         query: 'React patterns hooks',
         limit: 10,
         includeSnippets: true,
-        boostEffective: true
+        boostEffective: true,
       });
 
       expect(searchResults.results.length).toBeGreaterThan(0);
@@ -131,14 +136,14 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
 
     it('should handle similarity search', async () => {
       const similarResults = await indexManager.findSimilar('fts5-test-1', 5);
-      
+
       expect(similarResults).toBeDefined();
       expect(similarResults.results).toBeInstanceOf(Array);
     });
 
     it('should provide search suggestions', async () => {
       const suggestions = await indexManager.getSuggestions('React');
-      
+
       expect(suggestions).toBeInstanceOf(Array);
       expect(suggestions.length).toBeGreaterThanOrEqual(0);
     });
@@ -147,7 +152,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
   describe('📊 Performance Monitoring', () => {
     it('should track performance metrics', async () => {
       const metrics = indexManager.getPerformanceMetrics();
-      
+
       expect(metrics).toBeDefined();
       expect(metrics.totalIndexedEntries).toBeGreaterThanOrEqual(0);
       expect(metrics.batchesProcessed).toBeGreaterThanOrEqual(0);
@@ -158,7 +163,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     it('should provide FTS5 engine metrics', async () => {
       const fts5Engine = indexManager.getFTS5Engine();
       const metrics = await fts5Engine.getMetrics();
-      
+
       expect(metrics.totalQueries).toBeGreaterThanOrEqual(0);
       expect(metrics.averageQueryTime).toBeGreaterThanOrEqual(0);
       expect(metrics.databaseSize).toBeGreaterThanOrEqual(0);
@@ -168,7 +173,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     it('should maintain health monitoring', async () => {
       const fts5Engine = indexManager.getFTS5Engine();
       const health = await fts5Engine.getHealth();
-      
+
       expect(health.status).toMatch(/healthy|degraded|unhealthy/);
       expect(health.checks).toBeDefined();
       expect(health.lastHealthCheck).toBeInstanceOf(Date);
@@ -181,7 +186,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
         type: 'created',
         path: join(testWatchDir, 'test-file.md'),
         contentType: 'knowledge',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Write test file
@@ -189,37 +194,40 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
 
       // Simulate file change
       await indexManager.handleContentChange(testChange);
-      
+
       // Allow debouncing to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       expect(true).toBe(true); // Content change handled without errors
     });
 
     it('should support priority queue processing', async () => {
       const priorityBatch: IndexBatch = {
-        operations: [{
-          type: 'insert',
-          entry: {
-            id: 'priority-test',
-            type: 'knowledge',
-            title: 'Priority Test',
-            content: 'This is a priority test entry',
-            path: '/test/priority.md',
-            metadata: {
-              tags: ['priority', 'test'],
-              agentTypes: ['system'],
-              usageCount: 1,
-              lastUsed: new Date(),
-              fileSize: 100,
-              relatedIds: [],
-              childIds: []
+        operations: [
+          {
+            type: 'insert',
+            entry: {
+              id: 'priority-test',
+              type: 'knowledge',
+              title: 'Priority Test',
+              content: 'This is a priority test entry',
+              path: '/test/priority.md',
+              hash: 'hash-priority-test',
+              metadata: {
+                tags: ['priority', 'test'],
+                agentTypes: ['system'],
+                usageCount: 1,
+                lastUsed: new Date(),
+                fileSize: 100,
+                relatedIds: [],
+                childIds: [],
+              },
+              lastModified: new Date(),
             },
-            lastModified: new Date()
-          }
-        }],
+          },
+        ],
         timestamp: new Date(),
-        source: 'priority-test-batch'
+        source: 'priority-test-batch',
       };
 
       await indexManager.indexBatch(priorityBatch);
@@ -229,20 +237,20 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     it('should handle file watcher operations', async () => {
       const watchDir = join(testWatchDir, 'watch-test');
       mkdirSync(watchDir, { recursive: true });
-      
+
       // Add directory to watching
       await indexManager.addWatchDirectory(watchDir);
-      
+
       // Test file creation
       const testFile = join(watchDir, 'watched-file.md');
       writeFileSync(testFile, '# Watched File\nThis file is being watched.');
-      
+
       // Allow file system events to propagate
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       // Remove from watching
       await indexManager.removeWatchDirectory(watchDir);
-      
+
       expect(true).toBe(true); // File watching operations completed
     });
   });
@@ -250,33 +258,36 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
   describe('🔄 Batch Processing', () => {
     it('should handle concurrent batch operations', async () => {
       const batches = Array.from({ length: 5 }, (_, i) => ({
-        operations: [{
-          type: 'insert' as const,
-          entry: {
-            id: `concurrent-${i}`,
-            type: 'code' as const,
-            title: `Concurrent Test ${i}`,
-            content: `This is concurrent test entry number ${i}`,
-            path: `/test/concurrent-${i}.ts`,
-            metadata: {
-              tags: ['concurrent', 'test'],
-              agentTypes: ['system'],
-              usageCount: 1,
-              lastUsed: new Date(),
-              fileSize: 200,
-              relatedIds: [],
-              childIds: []
+        operations: [
+          {
+            type: 'insert' as const,
+            entry: {
+              id: `concurrent-${i}`,
+              type: 'code' as const,
+              title: `Concurrent Test ${i}`,
+              content: `This is concurrent test entry number ${i}`,
+              path: `/test/concurrent-${i}.ts`,
+              hash: `hash-concurrent-${i}`,
+              metadata: {
+                tags: ['concurrent', 'test'],
+                agentTypes: ['system'],
+                usageCount: 1,
+                lastUsed: new Date(),
+                fileSize: 200,
+                relatedIds: [],
+                childIds: [],
+              },
+              lastModified: new Date(),
             },
-            lastModified: new Date()
-          }
-        }],
+          },
+        ],
         timestamp: new Date(),
-        source: `concurrent-batch-${i}`
+        source: `concurrent-batch-${i}`,
       }));
 
-      const promises = batches.map(batch => indexManager.indexBatch(batch));
+      const promises = batches.map((batch) => indexManager.indexBatch(batch));
       await Promise.all(promises);
-      
+
       expect(true).toBe(true); // All concurrent batches processed
     });
 
@@ -291,6 +302,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
               title: 'Updated Concurrent Test',
               content: 'This entry has been updated',
               path: '/test/concurrent-0-updated.ts',
+              hash: 'hash-concurrent-0',
               metadata: {
                 tags: ['concurrent', 'test', 'updated'],
                 agentTypes: ['system'],
@@ -298,10 +310,10 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
                 lastUsed: new Date(),
                 fileSize: 250,
                 relatedIds: [],
-                childIds: []
+                childIds: [],
               },
-              lastModified: new Date()
-            }
+              lastModified: new Date(),
+            },
           },
           {
             type: 'delete',
@@ -311,6 +323,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
               title: 'To Delete',
               content: '',
               path: '/test/to-delete.ts',
+              hash: 'hash-concurrent-1',
               metadata: {
                 tags: [],
                 agentTypes: [],
@@ -318,14 +331,14 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
                 lastUsed: new Date(),
                 fileSize: 0,
                 relatedIds: [],
-                childIds: []
+                childIds: [],
               },
-              lastModified: new Date()
-            }
-          }
+              lastModified: new Date(),
+            },
+          },
         ],
         timestamp: new Date(),
-        source: 'update-delete-batch'
+        source: 'update-delete-batch',
       };
 
       await indexManager.indexBatch(updateBatch);
@@ -336,7 +349,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
   describe('🛠️ Maintenance Operations', () => {
     it('should perform enhanced vacuum with FTS5 optimization', async () => {
       const result = await indexManager.vacuum();
-      
+
       expect(result).toBeDefined();
       expect(result.vacuumPerformed).toBe(true);
       expect(result.duration).toBeGreaterThan(0);
@@ -345,7 +358,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
 
     it('should handle index statistics with FTS5 metrics', async () => {
       const stats = await indexManager.getStats();
-      
+
       expect(stats.totalEntries).toBeGreaterThanOrEqual(0);
       expect(stats.databaseSize).toBeGreaterThanOrEqual(0);
       expect(stats.averageSearchTime).toBeGreaterThanOrEqual(0);
@@ -368,9 +381,9 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
         type: 'knowledge',
         tags: 'react',
         limit: 10,
-        includeSnippets: true
+        includeSnippets: true,
       });
-      
+
       expect(results.facets).toBeDefined();
       expect(results.facets.types).toBeInstanceOf(Array);
       expect(results.facets.categories).toBeInstanceOf(Array);
@@ -380,9 +393,9 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
       const results = await indexManager.search({
         query: 'React AND patterns',
         queryType: 'boolean',
-        limit: 5
+        limit: 5,
       });
-      
+
       expect(results.results).toBeInstanceOf(Array);
     });
 
@@ -390,9 +403,9 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
       const results = await indexManager.search({
         query: 'Reaktt', // Intentional typo
         queryType: 'fuzzy',
-        limit: 5
+        limit: 5,
       });
-      
+
       expect(results.results).toBeInstanceOf(Array);
     });
   });
@@ -406,7 +419,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
         content: '',
         path: '',
         metadata: null,
-        lastModified: new Date()
+        lastModified: new Date(),
       } as any;
 
       await expect(indexManager.indexContent([invalidEntry])).rejects.toThrow();
@@ -415,16 +428,16 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
     it('should gracefully handle shutdown during operations', async () => {
       const testManager = new ForgeFlowIndexManager({
         ...config,
-        databasePath: join(tmpdir(), 'shutdown-test.db')
+        databasePath: join(tmpdir(), 'shutdown-test.db'),
       });
-      
+
       await testManager.initialize();
-      
+
       // Start an operation and immediately shutdown
       const shutdownPromise = testManager.shutdown();
-      
+
       await expect(shutdownPromise).resolves.not.toThrow();
-      
+
       // Cleanup
       const shutdownDbPath = join(tmpdir(), 'shutdown-test.db');
       if (existsSync(shutdownDbPath)) {
@@ -446,9 +459,9 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
           lastUsed: new Date(),
           fileSize: 100,
           relatedIds: [],
-          childIds: []
+          childIds: [],
         },
-        lastModified: new Date()
+        lastModified: new Date(),
       }));
 
       // Index many entries concurrently
@@ -458,7 +471,7 @@ describe('Enhanced ForgeFlowIndexManager with SQLite FTS5', () => {
         chunks.push(entries.slice(i, i + chunkSize));
       }
 
-      const promises = chunks.map(chunk => indexManager.indexContent(chunk));
+      const promises = chunks.map((chunk) => indexManager.indexContent(chunk));
       await Promise.all(promises);
 
       // Verify all entries were indexed

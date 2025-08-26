@@ -80,11 +80,7 @@ export class PerformanceOptimizerAgent extends BaseAgent {
 
       await this.generateReport(worktreeId, baseline, results);
 
-      this.reportProgress(
-        issueId,
-        100,
-        '🎉 Performance optimization complete - Report generated',
-      );
+      this.reportProgress(issueId, 100, '🎉 Performance optimization complete - Report generated');
       this.postExecute(issueId, true);
     } catch (error) {
       this.handleError(error, issueId);

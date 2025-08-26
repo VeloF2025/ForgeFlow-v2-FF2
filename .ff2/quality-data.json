@@ -1,0 +1,1385 @@
+{
+  "assessmentHistory": [
+    {
+      "timestamp": "2025-08-25T14:11:49.982Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:49.982Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:50.586Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:50.586Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:50.594Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:50.594Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:50.604Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:50.604Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 0.5
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:50.609Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:50.609Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 0.5
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:50.933Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:50.933Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:52.152Z",
+      "jobId": "test-job-123",
+      "result": {
+        "jobId": "test-job-123",
+        "timestamp": "2025-08-25T14:11:52.152Z",
+        "overallScore": 0.2,
+        "scores": {
+          "codeQuality": 0,
+          "testCoverage": 0,
+          "documentation": 0,
+          "maintainability": 0,
+          "security": 1,
+          "performance": 0,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 0.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "high",
+            "category": "code",
+            "description": "Code quality score is critically low",
+            "location": "",
+            "recommendation": "Review and refactor code to improve quality metrics",
+            "autoFixable": false
+          },
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          },
+          {
+            "severity": "medium",
+            "category": "performance",
+            "description": "Performance score is low",
+            "location": "",
+            "recommendation": "Profile and optimize performance bottlenecks",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "maintainability",
+            "description": "Maintainability score is low",
+            "location": "",
+            "recommendation": "Reduce complexity and improve code structure",
+            "autoFixable": false
+          },
+          {
+            "severity": "medium",
+            "category": "documentation",
+            "description": "Documentation is insufficient",
+            "location": "",
+            "recommendation": "Auto-fix available: Documentation is insufficient",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 2 critical issues",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "performance",
+            "description": "Optimize performance to meet threshold",
+            "expectedImpact": 0.5,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "code-quality",
+            "description": "Improve code quality through refactoring",
+            "expectedImpact": 0.4,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:11:57.158Z",
+      "jobId": "job_exec-integration-test",
+      "result": {
+        "jobId": "job_exec-integration-test",
+        "timestamp": "2025-08-25T14:11:57.158Z",
+        "overallScore": 0.613,
+        "scores": {
+          "codeQuality": 0.7,
+          "testCoverage": 0,
+          "documentation": 0.63,
+          "maintainability": 0.7,
+          "security": 1,
+          "performance": 0.7,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": true,
+            "score": 0.7,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 70.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Quality Score",
+            "before": 0.19999999999999998,
+            "after": 0.7,
+            "improvement": 0.5,
+            "method": "Continuous quality improvements"
+          },
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 1 critical issue",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T14:12:02.322Z",
+      "jobId": "job_exec-integration-test",
+      "result": {
+        "jobId": "job_exec-integration-test",
+        "timestamp": "2025-08-25T14:12:02.322Z",
+        "overallScore": 0.613,
+        "scores": {
+          "codeQuality": 0.7,
+          "testCoverage": 0,
+          "documentation": 0.63,
+          "maintainability": 0.7,
+          "security": 1,
+          "performance": 0.7,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": true,
+            "score": 0.7,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 70.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Quality Score",
+            "before": 0.19999999999999998,
+            "after": 0.7,
+            "improvement": 0.5,
+            "method": "Continuous quality improvements"
+          },
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 1 critical issue",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-08-25T18:05:48.145Z",
+      "jobId": "job_exec-integration-test",
+      "result": {
+        "jobId": "job_exec-integration-test",
+        "timestamp": "2025-08-25T18:05:48.145Z",
+        "overallScore": 0.613,
+        "scores": {
+          "codeQuality": 0.7,
+          "testCoverage": 0,
+          "documentation": 0.63,
+          "maintainability": 0.7,
+          "security": 1,
+          "performance": 0.7,
+          "reliability": 1
+        },
+        "gates": [
+          {
+            "name": "Linting",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Errors: 0",
+              "Warnings: 0"
+            ]
+          },
+          {
+            "name": "Type Checking",
+            "passed": true,
+            "score": 1,
+            "threshold": 0,
+            "details": [
+              "Type errors: 0"
+            ]
+          },
+          {
+            "name": "Testing",
+            "passed": false,
+            "score": 0,
+            "threshold": 0.8,
+            "details": [
+              "Coverage: 0%",
+              "Failed tests: 0"
+            ]
+          },
+          {
+            "name": "Security",
+            "passed": true,
+            "score": 1,
+            "threshold": 1,
+            "details": [
+              "Vulnerabilities: 0",
+              "Severity: none"
+            ]
+          },
+          {
+            "name": "Performance",
+            "passed": true,
+            "score": 0.7,
+            "threshold": 0.7,
+            "details": [
+              "Performance score: 70.0%"
+            ]
+          }
+        ],
+        "issues": [
+          {
+            "severity": "critical",
+            "category": "test",
+            "description": "Test coverage critically low: 0.0%",
+            "location": "",
+            "recommendation": "Auto-fix available: Test coverage critically low: 0.0%",
+            "autoFixable": true
+          }
+        ],
+        "improvements": [
+          {
+            "area": "Quality Score",
+            "before": 0.19999999999999998,
+            "after": 0.7,
+            "improvement": 0.5,
+            "method": "Continuous quality improvements"
+          },
+          {
+            "area": "Security",
+            "before": 0.5,
+            "after": 1,
+            "improvement": 0.5,
+            "method": "Security-first development approach"
+          }
+        ],
+        "recommendations": [
+          {
+            "priority": "high",
+            "category": "error-resolution",
+            "description": "Address 1 critical issue",
+            "expectedImpact": 0.8,
+            "effort": "medium"
+          },
+          {
+            "priority": "medium",
+            "category": "testing",
+            "description": "Increase test coverage from 0.0% to 80%+",
+            "expectedImpact": 0.6,
+            "effort": "medium"
+          }
+        ]
+      }
+    }
+  ],
+  "issuePatterns": {
+    "Code quality score is critically low": 7,
+    "Test coverage critically low: 0.0%": 10,
+    "Performance score is low": 7,
+    "Maintainability score is low": 7,
+    "Documentation is insufficient": 7
+  },
+  "lastSaved": "2025-08-25T18:05:48.483Z"
+}

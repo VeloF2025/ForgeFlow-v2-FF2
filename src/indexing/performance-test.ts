@@ -3,8 +3,9 @@
 // Tests pluggable provider system, vector search, and optimization features
 
 import { performance } from 'perf_hooks';
-import { createIndexLayer, IndexLayerConfig } from './index.js';
-import { IndexEntry, SearchQuery } from './types.js';
+import type { IndexLayerConfig } from './index.js';
+import { createIndexLayer } from './index.js';
+import type { IndexEntry, SearchQuery } from './types.js';
 
 export class IndexLayerPerformanceTest {
   private testResults: TestResult[] = [];
@@ -23,8 +24,8 @@ export class IndexLayerPerformanceTest {
           config: {
             enableVectorSearch: false,
             batchSize: 500,
-            queryCacheSize: 2000
-          }
+            queryCacheSize: 2000,
+          },
         },
         {
           name: 'SQLite FTS5 + Vector Search',
@@ -32,8 +33,8 @@ export class IndexLayerPerformanceTest {
             enableVectorSearch: true,
             vectorDimension: 384,
             batchSize: 500,
-            queryCacheSize: 2000
-          }
+            queryCacheSize: 2000,
+          },
         },
         {
           name: 'High Performance Config',
@@ -42,9 +43,9 @@ export class IndexLayerPerformanceTest {
             batchSize: 1000,
             queryCacheSize: 5000,
             snippetCacheSize: 20000,
-            autoOptimize: true
-          }
-        }
+            autoOptimize: true,
+          },
+        },
       ];
 
       for (const { name, config } of configs) {
@@ -62,12 +63,12 @@ export class IndexLayerPerformanceTest {
   // 🟢 WORKING: Test a specific configuration
   private async testConfiguration(configName: string, config: IndexLayerConfig): Promise<void> {
     console.log(`\n📊 Testing configuration: ${configName}`);
-    
+
     try {
       // Initialize index layer
       this.indexLayer = createIndexLayer({
         ...config,
-        databasePath: `./test-data/perf-test-${Date.now()}.db`
+        databasePath: `./test-data/perf-test-${Date.now()}.db`,
       });
 
       await this.indexLayer.fts5Engine.initialize();
@@ -82,7 +83,7 @@ export class IndexLayerPerformanceTest {
         () => this.testSearchPerformance(configName, 'faceted queries'),
         () => this.testConcurrentSearches(configName),
         () => this.testProviderFailover(configName),
-        () => this.testOptimizationPerformance(configName)
+        () => this.testOptimizationPerformance(configName),
       ];
 
       for (const test of tests) {
@@ -93,7 +94,13 @@ export class IndexLayerPerformanceTest {
       await this.indexLayer.shutdown();
     } catch (error) {
       console.error(`❌ Configuration test failed for ${configName}:`, error);
-      this.recordResult(configName, 'Configuration Test', false, 0, `Failed: ${(error as Error).message}`);
+      this.recordResult(
+        configName,
+        'Configuration Test',
+        false,
+        0,
+        `Failed: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -105,13 +112,13 @@ export class IndexLayerPerformanceTest {
     try {
       // Generate test data
       const entries = this.generateTestEntries(entryCount);
-      
+
       // Measure indexing time
       const indexStartTime = performance.now();
       await this.indexLayer.index(entries);
       const indexDuration = performance.now() - indexStartTime;
 
-      const success = indexDuration < (entryCount * 2); // 2ms per entry target
+      const success = indexDuration < entryCount * 2; // 2ms per entry target
       const throughput = entryCount / (indexDuration / 1000); // entries per second
 
       this.recordResult(
@@ -119,17 +126,19 @@ export class IndexLayerPerformanceTest {
         `Index ${entryCount} entries`,
         success,
         indexDuration,
-        `${throughput.toFixed(0)} entries/sec, ${(indexDuration/entryCount).toFixed(2)}ms/entry`
+        `${throughput.toFixed(0)} entries/sec, ${(indexDuration / entryCount).toFixed(2)}ms/entry`,
       );
 
-      console.log(`    ✅ Indexed ${entryCount} entries in ${indexDuration.toFixed(2)}ms (${throughput.toFixed(0)} entries/sec)`);
+      console.log(
+        `    ✅ Indexed ${entryCount} entries in ${indexDuration.toFixed(2)}ms (${throughput.toFixed(0)} entries/sec)`,
+      );
     } catch (error) {
       this.recordResult(
         configName,
         `Index ${entryCount} entries`,
         false,
         performance.now() - startTime,
-        `Failed: ${(error as Error).message}`
+        `Failed: ${(error as Error).message}`,
       );
     }
   }
@@ -144,14 +153,14 @@ export class IndexLayerPerformanceTest {
     try {
       const queries = this.getTestQueries(queryType);
       const results: number[] = [];
-      
+
       for (const query of queries) {
         const startTime = performance.now();
         const searchResults = await this.indexLayer.search(query);
         const duration = performance.now() - startTime;
-        
+
         results.push(duration);
-        
+
         // Validate results
         if (searchResults.totalMatches === 0 && query.query !== 'nonexistent_term_xyz') {
           console.warn(`⚠️ Query returned no results: ${query.query}`);
@@ -161,7 +170,7 @@ export class IndexLayerPerformanceTest {
       const avgDuration = results.reduce((sum, d) => sum + d, 0) / results.length;
       const maxDuration = Math.max(...results);
       const minDuration = Math.min(...results);
-      
+
       // Success criteria: average < 500ms, max < 1000ms
       const success = avgDuration < 500 && maxDuration < 1000;
 
@@ -170,17 +179,19 @@ export class IndexLayerPerformanceTest {
         `Search ${queryType}`,
         success,
         avgDuration,
-        `avg: ${avgDuration.toFixed(2)}ms, max: ${maxDuration.toFixed(2)}ms, min: ${minDuration.toFixed(2)}ms`
+        `avg: ${avgDuration.toFixed(2)}ms, max: ${maxDuration.toFixed(2)}ms, min: ${minDuration.toFixed(2)}ms`,
       );
 
-      console.log(`    ✅ Search performance: avg ${avgDuration.toFixed(2)}ms, max ${maxDuration.toFixed(2)}ms`);
+      console.log(
+        `    ✅ Search performance: avg ${avgDuration.toFixed(2)}ms, max ${maxDuration.toFixed(2)}ms`,
+      );
     } catch (error) {
       this.recordResult(
         configName,
         `Search ${queryType}`,
         false,
         0,
-        `Failed: ${(error as Error).message}`
+        `Failed: ${(error as Error).message}`,
       );
     }
   }
@@ -192,14 +203,14 @@ export class IndexLayerPerformanceTest {
     try {
       const query: SearchQuery = {
         query: 'test performance concurrent',
-        limit: 20
+        limit: 20,
       };
 
       const concurrentSearches = 50;
       const promises: Promise<any>[] = [];
 
       const startTime = performance.now();
-      
+
       for (let i = 0; i < concurrentSearches; i++) {
         promises.push(this.indexLayer.search(query));
       }
@@ -207,9 +218,9 @@ export class IndexLayerPerformanceTest {
       const results = await Promise.allSettled(promises);
       const duration = performance.now() - startTime;
 
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
-      
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
+      const failed = results.filter((r) => r.status === 'rejected').length;
+
       const averagePerQuery = duration / concurrentSearches;
       const success = successful === concurrentSearches && averagePerQuery < 1000;
 
@@ -218,17 +229,19 @@ export class IndexLayerPerformanceTest {
         'Concurrent Searches',
         success,
         duration,
-        `${successful}/${concurrentSearches} successful, ${averagePerQuery.toFixed(2)}ms/query avg`
+        `${successful}/${concurrentSearches} successful, ${averagePerQuery.toFixed(2)}ms/query avg`,
       );
 
-      console.log(`    ✅ Concurrent searches: ${successful}/${concurrentSearches} successful in ${duration.toFixed(2)}ms`);
+      console.log(
+        `    ✅ Concurrent searches: ${successful}/${concurrentSearches} successful in ${duration.toFixed(2)}ms`,
+      );
     } catch (error) {
       this.recordResult(
         configName,
         'Concurrent Searches',
         false,
         0,
-        `Failed: ${(error as Error).message}`
+        `Failed: ${(error as Error).message}`,
       );
     }
   }
@@ -239,23 +252,25 @@ export class IndexLayerPerformanceTest {
 
     try {
       const startTime = performance.now();
-      
+
       // Get provider registry
       const registry = this.indexLayer.registry;
       const providers = registry.listProviders();
-      
+
       if (providers.length < 2) {
-        console.log(`    ⚠️ Skipping failover test - only ${providers.length} provider(s) available`);
+        console.log(
+          `    ⚠️ Skipping failover test - only ${providers.length} provider(s) available`,
+        );
         return;
       }
 
       // Test basic search before failover
       const query: SearchQuery = { query: 'failover test' };
       const results1 = await this.indexLayer.search(query);
-      
+
       // Test that search still works (failover should be transparent)
       const results2 = await this.indexLayer.search(query);
-      
+
       const duration = performance.now() - startTime;
       const success = results1 && results2;
 
@@ -264,7 +279,7 @@ export class IndexLayerPerformanceTest {
         'Provider Failover',
         success,
         duration,
-        `${providers.length} providers available, failover transparent`
+        `${providers.length} providers available, failover transparent`,
       );
 
       console.log(`    ✅ Provider failover test completed in ${duration.toFixed(2)}ms`);
@@ -274,7 +289,7 @@ export class IndexLayerPerformanceTest {
         'Provider Failover',
         false,
         0,
-        `Failed: ${(error as Error).message}`
+        `Failed: ${(error as Error).message}`,
       );
     }
   }
@@ -285,23 +300,23 @@ export class IndexLayerPerformanceTest {
 
     try {
       const optimizer = this.indexLayer.optimizer;
-      
+
       // Generate some query analytics
       for (let i = 0; i < 100; i++) {
         const query: SearchQuery = {
           query: `test query ${i % 10}`,
           type: 'knowledge',
-          limit: 20
+          limit: 20,
         };
         optimizer.recordQuery(query, Math.random() * 100 + 50, Math.floor(Math.random() * 20));
       }
 
       const startTime = performance.now();
-      
+
       // Test analysis
       const analysis = await optimizer.analyzeQueryPatterns();
       const suggestions = await optimizer.suggestIndexOptimizations();
-      
+
       const duration = performance.now() - startTime;
       const success = analysis && suggestions && duration < 1000;
 
@@ -310,7 +325,7 @@ export class IndexLayerPerformanceTest {
         'Optimization Analysis',
         success,
         duration,
-        `${suggestions.length} optimizations suggested`
+        `${suggestions.length} optimizations suggested`,
       );
 
       console.log(`    ✅ Optimization analysis completed in ${duration.toFixed(2)}ms`);
@@ -320,7 +335,7 @@ export class IndexLayerPerformanceTest {
         'Optimization Analysis',
         false,
         0,
-        `Failed: ${(error as Error).message}`
+        `Failed: ${(error as Error).message}`,
       );
     }
   }
@@ -328,24 +343,38 @@ export class IndexLayerPerformanceTest {
   // 🟢 WORKING: Generate test data
   private generateTestEntries(count: number): IndexEntry[] {
     const entries: IndexEntry[] = [];
-    const types: Array<'knowledge' | 'memory' | 'adr' | 'gotcha' | 'code'> = ['knowledge', 'memory', 'adr', 'gotcha', 'code'];
+    const types: Array<'knowledge' | 'memory' | 'adr' | 'gotcha' | 'code'> = [
+      'knowledge',
+      'memory',
+      'adr',
+      'gotcha',
+      'code',
+    ];
     const categories = ['backend', 'frontend', 'database', 'api', 'security', 'performance'];
     const tags = ['typescript', 'javascript', 'react', 'node', 'testing', 'deployment'];
 
     for (let i = 0; i < count; i++) {
       const type = types[i % types.length];
       const category = categories[i % categories.length];
-      const entryTags = [
-        tags[i % tags.length],
-        tags[(i + 1) % tags.length]
-      ];
+      const entryTags = [tags[i % tags.length], tags[(i + 1) % tags.length]];
+
+      const id = `test-entry-${i}`;
+      const title = `Test Entry ${i}: ${category} implementation`;
+      const content = `This is a test entry for performance testing. It contains information about ${category} and ${type} implementation details. Entry ${i} demonstrates various aspects of the system including ${entryTags.join(', ')}. The content is designed to be searchable and contains multiple keywords that can be indexed efficiently by the FTS5 engine. Additional content includes performance metrics, optimization strategies, and best practices for implementing ${category} solutions in a production environment.`;
+      const crypto = require('crypto');
+      const hash = crypto
+        .createHash('sha256')
+        .update(content + title + id)
+        .digest('hex')
+        .substring(0, 8);
 
       entries.push({
-        id: `test-entry-${i}`,
+        id,
         type,
-        title: `Test Entry ${i}: ${category} implementation`,
-        content: `This is a test entry for performance testing. It contains information about ${category} and ${type} implementation details. Entry ${i} demonstrates various aspects of the system including ${entryTags.join(', ')}. The content is designed to be searchable and contains multiple keywords that can be indexed efficiently by the FTS5 engine. Additional content includes performance metrics, optimization strategies, and best practices for implementing ${category} solutions in a production environment.`,
+        title,
+        content,
         path: `test/entries/${type}/${i}.md`,
+        hash,
         metadata: {
           tags: entryTags,
           category,
@@ -354,9 +383,9 @@ export class IndexLayerPerformanceTest {
           lastUsed: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
           fileSize: 500 + Math.floor(Math.random() * 1000),
           relatedIds: [],
-          childIds: []
+          childIds: [],
         },
-        lastModified: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+        lastModified: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
       });
     }
 
@@ -374,7 +403,7 @@ export class IndexLayerPerformanceTest {
           { query: 'performance' },
           { query: 'implementation' },
           { query: 'typescript' },
-          { query: 'backend' }
+          { query: 'backend' },
         );
         break;
 
@@ -384,7 +413,7 @@ export class IndexLayerPerformanceTest {
           { query: 'backend AND typescript', queryType: 'boolean' },
           { query: '"performance testing"', queryType: 'phrase' },
           { query: 'implement*', queryType: 'fuzzy' },
-          { query: 'database OR api', queryType: 'boolean' }
+          { query: 'database OR api', queryType: 'boolean' },
         );
         break;
 
@@ -394,7 +423,7 @@ export class IndexLayerPerformanceTest {
           { query: 'implementation', category: 'backend', limit: 20 },
           { query: 'test', tags: ['typescript'], limit: 15 },
           { query: 'api', type: 'code', category: 'backend', limit: 25 },
-          { query: 'optimization', agentTypes: ['test-agent'], limit: 30 }
+          { query: 'optimization', agentTypes: ['test-agent'], limit: 30 },
         );
         break;
     }
@@ -403,21 +432,27 @@ export class IndexLayerPerformanceTest {
   }
 
   // 🟢 WORKING: Record test result
-  private recordResult(config: string, testName: string, success: boolean, duration: number, details: string): void {
+  private recordResult(
+    config: string,
+    testName: string,
+    success: boolean,
+    duration: number,
+    details: string,
+  ): void {
     this.testResults.push({
       config,
       testName,
       success,
       duration,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
   // 🟢 WORKING: Generate comprehensive test report
   private generateReport(totalDuration: number): PerformanceTestReport {
     const totalTests = this.testResults.length;
-    const successfulTests = this.testResults.filter(r => r.success).length;
+    const successfulTests = this.testResults.filter((r) => r.success).length;
     const failedTests = totalTests - successfulTests;
 
     // Group results by configuration
@@ -426,31 +461,33 @@ export class IndexLayerPerformanceTest {
       if (!configResults.has(result.config)) {
         configResults.set(result.config, []);
       }
-      configResults.get(result.config)!.push(result);
+      configResults.get(result.config).push(result);
     }
 
     // Calculate performance metrics
-    const searchResults = this.testResults.filter(r => r.testName.includes('Search'));
-    const indexResults = this.testResults.filter(r => r.testName.includes('Index'));
+    const searchResults = this.testResults.filter((r) => r.testName.includes('Search'));
+    const indexResults = this.testResults.filter((r) => r.testName.includes('Index'));
 
-    const avgSearchTime = searchResults.length > 0 
-      ? searchResults.reduce((sum, r) => sum + r.duration, 0) / searchResults.length 
-      : 0;
+    const avgSearchTime =
+      searchResults.length > 0
+        ? searchResults.reduce((sum, r) => sum + r.duration, 0) / searchResults.length
+        : 0;
 
-    const avgIndexTime = indexResults.length > 0
-      ? indexResults.reduce((sum, r) => sum + r.duration, 0) / indexResults.length
-      : 0;
+    const avgIndexTime =
+      indexResults.length > 0
+        ? indexResults.reduce((sum, r) => sum + r.duration, 0) / indexResults.length
+        : 0;
 
     // Performance targets validation
     const performanceTargets = {
       searchSubLimit: avgSearchTime < 500, // Sub-500ms search requirement
       indexingEfficient: avgIndexTime < 10000, // Reasonable indexing time
-      concurrentPerformance: this.testResults.some(r => 
-        r.testName === 'Concurrent Searches' && r.success
+      concurrentPerformance: this.testResults.some(
+        (r) => r.testName === 'Concurrent Searches' && r.success,
       ),
-      failoverReliability: this.testResults.some(r => 
-        r.testName === 'Provider Failover' && r.success
-      )
+      failoverReliability: this.testResults.some(
+        (r) => r.testName === 'Provider Failover' && r.success,
+      ),
     };
 
     const report: PerformanceTestReport = {
@@ -459,24 +496,24 @@ export class IndexLayerPerformanceTest {
         successfulTests,
         failedTests,
         successRate: (successfulTests / totalTests) * 100,
-        totalDuration
+        totalDuration,
       },
       performance: {
         avgSearchTime,
         avgIndexTime,
         searchSubLimit: performanceTargets.searchSubLimit,
-        indexingEfficient: performanceTargets.indexingEfficient
+        indexingEfficient: performanceTargets.indexingEfficient,
       },
       features: {
         pluggableProviders: true,
         vectorSearchReady: true,
         automaticOptimization: true,
         realTimeUpdates: true,
-        hybridSearch: true
+        hybridSearch: true,
       },
       configurationResults: Object.fromEntries(configResults),
       recommendations: this.generateRecommendations(performanceTargets),
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.printReport(report);
@@ -488,19 +525,27 @@ export class IndexLayerPerformanceTest {
     const recommendations: string[] = [];
 
     if (!targets.searchSubLimit) {
-      recommendations.push('Consider increasing cache sizes or optimizing query patterns to achieve sub-500ms search times');
+      recommendations.push(
+        'Consider increasing cache sizes or optimizing query patterns to achieve sub-500ms search times',
+      );
     }
 
     if (!targets.indexingEfficient) {
-      recommendations.push('Increase batch sizes or implement parallel indexing to improve indexing performance');
+      recommendations.push(
+        'Increase batch sizes or implement parallel indexing to improve indexing performance',
+      );
     }
 
     if (!targets.concurrentPerformance) {
-      recommendations.push('Optimize connection pooling and concurrency handling for better concurrent search performance');
+      recommendations.push(
+        'Optimize connection pooling and concurrency handling for better concurrent search performance',
+      );
     }
 
     if (!targets.failoverReliability) {
-      recommendations.push('Test failover mechanisms with multiple providers to ensure reliability');
+      recommendations.push(
+        'Test failover mechanisms with multiple providers to ensure reliability',
+      );
     }
 
     if (recommendations.length === 0) {
@@ -515,7 +560,7 @@ export class IndexLayerPerformanceTest {
     console.log('\n' + '='.repeat(80));
     console.log('🏆 INDEX LAYER PERFORMANCE TEST REPORT');
     console.log('='.repeat(80));
-    
+
     console.log(`\n📊 SUMMARY:`);
     console.log(`   Total Tests: ${report.summary.totalTests}`);
     console.log(`   Successful: ${report.summary.successfulTests}`);
@@ -524,14 +569,22 @@ export class IndexLayerPerformanceTest {
     console.log(`   Total Duration: ${report.summary.totalDuration.toFixed(2)}ms`);
 
     console.log(`\n⚡ PERFORMANCE METRICS:`);
-    console.log(`   Average Search Time: ${report.performance.avgSearchTime.toFixed(2)}ms ${report.performance.searchSubLimit ? '✅' : '❌'}`);
-    console.log(`   Average Index Time: ${report.performance.avgIndexTime.toFixed(2)}ms ${report.performance.indexingEfficient ? '✅' : '❌'}`);
-    console.log(`   Sub-500ms Requirement: ${report.performance.searchSubLimit ? '✅ MET' : '❌ NOT MET'}`);
+    console.log(
+      `   Average Search Time: ${report.performance.avgSearchTime.toFixed(2)}ms ${report.performance.searchSubLimit ? '✅' : '❌'}`,
+    );
+    console.log(
+      `   Average Index Time: ${report.performance.avgIndexTime.toFixed(2)}ms ${report.performance.indexingEfficient ? '✅' : '❌'}`,
+    );
+    console.log(
+      `   Sub-500ms Requirement: ${report.performance.searchSubLimit ? '✅ MET' : '❌ NOT MET'}`,
+    );
 
     console.log(`\n🚀 FEATURES VALIDATED:`);
     console.log(`   Pluggable Providers: ${report.features.pluggableProviders ? '✅' : '❌'}`);
     console.log(`   Vector Search Ready: ${report.features.vectorSearchReady ? '✅' : '❌'}`);
-    console.log(`   Automatic Optimization: ${report.features.automaticOptimization ? '✅' : '❌'}`);
+    console.log(
+      `   Automatic Optimization: ${report.features.automaticOptimization ? '✅' : '❌'}`,
+    );
     console.log(`   Real-time Updates: ${report.features.realTimeUpdates ? '✅' : '❌'}`);
     console.log(`   Hybrid Search: ${report.features.hybridSearch ? '✅' : '❌'}`);
 

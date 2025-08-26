@@ -18,18 +18,18 @@ export type {
   KnowledgeValidationRules,
   PromotionCandidate,
   EffectivenessMetrics,
-  MaintenanceReport
+  MaintenanceReport,
 } from './types';
 
-// Re-export smart recommendations types  
+// Re-export smart recommendations types
 export type {
   RecommendationContext,
   KnowledgeRecommendation,
-  PatternInsight
+  PatternInsight,
 } from './smart-recommendations';
 
 // Configuration factory
-import { KnowledgeConfig } from '../types';
+import type { KnowledgeConfig } from '../types';
 import { KnowledgeManager } from './knowledge-manager';
 
 /**
@@ -44,7 +44,7 @@ export function createKnowledgeConfig(basePath: string = './knowledge'): Knowled
     gotchaPromotionThreshold: 3,
     effectivenessDecayRate: 0.05,
     cleanupIntervalDays: 90,
-    autoPromoteGotchas: true
+    autoPromoteGotchas: true,
   };
 }
 
@@ -56,11 +56,11 @@ export function createKnowledgeConfig(basePath: string = './knowledge'): Knowled
 export async function initializeKnowledgeSystem(config?: Partial<KnowledgeConfig>) {
   const fullConfig = {
     ...createKnowledgeConfig(),
-    ...config
+    ...config,
   };
 
   const knowledgeManager = new KnowledgeManager(fullConfig);
   await knowledgeManager.initialize();
-  
+
   return knowledgeManager;
 }

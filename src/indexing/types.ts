@@ -7,6 +7,7 @@ export interface IndexEntry {
   title: string;
   content: string;
   path: string;
+  hash: string;
   metadata: IndexMetadata;
   lastModified: Date;
   searchVector?: number[];
@@ -20,24 +21,24 @@ export interface IndexMetadata {
   category?: string;
   projectId?: string;
   agentTypes: string[];
-  
+
   // Content-specific metadata
   difficulty?: 'low' | 'medium' | 'high';
   scope?: 'global' | 'project';
   effectiveness?: number; // 0-1 score for knowledge cards
   severity?: 'low' | 'medium' | 'high' | 'critical'; // For gotchas
   status?: string; // For ADRs, memory entries
-  
+
   // Usage metadata
   usageCount: number;
   lastUsed: Date;
   successRate?: number;
-  
+
   // File metadata
   fileSize: number;
   language?: string; // For code files
   extension?: string;
-  
+
   // Relationships
   relatedIds: string[];
   parentId?: string;
@@ -48,32 +49,32 @@ export interface SearchQuery {
   // Query text and options
   query: string;
   queryType?: SearchQueryType;
-  
+
   // Filters
   type?: IndexContentType | IndexContentType[];
   category?: string | string[];
   tags?: string | string[];
   projectId?: string;
   agentTypes?: string | string[];
-  
+
   // Search options
   fuzzy?: boolean;
   phrase?: boolean;
   boolean?: boolean;
-  
+
   // Result options
   limit?: number;
   offset?: number;
   includeSnippets?: boolean;
   snippetLength?: number;
   highlightResults?: boolean;
-  
+
   // Ranking options
   minScore?: number;
   boostRecent?: boolean;
   boostEffective?: boolean;
   customWeights?: SearchWeights;
-  
+
   // Time filters
   createdAfter?: Date;
   createdBefore?: Date;
@@ -97,15 +98,15 @@ export interface SearchResult {
   entry: IndexEntry;
   score: number;
   rank: number;
-  
+
   // Snippets and highlighting
   titleSnippet?: string;
   contentSnippets: ContentSnippet[];
-  
+
   // Match information
   matchedFields: string[];
   totalMatches: number;
-  
+
   // Relevance factors
   relevanceFactors: {
     titleMatch: number;
@@ -132,10 +133,10 @@ export interface SearchResults {
   totalPages: number;
   currentPage: number;
   executionTime: number; // milliseconds
-  
+
   // Facets for filtering
   facets: SearchFacets;
-  
+
   // Suggestions
   suggestions: string[];
   correctedQuery?: string;
@@ -161,19 +162,22 @@ export interface IndexStats {
   totalEntries: number;
   totalSize: number; // bytes
   lastUpdated: Date;
-  
+
   // Type breakdown
-  typeBreakdown: Record<IndexContentType, {
-    count: number;
-    size: number;
-    lastUpdated: Date;
-  }>;
-  
+  typeBreakdown: Record<
+    IndexContentType,
+    {
+      count: number;
+      size: number;
+      lastUpdated: Date;
+    }
+  >;
+
   // Performance metrics
   averageSearchTime: number; // milliseconds
   averageIndexTime: number; // milliseconds per entry
   cacheHitRate: number; // percentage
-  
+
   // Database stats
   databaseSize: number; // bytes
   indexSize: number; // bytes
@@ -186,27 +190,27 @@ export interface IndexConfig {
   // Database configuration
   databasePath: string;
   maxDatabaseSize: number; // bytes
-  
+
   // FTS5 configuration
   tokenizer: 'simple' | 'porter' | 'unicode61' | 'ascii';
   removeAccents: boolean;
   caseSensitive: boolean;
-  
+
   // Performance settings
   cacheSize: number; // number of pages
   synchronous: 'off' | 'normal' | 'full';
   journalMode: 'delete' | 'truncate' | 'persist' | 'memory' | 'wal';
-  
+
   // Indexing settings
   batchSize: number;
   maxContentLength: number; // characters
   enableVectorIndex: boolean;
-  
+
   // Maintenance settings
   autoVacuum: boolean;
   vacuumThreshold: number; // percentage fragmentation
   retentionDays: number;
-  
+
   // Search settings
   defaultLimit: number;
   maxLimit: number;
@@ -243,17 +247,17 @@ export interface SearchAnalytics {
   uniqueQueries: number;
   averageQueryLength: number;
   topQueries: QueryStats[];
-  
+
   // Performance metrics
   averageResponseTime: number;
   slowQueries: SlowQuery[];
   cacheMetrics: CacheMetrics;
-  
+
   // Result statistics
   averageResults: number;
   zeroResultQueries: number;
   clickThroughRate: number;
-  
+
   // Time range
   startDate: Date;
   endDate: Date;
@@ -291,7 +295,7 @@ export interface ContentExtractor {
   extractFromADR(adrFile: any): Promise<IndexEntry>;
   extractFromGotcha(gotchaFile: any): Promise<IndexEntry>;
   extractFromCodeFile(filePath: string): Promise<IndexEntry>;
-  
+
   // Content processing
   cleanContent(content: string): string;
   extractKeywords(content: string): string[];
@@ -312,17 +316,17 @@ export interface IIndexManager {
   // Lifecycle
   initialize(): Promise<void>;
   shutdown(): Promise<void>;
-  
+
   // Index operations
   indexContent(entries: IndexEntry[]): Promise<void>;
   indexBatch(batch: IndexBatch): Promise<void>;
   removeFromIndex(ids: string[]): Promise<void>;
   updateIndex(operation: IndexUpdateOperation): Promise<void>;
-  
+
   // Bulk operations
   rebuildIndex(): Promise<void>;
   rebuildPartialIndex(type: IndexContentType): Promise<void>;
-  
+
   // Status and maintenance
   getStats(): Promise<IndexStats>;
   vacuum(): Promise<IndexMaintenanceResult>;
@@ -333,11 +337,11 @@ export interface ISearchEngine {
   // Search operations
   search(query: SearchQuery): Promise<SearchResults>;
   searchSimilar(entryId: string, limit?: number): Promise<SearchResults>;
-  
+
   // Autocomplete and suggestions
   getSuggestions(partial: string, limit?: number): Promise<string[]>;
   getPopularQueries(limit?: number): Promise<QueryStats[]>;
-  
+
   // Analytics
   recordQuery(query: string, resultCount: number, responseTime: number): Promise<void>;
   getAnalytics(startDate: Date, endDate: Date): Promise<SearchAnalytics>;
@@ -347,21 +351,21 @@ export interface ISQLiteIndex {
   // Database operations
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  
+
   // Schema management
   createTables(): Promise<void>;
   createIndexes(): Promise<void>;
   migrate(): Promise<void>;
-  
+
   // CRUD operations
   insert(entries: IndexEntry[]): Promise<void>;
   update(entries: IndexEntry[]): Promise<void>;
   delete(ids: string[]): Promise<void>;
-  
+
   // Search operations
   searchFTS(query: string, options: SearchOptions): Promise<SQLiteSearchResult[]>;
   count(filters?: IndexFilters): Promise<number>;
-  
+
   // Maintenance
   vacuum(): Promise<number>; // returns space reclaimed
   analyze(): Promise<void>;
@@ -404,7 +408,7 @@ export class IndexError extends Error {
   constructor(
     message: string,
     public code: IndexErrorCode,
-    public details?: Record<string, unknown>
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'IndexError';
@@ -419,7 +423,7 @@ export enum IndexErrorCode {
   INVALID_QUERY = 'INVALID_QUERY',
   INSUFFICIENT_DISK_SPACE = 'INSUFFICIENT_DISK_SPACE',
   CONCURRENT_UPDATE_CONFLICT = 'CONCURRENT_UPDATE_CONFLICT',
-  SCHEMA_MIGRATION_FAILED = 'SCHEMA_MIGRATION_FAILED'
+  SCHEMA_MIGRATION_FAILED = 'SCHEMA_MIGRATION_FAILED',
 }
 
 // Enhanced Vector Search Support for ML Integration
@@ -429,10 +433,14 @@ export interface VectorIndex {
   updateVectors(entries: VectorEntry[]): Promise<void>;
   removeVectors(ids: string[]): Promise<void>;
   searchVectors(vector: number[], limit: number, threshold?: number): Promise<VectorSearchResult[]>;
-  
+
   // Hybrid search with advanced fusion
-  hybridSearch(textQuery: string, vector?: number[], weights?: HybridSearchWeights): Promise<SearchResults>;
-  
+  hybridSearch(
+    textQuery: string,
+    vector?: number[],
+    weights?: HybridSearchWeights,
+  ): Promise<SearchResults>;
+
   // Vector index management
   buildVectorIndex(dimension: number): Promise<void>;
   optimizeVectorIndex(): Promise<void>;
@@ -474,12 +482,12 @@ export interface IndexProvider {
   capabilities: IndexCapabilities;
   initialize(config: IndexProviderConfig): Promise<void>;
   shutdown(): Promise<void>;
-  
+
   // Core indexing operations
   index(entries: IndexEntry[]): Promise<void>;
   search(query: SearchQuery): Promise<SearchResults>;
   delete(ids: string[]): Promise<void>;
-  
+
   // Health and statistics
   getHealth(): Promise<ProviderHealth>;
   getStats(): Promise<ProviderStats>;

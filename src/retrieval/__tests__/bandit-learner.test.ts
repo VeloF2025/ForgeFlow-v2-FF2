@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { EpsilonGreedyBandit, UCBBandit, createBanditAlgorithm } from '../bandit-learner.js';
-import { RetrievalStrategy, SearchContext, RetrievalConfig } from '../types.js';
+import type { RetrievalStrategy, SearchContext, RetrievalConfig } from '../types.js';
 
 describe('Multi-Armed Bandit Algorithms', () => {
   const mockConfig: RetrievalConfig['bandit'] = {
@@ -11,7 +11,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     epsilonDecay: 0.99,
     initialEpsilon: 0.2,
     confidenceLevel: 2.0,
-    windowSize: 100
+    windowSize: 100,
   };
 
   const mockContext: SearchContext = {
@@ -22,7 +22,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     recentQueries: [],
     recentResults: [],
     successfulPatterns: [],
-    timestamp: new Date()
+    timestamp: new Date(),
   };
 
   describe('EpsilonGreedyBandit', () => {
@@ -38,12 +38,14 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should select arms based on epsilon-greedy strategy', async () => {
       const strategy = await bandit.selectArm(mockContext);
-      expect(strategy).toMatch(/^(fts-heavy|vector-heavy|balanced|recency-focused|effectiveness-focused|popularity-focused|semantic-focused)$/);
+      expect(strategy).toMatch(
+        /^(fts-heavy|vector-heavy|balanced|recency-focused|effectiveness-focused|popularity-focused|semantic-focused)$/,
+      );
     });
 
     it('should update rewards and adjust strategy preferences', async () => {
       const strategy: RetrievalStrategy = 'fts-heavy';
-      
+
       // Update with positive rewards
       for (let i = 0; i < 10; i++) {
         await bandit.updateReward(strategy, mockContext, 0.8);
@@ -55,7 +57,9 @@ describe('Multi-Armed Bandit Algorithms', () => {
       }
 
       const stats = await bandit.getArmStatistics();
-      expect(stats.armStats['fts-heavy'].averageReward).toBeGreaterThan(stats.armStats['vector-heavy'].averageReward);
+      expect(stats.armStats['fts-heavy'].averageReward).toBeGreaterThan(
+        stats.armStats['vector-heavy'].averageReward,
+      );
     });
 
     it('should decay epsilon over time', async () => {
@@ -75,7 +79,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should maintain sliding window of rewards', async () => {
       const strategy: RetrievalStrategy = 'fts-heavy';
-      
+
       // Fill window with rewards
       for (let i = 0; i < mockConfig.windowSize + 50; i++) {
         await bandit.updateReward(strategy, mockContext, i % 2 === 0 ? 0.8 : 0.2);
@@ -87,7 +91,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should calculate confidence intervals for arm statistics', async () => {
       const strategy: RetrievalStrategy = 'effectiveness-focused';
-      
+
       // Add enough samples for meaningful confidence interval
       for (let i = 0; i < 30; i++) {
         await bandit.updateReward(strategy, mockContext, 0.7 + (Math.random() - 0.5) * 0.2);
@@ -95,7 +99,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
       const stats = await bandit.getArmStatistics();
       const armStats = stats.armStats[strategy];
-      
+
       expect(armStats.confidenceInterval).toHaveLength(2);
       expect(armStats.confidenceInterval[0]).toBeLessThan(armStats.confidenceInterval[1]);
       expect(armStats.confidenceInterval[0]).toBeGreaterThanOrEqual(0);
@@ -105,7 +109,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     it('should track contextual rewards', async () => {
       const context1 = { ...mockContext, agentTypes: ['test-agent-1'] };
       const context2 = { ...mockContext, agentTypes: ['test-agent-2'] };
-      
+
       // Different contexts should learn independently
       for (let i = 0; i < 20; i++) {
         await bandit.updateReward('fts-heavy', context1, 0.9); // Good for context1
@@ -170,18 +174,18 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should validate reward values', async () => {
       // Invalid rewards should be rejected
-      await expect(bandit.updateReward('fts-heavy', mockContext, -0.1))
-        .rejects.toThrow('Invalid reward value');
-      
-      await expect(bandit.updateReward('fts-heavy', mockContext, 1.1))
-        .rejects.toThrow('Invalid reward value');
-      
+      await expect(bandit.updateReward('fts-heavy', mockContext, -0.1)).rejects.toThrow(
+        'Invalid reward value',
+      );
+
+      await expect(bandit.updateReward('fts-heavy', mockContext, 1.1)).rejects.toThrow(
+        'Invalid reward value',
+      );
+
       // Valid rewards should work
-      await expect(bandit.updateReward('fts-heavy', mockContext, 0.0))
-        .resolves.not.toThrow();
-      
-      await expect(bandit.updateReward('fts-heavy', mockContext, 1.0))
-        .resolves.not.toThrow();
+      await expect(bandit.updateReward('fts-heavy', mockContext, 0.0)).resolves.not.toThrow();
+
+      await expect(bandit.updateReward('fts-heavy', mockContext, 1.0)).resolves.not.toThrow();
     });
   });
 
@@ -199,7 +203,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     it('should explore unvisited arms first', async () => {
       // UCB should select unvisited arms before exploiting
       const selectedStrategies = new Set<RetrievalStrategy>();
-      
+
       // Collect first few selections (should cover all arms)
       for (let i = 0; i < 10; i++) {
         const strategy = await bandit.selectArm(mockContext);
@@ -219,7 +223,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
       // UCB should still occasionally explore other options
       const selections = new Map<RetrievalStrategy, number>();
-      
+
       for (let i = 0; i < 100; i++) {
         const strategy = await bandit.selectArm(mockContext);
         selections.set(strategy, (selections.get(strategy) || 0) + 1);
@@ -278,14 +282,14 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should handle rapid sequential updates', async () => {
       const promises = [];
-      
+
       // Fire many updates simultaneously
       for (let i = 0; i < 100; i++) {
         promises.push(bandit.updateReward('balanced', mockContext, Math.random()));
       }
 
       await Promise.all(promises);
-      
+
       const stats = await bandit.getArmStatistics();
       expect(stats.totalTrials).toBe(100);
     });
@@ -294,7 +298,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
       // Test boundary values
       await bandit.updateReward('fts-heavy', mockContext, 0.0);
       await bandit.updateReward('vector-heavy', mockContext, 1.0);
-      
+
       const stats = await bandit.getArmStatistics();
       expect(stats.armStats['fts-heavy'].averageReward).toBe(0.0);
       expect(stats.armStats['vector-heavy'].averageReward).toBe(1.0);
@@ -302,19 +306,19 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
     it('should maintain performance with large datasets', async () => {
       const startTime = Date.now();
-      
+
       // Large number of updates
       for (let i = 0; i < 1000; i++) {
         const strategy = ['fts-heavy', 'vector-heavy', 'balanced'][i % 3] as RetrievalStrategy;
         await bandit.updateReward(strategy, mockContext, Math.random());
       }
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       // Should complete in reasonable time (less than 5 seconds)
       expect(duration).toBeLessThan(5000);
-      
+
       const stats = await bandit.getArmStatistics();
       expect(stats.totalTrials).toBe(1000);
     });
@@ -328,14 +332,13 @@ describe('Multi-Armed Bandit Algorithms', () => {
         recentQueries: [],
         recentResults: [],
         successfulPatterns: [],
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       const strategy = await bandit.selectArm(emptyContext);
       expect(strategy).toBeDefined();
-      
-      await expect(bandit.updateReward(strategy, emptyContext, 0.5))
-        .resolves.not.toThrow();
+
+      await expect(bandit.updateReward(strategy, emptyContext, 0.5)).resolves.not.toThrow();
     });
 
     it('should calculate convergence metrics', async () => {
@@ -361,7 +364,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     it('should converge to optimal strategy', async () => {
       const optimalStrategy: RetrievalStrategy = 'fts-heavy';
       const suboptimalStrategy: RetrievalStrategy = 'vector-heavy';
-      
+
       // Simulate clear performance difference
       for (let i = 0; i < 500; i++) {
         await bandit.updateReward(optimalStrategy, mockContext, 0.85);
@@ -370,7 +373,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
 
       // Test convergence by measuring selection frequency
       const selections = new Map<RetrievalStrategy, number>();
-      
+
       for (let i = 0; i < 100; i++) {
         const selected = await bandit.selectArm(mockContext);
         selections.set(selected, (selections.get(selected) || 0) + 1);
@@ -384,7 +387,7 @@ describe('Multi-Armed Bandit Algorithms', () => {
     it('should maintain exploration-exploitation balance', async () => {
       // Track epsilon decay over time
       const epsilonHistory: number[] = [];
-      
+
       for (let i = 0; i < 100; i++) {
         await bandit.updateReward('balanced', mockContext, 0.5);
         const stats = await bandit.getArmStatistics();
@@ -394,10 +397,10 @@ describe('Multi-Armed Bandit Algorithms', () => {
       // Epsilon should generally decrease
       const firstHalf = epsilonHistory.slice(0, 50);
       const secondHalf = epsilonHistory.slice(50);
-      
+
       const firstAvg = firstHalf.reduce((sum, e) => sum + e, 0) / firstHalf.length;
       const secondAvg = secondHalf.reduce((sum, e) => sum + e, 0) / secondHalf.length;
-      
+
       expect(secondAvg).toBeLessThan(firstAvg);
     });
 
@@ -415,13 +418,16 @@ describe('Multi-Armed Bandit Algorithms', () => {
       }
 
       const stats = await bandit.getArmStatistics();
-      
+
       // Both strategies should have reasonable confidence intervals
       const highVarianceArm = stats.armStats['semantic-focused'];
       const lowVarianceArm = stats.armStats['popularity-focused'];
-      
-      expect(highVarianceArm.confidenceInterval[1] - highVarianceArm.confidenceInterval[0])
-        .toBeGreaterThan(lowVarianceArm.confidenceInterval[1] - lowVarianceArm.confidenceInterval[0]);
+
+      expect(
+        highVarianceArm.confidenceInterval[1] - highVarianceArm.confidenceInterval[0],
+      ).toBeGreaterThan(
+        lowVarianceArm.confidenceInterval[1] - lowVarianceArm.confidenceInterval[0],
+      );
     });
   });
 });

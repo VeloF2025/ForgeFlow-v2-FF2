@@ -59,7 +59,7 @@ export interface RecoveryActionConfig {
   actionType: string;
   parameters: Record<string, unknown>;
   runBefore?: boolean; // Run before retry attempts
-  runAfter?: boolean;  // Run after all retries fail
+  runAfter?: boolean; // Run after all retries fail
   priority?: number;
   timeout?: number;
 }
@@ -100,14 +100,17 @@ export class FailurePolicyManager {
   private recoveryActions: RecoveryActionManager;
   private configPath: string;
   private policyCache = new Map<string, FailurePolicy[]>();
-  private metrics = new Map<string, {
-    policiesApplied: number;
-    retriesExecuted: number;
-    successfulRecoveries: number;
-    circuitBreakerTrips: number;
-    averageRecoveryTime: number;
-    policyEffectiveness: Map<string, { successes: number; failures: number }>;
-  }>();
+  private metrics = new Map<
+    string,
+    {
+      policiesApplied: number;
+      retriesExecuted: number;
+      successfulRecoveries: number;
+      circuitBreakerTrips: number;
+      averageRecoveryTime: number;
+      policyEffectiveness: Map<string, { successes: number; failures: number }>;
+    }
+  >();
 
   private constructor() {
     this.retryStrategy = new RetryStrategy();
@@ -127,10 +130,10 @@ export class FailurePolicyManager {
   async loadPolicies(configPath?: string): Promise<void> {
     try {
       const actualConfigPath = configPath || this.configPath;
-      
+
       if (!(await fs.pathExists(actualConfigPath))) {
-        enhancedLogger.warn('Failure policies config not found, creating default policies', { 
-          configPath: actualConfigPath 
+        enhancedLogger.warn('Failure policies config not found, creating default policies', {
+          configPath: actualConfigPath,
         });
         await this.createDefaultPolicies();
         return;
@@ -147,7 +150,7 @@ export class FailurePolicyManager {
           severity: ErrorSeverity.HIGH,
           context: { configPath: actualConfigPath },
           recoverable: false,
-          userMessage: 'Failure policy configuration is invalid'
+          userMessage: 'Failure policy configuration is invalid',
         });
       }
 
@@ -162,14 +165,13 @@ export class FailurePolicyManager {
 
       enhancedLogger.info('Loaded failure policies successfully', {
         policiesCount: this.policies.size,
-        configPath: actualConfigPath
+        configPath: actualConfigPath,
       });
-
     } catch (error) {
-      enhancedLogger.error('Failed to load failure policies', { 
-        error: error.message,
-        configPath 
-      });
+      enhancedLogger.error('Failed to load failure policies', {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        configPath,
+      } as any);
       // Fall back to default policies if loading fails
       await this.createDefaultPolicies();
     }
@@ -188,12 +190,15 @@ export class FailurePolicyManager {
           ...policy,
           id: policyConfig.id, // Preserve original ID
           conditions: [...(parentPolicy.conditions || []), ...(policy.conditions || [])],
-          recoveryActions: [...(parentPolicy.recoveryActions || []), ...(policy.recoveryActions || [])]
+          recoveryActions: [
+            ...(parentPolicy.recoveryActions || []),
+            ...(policy.recoveryActions || []),
+          ],
         };
       } else {
         enhancedLogger.warn('Parent policy not found for inheritance', {
           policyId: policy.id,
-          inheritFrom: policy.inheritFrom
+          inheritFrom: policy.inheritFrom,
         });
       }
     }
@@ -210,43 +215,42 @@ export class FailurePolicyManager {
   async executePolicy(context: PolicyExecutionContext): Promise<PolicyExecutionResult> {
     const startTime = Date.now();
     const cacheKey = this.getCacheKey(context);
-    
+
     try {
       // Find applicable policies
       const applicablePolicies = this.findApplicablePolicies(context);
-      
+
       if (applicablePolicies.length === 0) {
         return this.getDefaultPolicyResult(context);
       }
 
       // Sort by priority (higher number = higher priority)
       applicablePolicies.sort((a, b) => b.priority - a.priority);
-      
+
       const selectedPolicy = applicablePolicies[0];
       const policyEvaluationTime = Date.now() - startTime;
 
       // Execute policy logic
       const result = await this.executePolicyLogic(selectedPolicy, context, policyEvaluationTime);
-      
+
       // Update metrics
       this.updatePolicyMetrics(selectedPolicy.id, context, result);
-      
+
       enhancedLogger.debug('Failure policy executed', {
         policyId: selectedPolicy.id,
         operationName: context.operationName,
         shouldRetry: result.shouldRetry,
         delayMs: result.delayMs,
-        executionTime: result.executionMetrics.totalExecutionTime
+        executionTime: result.executionMetrics.totalExecutionTime,
       });
 
       return result;
-
     } catch (error) {
       enhancedLogger.error('Failed to execute failure policy', {
-        operationName: context.operationName,
-        error: error.message
-      });
-      
+        operation: context.operationName,
+        errorMessage: error instanceof Error ? error.message : String(error),
+      } as any);
+
       // Return safe default on policy execution failure
       return this.getDefaultPolicyResult(context);
     }
@@ -255,24 +259,27 @@ export class FailurePolicyManager {
   // 🟢 WORKING: Find applicable policies based on context
   private findApplicablePolicies(context: PolicyExecutionContext): FailurePolicy[] {
     const applicable: FailurePolicy[] = [];
-    
+
     for (const policy of this.policies.values()) {
       if (!policy.enabled) continue;
-      
+
       if (this.evaluatePolicyConditions(policy.conditions, context)) {
         applicable.push(policy);
       }
     }
-    
+
     return applicable;
   }
 
   // 🟢 WORKING: Evaluate policy conditions against context
-  private evaluatePolicyConditions(conditions: PolicyCondition[], context: PolicyExecutionContext): boolean {
+  private evaluatePolicyConditions(
+    conditions: PolicyCondition[],
+    context: PolicyExecutionContext,
+  ): boolean {
     if (!conditions || conditions.length === 0) return true;
-    
-    return conditions.every(condition => {
-      let result = this.evaluateCondition(condition, context);
+
+    return conditions.every((condition) => {
+      const result = this.evaluateCondition(condition, context);
       return condition.negate ? !result : result;
     });
   }
@@ -280,22 +287,20 @@ export class FailurePolicyManager {
   // 🟢 WORKING: Evaluate individual condition
   private evaluateCondition(condition: PolicyCondition, context: PolicyExecutionContext): boolean {
     let fieldValue: any;
-    
+
     switch (condition.field) {
       case 'category':
-        fieldValue = context.error instanceof ForgeFlowError 
-          ? context.error.category 
-          : ErrorCategory.INTERNAL_ERROR;
+        fieldValue =
+          context.error instanceof ForgeFlowError
+            ? context.error.category
+            : ErrorCategory.INTERNAL_ERROR;
         break;
       case 'severity':
-        fieldValue = context.error instanceof ForgeFlowError 
-          ? context.error.severity 
-          : ErrorSeverity.MEDIUM;
+        fieldValue =
+          context.error instanceof ForgeFlowError ? context.error.severity : ErrorSeverity.MEDIUM;
         break;
       case 'code':
-        fieldValue = context.error instanceof ForgeFlowError 
-          ? context.error.code 
-          : 'UNKNOWN_ERROR';
+        fieldValue = context.error instanceof ForgeFlowError ? context.error.code : 'UNKNOWN_ERROR';
         break;
       case 'message':
         fieldValue = context.error.message;
@@ -311,17 +316,18 @@ export class FailurePolicyManager {
       case 'equals':
         return fieldValue === condition.value;
       case 'contains':
-        return typeof fieldValue === 'string' && 
-               typeof condition.value === 'string' && 
-               fieldValue.toLowerCase().includes(condition.value.toLowerCase());
+        return (
+          typeof fieldValue === 'string' &&
+          typeof condition.value === 'string' &&
+          fieldValue.toLowerCase().includes(condition.value.toLowerCase())
+        );
       case 'matches':
         if (condition.value instanceof RegExp) {
           return condition.value.test(String(fieldValue));
         }
         return new RegExp(String(condition.value), 'i').test(String(fieldValue));
       case 'in':
-        return Array.isArray(condition.value) && 
-               condition.value.includes(fieldValue);
+        return Array.isArray(condition.value) && condition.value.includes(fieldValue);
       default:
         return false;
     }
@@ -331,18 +337,18 @@ export class FailurePolicyManager {
   private async executePolicyLogic(
     policy: FailurePolicy,
     context: PolicyExecutionContext,
-    policyEvaluationTime: number
+    policyEvaluationTime: number,
   ): Promise<PolicyExecutionResult> {
     const strategyStartTime = Date.now();
-    
+
     // Check circuit breaker first
     let circuitBreakerState: 'open' | 'closed' | 'half-open' | undefined;
     if (policy.circuitBreaker?.enabled) {
       circuitBreakerState = await this.circuitBreaker.checkState(
         context.operationName,
-        policy.circuitBreaker
+        policy.circuitBreaker,
       );
-      
+
       if (circuitBreakerState === 'open') {
         const strategyComputationTime = Date.now() - strategyStartTime;
         return {
@@ -354,8 +360,8 @@ export class FailurePolicyManager {
           executionMetrics: {
             policyEvaluationTime,
             strategyComputationTime,
-            totalExecutionTime: Date.now() - (Date.now() - policyEvaluationTime)
-          }
+            totalExecutionTime: Date.now() - (Date.now() - policyEvaluationTime),
+          },
         };
       }
     }
@@ -370,14 +376,14 @@ export class FailurePolicyManager {
       delayMs = await this.retryStrategy.calculateDelay(
         policy.retryStrategy,
         context.attempt,
-        context.error
+        context.error,
       );
       nextRetryAt = new Date(Date.now() + delayMs);
     }
 
     // Determine recovery actions
     const recoveryActions = this.selectRecoveryActions(policy, context, shouldRetry);
-    
+
     const strategyComputationTime = Date.now() - strategyStartTime;
 
     return {
@@ -390,8 +396,8 @@ export class FailurePolicyManager {
       executionMetrics: {
         policyEvaluationTime,
         strategyComputationTime,
-        totalExecutionTime: policyEvaluationTime + strategyComputationTime
-      }
+        totalExecutionTime: policyEvaluationTime + strategyComputationTime,
+      },
     };
   }
 
@@ -413,7 +419,11 @@ export class FailurePolicyManager {
 
     // Check specific retry conditions
     if (policy.retryStrategy.shouldRetry) {
-      const retryContext = { ...context, error: context.error, operationName: context.operationName };
+      const retryContext = {
+        ...context,
+        error: context.error,
+        operationName: context.operationName,
+      };
       return this.evaluatePolicyConditions(policy.retryStrategy.shouldRetry, retryContext);
     }
 
@@ -430,39 +440,49 @@ export class FailurePolicyManager {
   private isRetryableError(error: Error): boolean {
     const message = error.message.toLowerCase();
     const retryablePatterns = [
-      'timeout', 'network', 'connection', 'temporary', 'rate limit',
-      'service unavailable', 'internal server error', 'bad gateway'
+      'timeout',
+      'network',
+      'connection',
+      'temporary',
+      'rate limit',
+      'service unavailable',
+      'internal server error',
+      'bad gateway',
     ];
-    
-    return retryablePatterns.some(pattern => message.includes(pattern));
+
+    return retryablePatterns.some((pattern) => message.includes(pattern));
   }
 
   // 🟢 WORKING: Select appropriate recovery actions
   private selectRecoveryActions(
     policy: FailurePolicy,
     context: PolicyExecutionContext,
-    willRetry: boolean
+    willRetry: boolean,
   ): RecoveryActionConfig[] {
     if (!policy.recoveryActions) return [];
-    
-    return policy.recoveryActions.filter(action => {
-      // Run before retry attempts
-      if (action.runBefore && willRetry) return true;
-      // Run after all retries fail
-      if (action.runAfter && !willRetry && context.attempt >= policy.retryStrategy.maxAttempts) return true;
-      // Default behavior
-      if (!action.runBefore && !action.runAfter) return willRetry;
-      
-      return false;
-    }).sort((a, b) => (b.priority || 0) - (a.priority || 0));
+
+    return policy.recoveryActions
+      .filter((action) => {
+        // Run before retry attempts
+        if (action.runBefore && willRetry) return true;
+        // Run after all retries fail
+        if (action.runAfter && !willRetry && context.attempt >= policy.retryStrategy.maxAttempts)
+          return true;
+        // Default behavior
+        if (!action.runBefore && !action.runAfter) return willRetry;
+
+        return false;
+      })
+      .sort((a, b) => (b.priority || 0) - (a.priority || 0));
   }
 
   // 🟢 WORKING: Get cache key for policy lookups
   private getCacheKey(context: PolicyExecutionContext): string {
-    const errorType = context.error instanceof ForgeFlowError 
-      ? `${context.error.category}-${context.error.code}`
-      : context.error.constructor.name;
-    
+    const errorType =
+      context.error instanceof ForgeFlowError
+        ? `${context.error.category}-${context.error.code}`
+        : context.error.constructor.name;
+
     return `${context.operationName}:${errorType}`;
   }
 
@@ -470,7 +490,7 @@ export class FailurePolicyManager {
   private updatePolicyMetrics(
     policyId: string,
     context: PolicyExecutionContext,
-    result: PolicyExecutionResult
+    result: PolicyExecutionResult,
   ): void {
     const operationMetrics = this.metrics.get(context.operationName) || {
       policiesApplied: 0,
@@ -478,7 +498,7 @@ export class FailurePolicyManager {
       successfulRecoveries: 0,
       circuitBreakerTrips: 0,
       averageRecoveryTime: 0,
-      policyEffectiveness: new Map()
+      policyEffectiveness: new Map(),
     };
 
     operationMetrics.policiesApplied++;
@@ -490,20 +510,23 @@ export class FailurePolicyManager {
     }
 
     // Track policy effectiveness
-    const policyEffectiveness = operationMetrics.policyEffectiveness.get(policyId) || 
-      { successes: 0, failures: 0 };
-    
+    const policyEffectiveness = operationMetrics.policyEffectiveness.get(policyId) || {
+      successes: 0,
+      failures: 0,
+    };
+
     // This will be updated when we get the final result of the operation
     operationMetrics.policyEffectiveness.set(policyId, policyEffectiveness);
-    
+
     this.metrics.set(context.operationName, operationMetrics);
   }
 
   // 🟢 WORKING: Get default policy result when no policies match
   private getDefaultPolicyResult(context: PolicyExecutionContext): PolicyExecutionResult {
-    const isRetryable = context.error instanceof ForgeFlowError 
-      ? context.error.recoverable 
-      : this.isRetryableError(context.error);
+    const isRetryable =
+      context.error instanceof ForgeFlowError
+        ? context.error.recoverable
+        : this.isRetryableError(context.error);
 
     const shouldRetry = isRetryable && context.attempt < 3; // Default max 3 attempts
     const delayMs = shouldRetry ? Math.min(1000 * Math.pow(2, context.attempt), 30000) : 0;
@@ -516,8 +539,8 @@ export class FailurePolicyManager {
       executionMetrics: {
         policyEvaluationTime: 0,
         strategyComputationTime: 0,
-        totalExecutionTime: 0
-      }
+        totalExecutionTime: 0,
+      },
     };
   }
 
@@ -528,9 +551,7 @@ export class FailurePolicyManager {
         id: 'github-api-policy',
         name: 'GitHub API Error Policy',
         description: 'Handles GitHub API errors with exponential backoff and rate limit recovery',
-        conditions: [
-          { field: 'category', operator: 'equals', value: 'github_integration' }
-        ],
+        conditions: [{ field: 'category', operator: 'equals', value: 'github_integration' }],
         retryStrategy: {
           strategyType: 'exponential',
           maxAttempts: 5,
@@ -539,56 +560,54 @@ export class FailurePolicyManager {
           backoffMultiplier: 2,
           jitter: true,
           jitterType: 'full',
-          giveUpAfter: 300000 // 5 minutes
+          giveUpAfter: 300000, // 5 minutes
         },
         circuitBreaker: {
           enabled: true,
           failureThreshold: 5,
           successThreshold: 2,
           timeout: 60000,
-          halfOpenMaxCalls: 3
+          halfOpenMaxCalls: 3,
         },
         recoveryActions: [
           {
             actionType: 'github-rate-limit-wait',
             parameters: { respectHeaders: true },
             runBefore: true,
-            priority: 10
+            priority: 10,
           },
           {
             actionType: 'github-token-rotation',
             parameters: { fallbackTokens: [] },
             runAfter: true,
-            priority: 8
-          }
+            priority: 8,
+          },
         ],
         priority: 10,
-        enabled: true
+        enabled: true,
       },
       {
         id: 'git-operations-policy',
         name: 'Git Operations Policy',
         description: 'Handles git command failures with cleanup and retry',
-        conditions: [
-          { field: 'category', operator: 'equals', value: 'worktree_management' }
-        ],
+        conditions: [{ field: 'category', operator: 'equals', value: 'worktree_management' }],
         retryStrategy: {
           strategyType: 'linear',
           maxAttempts: 3,
           initialDelay: 2000,
           maxDelay: 10000,
-          giveUpAfter: 120000 // 2 minutes
+          giveUpAfter: 120000, // 2 minutes
         },
         recoveryActions: [
           {
             actionType: 'git-cleanup',
             parameters: { resetHard: true, cleanUntracked: true },
             runBefore: true,
-            priority: 10
-          }
+            priority: 10,
+          },
         ],
         priority: 9,
-        enabled: true
+        enabled: true,
       },
       {
         id: 'network-timeout-policy',
@@ -596,7 +615,7 @@ export class FailurePolicyManager {
         description: 'Handles network timeouts and connectivity issues',
         conditions: [
           { field: 'category', operator: 'equals', value: 'timeout' },
-          { field: 'category', operator: 'equals', value: 'network' }
+          { field: 'category', operator: 'equals', value: 'network' },
         ],
         retryStrategy: {
           strategyType: 'exponential',
@@ -605,42 +624,40 @@ export class FailurePolicyManager {
           maxDelay: 60000,
           backoffMultiplier: 1.5,
           jitter: true,
-          giveUpAfter: 180000 // 3 minutes
+          giveUpAfter: 180000, // 3 minutes
         },
         priority: 8,
-        enabled: true
+        enabled: true,
       },
       {
         id: 'agent-execution-policy',
         name: 'Agent Execution Policy',
         description: 'Handles agent execution failures with state recovery',
-        conditions: [
-          { field: 'category', operator: 'equals', value: 'agent_execution' }
-        ],
+        conditions: [{ field: 'category', operator: 'equals', value: 'agent_execution' }],
         retryStrategy: {
           strategyType: 'exponential',
           maxAttempts: 3,
           initialDelay: 2000,
           maxDelay: 20000,
           backoffMultiplier: 2,
-          jitter: true
+          jitter: true,
         },
         recoveryActions: [
           {
             actionType: 'agent-state-reset',
             parameters: { preserveContext: true },
             runBefore: true,
-            priority: 9
+            priority: 9,
           },
           {
             actionType: 'agent-fallback-assignment',
             parameters: { preferSameType: true },
             runAfter: true,
-            priority: 7
-          }
+            priority: 7,
+          },
         ],
         priority: 9,
-        enabled: true
+        enabled: true,
       },
       {
         id: 'default-retry-policy',
@@ -653,11 +670,11 @@ export class FailurePolicyManager {
           initialDelay: 1000,
           maxDelay: 15000,
           backoffMultiplier: 2,
-          jitter: true
+          jitter: true,
         },
         priority: 1,
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
 
     // Store default policies
@@ -667,9 +684,9 @@ export class FailurePolicyManager {
 
     // Save to config file
     await this.savePoliciesConfig(defaultPolicies);
-    
+
     enhancedLogger.info('Created default failure policies', {
-      policiesCount: defaultPolicies.length
+      policiesCount: defaultPolicies.length,
     });
   }
 
@@ -677,25 +694,24 @@ export class FailurePolicyManager {
   private async savePoliciesConfig(policies: FailurePolicy[]): Promise<void> {
     try {
       await fs.ensureDir(path.dirname(this.configPath));
-      
+
       const config = {
         version: '1.0',
         description: 'ForgeFlow v2 Failure Policies Configuration',
-        policies: policies
+        policies: policies,
       };
-      
+
       const yamlContent = yaml.stringify(config, {
         indent: 2,
-        lineWidth: 100
+        lineWidth: 100,
       });
-      
+
       await fs.writeFile(this.configPath, yamlContent, 'utf-8');
-      
     } catch (error) {
       enhancedLogger.error('Failed to save policies configuration', {
-        error: error.message,
-        configPath: this.configPath
-      });
+        errorMessage: error instanceof Error ? error.message : String(error),
+        configPath: this.configPath,
+      } as any);
     }
   }
 
@@ -703,21 +719,24 @@ export class FailurePolicyManager {
   getPolicyMetrics(): Record<string, unknown> {
     const globalMetrics = {
       totalPoliciesLoaded: this.policies.size,
-      enabledPolicies: Array.from(this.policies.values()).filter(p => p.enabled).length,
+      enabledPolicies: Array.from(this.policies.values()).filter((p) => p.enabled).length,
       operationMetrics: Object.fromEntries(this.metrics),
       policyEffectiveness: this.calculatePolicyEffectiveness(),
-      systemHealth: this.calculateSystemHealth()
+      systemHealth: this.calculateSystemHealth(),
     };
 
     return globalMetrics;
   }
 
   // 🟢 WORKING: Calculate overall policy effectiveness
-  private calculatePolicyEffectiveness(): Record<string, { 
-    successRate: number; 
-    totalApplications: number;
-    averageRecoveryTime: number; 
-  }> {
+  private calculatePolicyEffectiveness(): Record<
+    string,
+    {
+      successRate: number;
+      totalApplications: number;
+      averageRecoveryTime: number;
+    }
+  > {
     const effectiveness: Record<string, any> = {};
 
     for (const [operation, metrics] of this.metrics.entries()) {
@@ -732,7 +751,7 @@ export class FailurePolicyManager {
       effectiveness[operation] = {
         successRate: totalApplications > 0 ? (totalSuccesses / totalApplications) * 100 : 100,
         totalApplications,
-        averageRecoveryTime: metrics.averageRecoveryTime
+        averageRecoveryTime: metrics.averageRecoveryTime,
       };
     }
 
@@ -756,34 +775,28 @@ export class FailurePolicyManager {
       totalTrips += metrics.circuitBreakerTrips;
       totalRecoveries += metrics.successfulRecoveries;
       totalOperations += metrics.policiesApplied;
-      
+
       if (metrics.averageRecoveryTime > 0) {
         totalRecoveryTime += metrics.averageRecoveryTime;
         recoveryCount++;
       }
     }
 
-    const circuitBreakerHealth = totalOperations > 0 
-      ? Math.max(0, 100 - (totalTrips / totalOperations) * 100)
-      : 100;
+    const circuitBreakerHealth =
+      totalOperations > 0 ? Math.max(0, 100 - (totalTrips / totalOperations) * 100) : 100;
 
-    const policyEffectiveness = totalOperations > 0 
-      ? (totalRecoveries / totalOperations) * 100
-      : 100;
+    const policyEffectiveness =
+      totalOperations > 0 ? (totalRecoveries / totalOperations) * 100 : 100;
 
-    const averageRecoveryTime = recoveryCount > 0 
-      ? totalRecoveryTime / recoveryCount
-      : 0;
+    const averageRecoveryTime = recoveryCount > 0 ? totalRecoveryTime / recoveryCount : 0;
 
-    const overallHealthScore = Math.round(
-      (circuitBreakerHealth * 0.4) + (policyEffectiveness * 0.6)
-    );
+    const overallHealthScore = Math.round(circuitBreakerHealth * 0.4 + policyEffectiveness * 0.6);
 
     return {
       overallHealthScore,
       circuitBreakerHealth: Math.round(circuitBreakerHealth),
       policyEffectiveness: Math.round(policyEffectiveness),
-      averageRecoveryTime: Math.round(averageRecoveryTime)
+      averageRecoveryTime: Math.round(averageRecoveryTime),
     };
   }
 
@@ -792,11 +805,11 @@ export class FailurePolicyManager {
     const processedPolicy = await this.processPolicy(policy);
     this.policies.set(processedPolicy.id, processedPolicy);
     this.policyCache.clear(); // Clear cache to force re-evaluation
-    
+
     enhancedLogger.info('Added failure policy', {
       policyId: processedPolicy.id,
       name: processedPolicy.name,
-      enabled: processedPolicy.enabled
+      enabled: processedPolicy.enabled,
     });
   }
 
@@ -838,7 +851,12 @@ export class FailurePolicyManager {
   }
 
   // 🟢 WORKING: Record successful operation outcome
-  recordPolicyOutcome(operationName: string, policyId: string, success: boolean, recoveryTime?: number): void {
+  recordPolicyOutcome(
+    operationName: string,
+    policyId: string,
+    success: boolean,
+    recoveryTime?: number,
+  ): void {
     const operationMetrics = this.metrics.get(operationName);
     if (operationMetrics) {
       const policyMetrics = operationMetrics.policyEffectiveness.get(policyId);
@@ -846,11 +864,11 @@ export class FailurePolicyManager {
         if (success) {
           policyMetrics.successes++;
           operationMetrics.successfulRecoveries++;
-          
+
           if (recoveryTime !== undefined) {
             const currentAvg = operationMetrics.averageRecoveryTime;
             const totalRecoveries = operationMetrics.successfulRecoveries;
-            operationMetrics.averageRecoveryTime = 
+            operationMetrics.averageRecoveryTime =
               (currentAvg * (totalRecoveries - 1) + recoveryTime) / totalRecoveries;
           }
         } else {

@@ -1,0 +1,40 @@
+{
+  "usageOutcomes": {
+    "test-card-1": [
+      {
+        "cardId": "test-card-1",
+        "jobId": "job-1756145141316-uibksne98",
+        "timestamp": "2025-08-25T18:05:41.316Z",
+        "context": {
+          "agentType": "code-implementer",
+          "jobCategory": "feature",
+          "complexity": "medium",
+          "phase": "implementation"
+        },
+        "outcome": {
+          "success": true,
+          "relevance": 0.9,
+          "effectiveness": 0.8,
+          "timeToApply": 1000,
+          "userSatisfaction": 0.8
+        },
+        "impact": {
+          "qualityImprovement": 0.4,
+          "performanceGain": 0.1,
+          "learningValue": 0.5,
+          "timesSaved": 5000
+        },
+        "feedback": {
+          "positive": [
+            "Helped resolve issue"
+          ],
+          "negative": [],
+          "suggestions": []
+        }
+      }
+    ]
+  },
+  "evaluationHistory": {},
+  "lastPromotionRun": "2025-08-25T18:05:48.406Z",
+  "lastSaved": "2025-08-25T18:05:48.407Z"
+}

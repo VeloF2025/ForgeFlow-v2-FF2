@@ -1,7 +1,7 @@
 // Rank Fusion Engine - Advanced Result Fusion and Ranking Algorithms
 // Implements RRF, Borda Count, Weighted Fusion, and Learning-to-Rank
 
-import {
+import type {
   RankFusionAlgorithm,
   RetrievalResult,
   RetrievalQuery,
@@ -9,10 +9,9 @@ import {
   FeatureVector,
   RankingModel,
   RetrievalConfig,
-  RetrievalError,
-  RetrievalErrorCode
 } from './types.js';
-import { SearchResult } from '../indexing/types.js';
+import { RetrievalError, RetrievalErrorCode } from './types.js';
+import type { SearchResult } from '../indexing/types.js';
 import { logger } from '../utils/logger.js';
 
 export class RankFusionEngine implements RankFusionAlgorithm {
@@ -21,17 +20,14 @@ export class RankFusionEngine implements RankFusionAlgorithm {
 
   constructor(config: RetrievalConfig) {
     this.config = config;
-    
+
     logger.info('RankFusionEngine initialized', {
       fusionAlgorithm: config.hybrid.fusionAlgorithm,
-      learningToRank: config.reranking.enabled
+      learningToRank: config.reranking.enabled,
     });
   }
 
-  reciprocalRankFusion(
-    rankedLists: SearchResult[][],
-    k: number = 60
-  ): SearchResult[] {
+  reciprocalRankFusion(rankedLists: SearchResult[][], k: number = 60): SearchResult[] {
     try {
       if (rankedLists.length === 0) return [];
       if (rankedLists.length === 1) return rankedLists[0];
@@ -39,11 +35,11 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       const scoreMap = new Map<string, { result: SearchResult; score: number; count: number }>();
 
       // Calculate RRF scores for each result
-      rankedLists.forEach(list => {
+      rankedLists.forEach((list) => {
         list.forEach((result, rank) => {
           const rrfScore = 1 / (k + rank + 1);
           const existing = scoreMap.get(result.entry.id);
-          
+
           if (existing) {
             existing.score += rrfScore;
             existing.count++;
@@ -51,7 +47,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
             scoreMap.set(result.entry.id, {
               result,
               score: rrfScore,
-              count: 1
+              count: 1,
             });
           }
         });
@@ -63,14 +59,14 @@ export class RankFusionEngine implements RankFusionAlgorithm {
         .map((item, index) => ({
           ...item.result,
           score: item.score,
-          rank: index + 1
+          rank: index + 1,
         }));
 
       logger.debug('Reciprocal Rank Fusion completed', {
         inputLists: rankedLists.length,
         totalResults: scoreMap.size,
         outputResults: fusedResults.length,
-        k
+        k,
       });
 
       return fusedResults;
@@ -79,7 +75,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       throw new RetrievalError(
         'Reciprocal Rank Fusion failed',
         RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { error }
+        { error },
       );
     }
   }
@@ -89,15 +85,18 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       if (rankedLists.length === 0) return [];
       if (rankedLists.length === 1) return rankedLists[0];
 
-      const scoreMap = new Map<string, { result: SearchResult; score: number; appearances: number }>();
-      const maxRank = Math.max(...rankedLists.map(list => list.length));
+      const scoreMap = new Map<
+        string,
+        { result: SearchResult; score: number; appearances: number }
+      >();
+      const maxRank = Math.max(...rankedLists.map((list) => list.length));
 
       // Calculate Borda Count scores
-      rankedLists.forEach(list => {
+      rankedLists.forEach((list) => {
         list.forEach((result, rank) => {
           const bordaScore = maxRank - rank; // Higher rank = higher score
           const existing = scoreMap.get(result.entry.id);
-          
+
           if (existing) {
             existing.score += bordaScore;
             existing.appearances++;
@@ -105,7 +104,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
             scoreMap.set(result.entry.id, {
               result,
               score: bordaScore,
-              appearances: 1
+              appearances: 1,
             });
           }
         });
@@ -121,14 +120,14 @@ export class RankFusionEngine implements RankFusionAlgorithm {
         .map((item, index) => ({
           ...item.result,
           score: item.score / (maxRank * rankedLists.length), // Normalize score
-          rank: index + 1
+          rank: index + 1,
         }));
 
       logger.debug('Borda Count fusion completed', {
         inputLists: rankedLists.length,
         maxRank,
         totalResults: scoreMap.size,
-        outputResults: fusedResults.length
+        outputResults: fusedResults.length,
       });
 
       return fusedResults;
@@ -137,15 +136,12 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       throw new RetrievalError(
         'Borda Count fusion failed',
         RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { error }
+        { error },
       );
     }
   }
 
-  weightedFusion(
-    rankedLists: SearchResult[][],
-    weights: number[]
-  ): SearchResult[] {
+  weightedFusion(rankedLists: SearchResult[][], weights: number[]): SearchResult[] {
     try {
       if (rankedLists.length === 0) return [];
       if (rankedLists.length === 1) return rankedLists[0];
@@ -155,22 +151,25 @@ export class RankFusionEngine implements RankFusionAlgorithm {
 
       // Normalize weights to sum to 1
       const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-      const normalizedWeights = weights.map(w => w / totalWeight);
+      const normalizedWeights = weights.map((w) => w / totalWeight);
 
-      const scoreMap = new Map<string, { result: SearchResult; score: number; weightedAppearances: number }>();
+      const scoreMap = new Map<
+        string,
+        { result: SearchResult; score: number; weightedAppearances: number }
+      >();
 
       // Calculate weighted scores
       rankedLists.forEach((list, listIndex) => {
         const weight = normalizedWeights[listIndex];
-        
+
         list.forEach((result, rank) => {
           // Use both original score and rank position
           const positionScore = 1 / (rank + 1); // Higher for better positions
           const originalScore = result.score || 1; // Use original score if available
           const combinedScore = (positionScore + originalScore) * weight;
-          
+
           const existing = scoreMap.get(result.entry.id);
-          
+
           if (existing) {
             existing.score += combinedScore;
             existing.weightedAppearances += weight;
@@ -178,7 +177,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
             scoreMap.set(result.entry.id, {
               result,
               score: combinedScore,
-              weightedAppearances: weight
+              weightedAppearances: weight,
             });
           }
         });
@@ -190,31 +189,30 @@ export class RankFusionEngine implements RankFusionAlgorithm {
         .map((item, index) => ({
           ...item.result,
           score: item.score,
-          rank: index + 1
+          rank: index + 1,
         }));
 
       logger.debug('Weighted fusion completed', {
         inputLists: rankedLists.length,
         weights: normalizedWeights,
         totalResults: scoreMap.size,
-        outputResults: fusedResults.length
+        outputResults: fusedResults.length,
       });
 
       return fusedResults;
     } catch (error) {
       logger.error('Weighted fusion failed', error);
-      throw new RetrievalError(
-        'Weighted fusion failed',
-        RetrievalErrorCode.HYBRID_FUSION_FAILED,
-        { weights, error }
-      );
+      throw new RetrievalError('Weighted fusion failed', RetrievalErrorCode.HYBRID_FUSION_FAILED, {
+        weights,
+        error,
+      });
     }
   }
 
   learningToRank(
     rankedLists: SearchResult[][],
     features: FeatureVector[],
-    model?: RankingModel
+    model?: RankingModel,
   ): SearchResult[] {
     try {
       // If no model provided, fall back to simple feature-based ranking
@@ -223,15 +221,15 @@ export class RankFusionEngine implements RankFusionAlgorithm {
         return this.featureBasedRanking(rankedLists, features);
       }
 
-      const activeModel = model || this.rankingModel!;
-      
+      const activeModel = model || this.rankingModel;
+
       // Combine all unique results from ranked lists
       const allResults = this.combineUniqueResults(rankedLists);
-      
+
       if (allResults.length !== features.length) {
         logger.warn('Mismatch between results and features count', {
           results: allResults.length,
-          features: features.length
+          features: features.length,
         });
         return allResults; // Fall back to original results
       }
@@ -240,11 +238,11 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       const rankedResults = allResults.map((result, index) => {
         const feature = features[index];
         const modelScore = this.applyRankingModel(feature, activeModel);
-        
+
         return {
           ...result,
           score: modelScore,
-          rank: 0 // Will be set after sorting
+          rank: 0, // Will be set after sorting
         };
       });
 
@@ -258,7 +256,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
         inputLists: rankedLists.length,
         modelFeatures: activeModel.features.length,
         totalResults: rankedResults.length,
-        modelAccuracy: activeModel.accuracy
+        modelAccuracy: activeModel.accuracy,
       });
 
       return rankedResults;
@@ -273,15 +271,15 @@ export class RankFusionEngine implements RankFusionAlgorithm {
   async fuseAndRerank(
     rankedLists: RetrievalResult[][],
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): Promise<RetrievalResult[]> {
     try {
       if (rankedLists.length === 0) return [];
       if (rankedLists.length === 1) return rankedLists[0];
 
       // Convert RetrievalResult[][] to SearchResult[][] for fusion
-      const searchResultLists = rankedLists.map(list => 
-        list.map(result => result as SearchResult)
+      const searchResultLists = rankedLists.map((list) =>
+        list.map((result) => result as SearchResult),
       );
 
       let fusedResults: SearchResult[];
@@ -300,7 +298,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
           break;
         case 'ltr':
           if (this.config.reranking.enabled) {
-            const features = rankedLists[0].map(result => result.features);
+            const features = rankedLists[0].map((result) => result.features);
             fusedResults = this.learningToRank(searchResultLists, features, this.rankingModel);
           } else {
             fusedResults = this.reciprocalRankFusion(searchResultLists);
@@ -311,26 +309,25 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       }
 
       // Apply post-fusion enhancements
-      const enhancedResults = this.applyPostFusionEnhancements(
-        fusedResults,
-        query,
-        strategy
-      );
+      const enhancedResults = this.applyPostFusionEnhancements(fusedResults, query, strategy);
 
       // Convert back to RetrievalResult[]
-      const retrievalResults = enhancedResults.map(result => ({
-        ...result,
-        features: rankedLists[0].find(r => r.entry.id === result.entry.id)?.features || {},
-        confidenceScore: this.calculatePostFusionConfidence(result),
-        retrievalStrategy: strategy,
-        rankerUsed: this.config.reranking.enabled ? 'ml-reranker' : 'base'
-      } as RetrievalResult));
+      const retrievalResults = enhancedResults.map(
+        (result) =>
+          ({
+            ...result,
+            features: rankedLists[0].find((r) => r.entry.id === result.entry.id)?.features || {},
+            confidenceScore: this.calculatePostFusionConfidence(result),
+            retrievalStrategy: strategy,
+            rankerUsed: this.config.reranking.enabled ? 'ml-reranker' : 'base',
+          }) as RetrievalResult,
+      );
 
       logger.debug('Advanced fusion and reranking completed', {
         algorithm: this.config.hybrid.fusionAlgorithm,
         inputLists: rankedLists.length,
         outputResults: retrievalResults.length,
-        strategy
+        strategy,
       });
 
       return retrievalResults;
@@ -347,7 +344,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
     logger.info('Ranking model updated', {
       modelVersion: model.modelVersion,
       features: model.features.length,
-      accuracy: model.accuracy
+      accuracy: model.accuracy,
     });
   }
 
@@ -359,10 +356,10 @@ export class RankFusionEngine implements RankFusionAlgorithm {
 
   private featureBasedRanking(
     rankedLists: SearchResult[][],
-    features: FeatureVector[]
+    features: FeatureVector[],
   ): SearchResult[] {
     const allResults = this.combineUniqueResults(rankedLists);
-    
+
     if (allResults.length !== features.length) {
       return allResults;
     }
@@ -371,11 +368,11 @@ export class RankFusionEngine implements RankFusionAlgorithm {
     const scoredResults = allResults.map((result, index) => {
       const feature = features[index];
       const score = this.calculateSimpleFeatureScore(feature);
-      
+
       return {
         ...result,
         score,
-        rank: 0
+        rank: 0,
       };
     });
 
@@ -392,8 +389,8 @@ export class RankFusionEngine implements RankFusionAlgorithm {
     const seenIds = new Set<string>();
     const uniqueResults: SearchResult[] = [];
 
-    rankedLists.forEach(list => {
-      list.forEach(result => {
+    rankedLists.forEach((list) => {
+      list.forEach((result) => {
         if (!seenIds.has(result.entry.id)) {
           seenIds.add(result.entry.id);
           uniqueResults.push(result);
@@ -408,14 +405,14 @@ export class RankFusionEngine implements RankFusionAlgorithm {
     try {
       // Simple linear model application
       let score = model.bias;
-      
+
       // Apply weights to features (simplified feature extraction)
       const featureArray = this.extractFeatureArray(feature);
-      
+
       for (let i = 0; i < Math.min(model.weights.length, featureArray.length); i++) {
         score += model.weights[i] * featureArray[i];
       }
-      
+
       // Apply sigmoid function to normalize score to [0, 1]
       return 1 / (1 + Math.exp(-score));
     } catch (error) {
@@ -448,7 +445,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       feature.context.activeProject ? 1 : 0,
       feature.derived.overallRelevance,
       feature.derived.uncertaintyScore || 0.5,
-      feature.derived.noveltyScore
+      feature.derived.noveltyScore,
     ];
   }
 
@@ -461,7 +458,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
       recency: 0.1,
       affinity: 0.15,
       context: 0.1,
-      overall: 0.1
+      overall: 0.1,
     };
 
     return (
@@ -493,7 +490,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
   private applyPostFusionEnhancements(
     results: SearchResult[],
     query: RetrievalQuery,
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): SearchResult[] {
     // Apply strategy-specific enhancements after fusion
     let enhancedResults = [...results];
@@ -514,66 +511,65 @@ export class RankFusionEngine implements RankFusionAlgorithm {
     // Simple diversity enhancement - penalize results from same category/type
     const seenCategories = new Map<string, number>();
     const seenTypes = new Map<string, number>();
-    
-    return results.map(result => {
+
+    return results.map((result) => {
       const category = result.entry.metadata.category || 'unknown';
       const type = result.entry.type;
-      
+
       const categoryCount = seenCategories.get(category) || 0;
       const typeCount = seenTypes.get(type) || 0;
-      
+
       // Apply small penalty for repeated categories/types
       const diversityPenalty = Math.min(0.1, (categoryCount + typeCount) * 0.02);
-      
+
       seenCategories.set(category, categoryCount + 1);
       seenTypes.set(type, typeCount + 1);
-      
+
       return {
         ...result,
-        score: Math.max(0, result.score - diversityPenalty)
+        score: Math.max(0, result.score - diversityPenalty),
       };
     });
   }
 
   private applyQuerySpecificBoosting(
     results: SearchResult[],
-    query: RetrievalQuery
+    query: RetrievalQuery,
   ): SearchResult[] {
     // Boost results based on query context
-    return results.map(result => {
+    return results.map((result) => {
       let boost = 0;
-      
+
       // Boost results matching current project
       if (result.entry.metadata.projectId === query.context.projectId) {
         boost += 0.05;
       }
-      
+
       // Boost results matching agent types
-      if (query.context.agentTypes.some(agent => 
-        result.entry.metadata.agentTypes.includes(agent)
-      )) {
+      if (
+        query.context.agentTypes.some((agent) => result.entry.metadata.agentTypes.includes(agent))
+      ) {
         boost += 0.03;
       }
-      
+
       // Boost recent results if query seems urgent
       const urgentKeywords = ['critical', 'urgent', 'fix', 'broken', 'error'];
-      if (urgentKeywords.some(keyword => 
-        query.query.toLowerCase().includes(keyword)
-      )) {
-        const daysSinceModified = (Date.now() - result.entry.lastModified.getTime()) / (1000 * 60 * 60 * 24);
+      if (urgentKeywords.some((keyword) => query.query.toLowerCase().includes(keyword))) {
+        const daysSinceModified =
+          (Date.now() - result.entry.lastModified.getTime()) / (1000 * 60 * 60 * 24);
         if (daysSinceModified < 7) boost += 0.04;
       }
-      
+
       return {
         ...result,
-        score: result.score + boost
+        score: result.score + boost,
       };
     });
   }
 
   private applyStrategySpecificReordering(
     results: SearchResult[],
-    strategy: RetrievalStrategy
+    strategy: RetrievalStrategy,
   ): SearchResult[] {
     switch (strategy) {
       case 'recency-focused':
@@ -584,7 +580,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
           }
           return b.score - a.score;
         });
-        
+
       case 'effectiveness-focused':
         return results.sort((a, b) => {
           // First sort by score, then by effectiveness
@@ -595,7 +591,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
           }
           return b.score - a.score;
         });
-        
+
       case 'popularity-focused':
         return results.sort((a, b) => {
           // First sort by score, then by usage count
@@ -606,7 +602,7 @@ export class RankFusionEngine implements RankFusionAlgorithm {
           }
           return b.score - a.score;
         });
-        
+
       default:
         return results;
     }
@@ -615,16 +611,19 @@ export class RankFusionEngine implements RankFusionAlgorithm {
   private calculatePostFusionConfidence(result: SearchResult): number {
     // Calculate confidence based on various factors
     let confidence = Math.min(result.score, 1.0);
-    
+
     // Boost confidence for exact matches
-    if (result.titleSnippet?.includes('<mark>') || result.contentSnippets.some(s => s.highlighted.includes('<mark>'))) {
+    if (
+      result.titleSnippet?.includes('<mark>') ||
+      result.contentSnippets.some((s) => s.highlighted.includes('<mark>'))
+    ) {
       confidence += 0.1;
     }
-    
+
     // Consider result rank (higher rank = higher confidence)
     if (result.rank <= 3) confidence += 0.05;
     if (result.rank <= 10) confidence += 0.02;
-    
+
     return Math.min(confidence, 1.0);
   }
 }

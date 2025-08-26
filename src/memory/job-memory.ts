@@ -3,7 +3,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import {
+import type {
   JobMemory,
   Decision,
   Gotcha,
@@ -14,13 +14,13 @@ import {
   ContextUsage,
   GlobalJobEntry,
   JobSummary,
-  MemoryConfig
+  MemoryConfig,
 } from './types';
 import { logger } from '../utils/logger';
 
 /**
  * Job Memory Manager
- * 
+ *
  * Handles per-job memory persistence with atomic operations
  * Performance target: <50ms for all operations
  */
@@ -57,7 +57,7 @@ export class JobMemoryManager {
         priority: 'medium',
         tags: [],
         relatedIssues: [issueId],
-        childJobIds: []
+        childJobIds: [],
       },
       analytics: {
         patternMatches: [],
@@ -66,32 +66,34 @@ export class JobMemoryManager {
           gotchaResolutionTime: 0,
           contextRetrievalTime: 0,
           knowledgeReuseRate: 0,
-          errorRate: 0
+          errorRate: 0,
         },
         learningScore: 0,
         reuseScore: 0,
-        innovationScore: 0
-      }
+        innovationScore: 0,
+      },
     };
 
     try {
       // Create job directory structure
       await this.ensureJobDirectoryStructure(jobId);
-      
+
       // Save initial memory
       await this.saveJobMemory(initialMemory);
-      
+
       // Cache in active jobs
       this.activeJobs.set(jobId, initialMemory);
-      
+
       // Record in global job log
       await this.recordGlobalJobEntry(initialMemory);
-      
+
       logger.info(`Initialized job memory: ${jobId} for issue ${issueId}`);
       return initialMemory;
     } catch (error) {
       logger.error(`Failed to initialize job memory for ${jobId}:`, error);
-      throw new Error(`Failed to initialize job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to initialize job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -101,29 +103,31 @@ export class JobMemoryManager {
   async getJobMemory(jobId: string): Promise<JobMemory | null> {
     // Check active cache first
     if (this.activeJobs.has(jobId)) {
-      return this.activeJobs.get(jobId)!;
+      return this.activeJobs.get(jobId);
     }
 
     try {
       const memoryPath = this.getJobMemoryPath(jobId);
       const exists = await this.fileExists(memoryPath);
-      
+
       if (!exists) {
         return null;
       }
 
       const data = await fs.readFile(memoryPath, 'utf-8');
       const memory = JSON.parse(data, this.dateReviver) as JobMemory;
-      
+
       // Cache if job is still running
       if (memory.status === 'running') {
         this.activeJobs.set(jobId, memory);
       }
-      
+
       return memory;
     } catch (error) {
       logger.error(`Failed to get job memory ${jobId}:`, error);
-      throw new Error(`Failed to get job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -143,19 +147,19 @@ export class JobMemoryManager {
         jobId, // Ensure jobId cannot be changed
         metadata: {
           ...currentMemory.metadata,
-          ...(updates.metadata || {})
+          ...(updates.metadata || {}),
         },
         analytics: {
           ...currentMemory.analytics,
-          ...(updates.analytics || {})
-        }
+          ...(updates.analytics || {}),
+        },
       };
 
       await this.saveJobMemory(updatedMemory);
-      
+
       // Update cache
       this.activeJobs.set(jobId, updatedMemory);
-      
+
       return updatedMemory;
     });
   }
@@ -175,11 +179,14 @@ export class JobMemoryManager {
       const duration = Math.max(1, Math.floor(durationMs / 1000 / 60)); // minutes, minimum 1
 
       // Add final outcome
-      const outcomes = [...memory.outcomes, { ...finalOutcome, id: this.generateId('outcome'), timestamp: endTime }];
-      
+      const outcomes = [
+        ...memory.outcomes,
+        { ...finalOutcome, id: this.generateId('outcome'), timestamp: endTime },
+      ];
+
       // Determine final status based on outcomes
-      const successfulOutcomes = outcomes.filter(o => o.type === 'success').length;
-      const failedOutcomes = outcomes.filter(o => o.type === 'failure').length;
+      const successfulOutcomes = outcomes.filter((o) => o.type === 'success').length;
+      const failedOutcomes = outcomes.filter((o) => o.type === 'failure').length;
       const status = successfulOutcomes > failedOutcomes ? 'completed' : 'failed';
 
       const completedMemory: JobMemory = {
@@ -189,18 +196,18 @@ export class JobMemoryManager {
         outcomes,
         metadata: {
           ...memory.metadata,
-          totalDuration: duration
-        }
+          totalDuration: duration,
+        },
       };
 
       await this.saveJobMemory(completedMemory);
-      
+
       // Update global job log
       await this.updateGlobalJobEntry(completedMemory);
-      
+
       // Remove from active cache
       this.activeJobs.delete(jobId);
-      
+
       logger.info(`Completed job memory: ${jobId} (${status}) in ${duration} minutes`);
       return completedMemory;
     });
@@ -209,7 +216,10 @@ export class JobMemoryManager {
   /**
    * Record a decision in job memory
    */
-  async recordDecision(jobId: string, decision: Omit<Decision, 'id' | 'timestamp'>): Promise<Decision> {
+  async recordDecision(
+    jobId: string,
+    decision: Omit<Decision, 'id' | 'timestamp'>,
+  ): Promise<Decision> {
     return this.withLock(jobId, async () => {
       const memory = await this.getJobMemory(jobId);
       if (!memory) {
@@ -219,7 +229,7 @@ export class JobMemoryManager {
       const newDecision: Decision = {
         ...decision,
         id: this.generateId('decision'),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Add agent type to metadata if not already present
@@ -229,7 +239,7 @@ export class JobMemoryManager {
 
       memory.decisions.push(newDecision);
       await this.saveJobMemory(memory);
-      
+
       // Update global job log with new agent types
       await this.updateGlobalJobEntry(memory);
 
@@ -251,7 +261,7 @@ export class JobMemoryManager {
       const newGotcha: Gotcha = {
         ...gotcha,
         id: this.generateId('gotcha'),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Add agent type to metadata if not already present
@@ -261,7 +271,7 @@ export class JobMemoryManager {
 
       memory.gotchas.push(newGotcha);
       await this.saveJobMemory(memory);
-      
+
       // Update global job log with new agent types
       await this.updateGlobalJobEntry(memory);
 
@@ -273,7 +283,10 @@ export class JobMemoryManager {
   /**
    * Record context entry in job memory
    */
-  async recordContext(jobId: string, context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>): Promise<ContextEntry> {
+  async recordContext(
+    jobId: string,
+    context: Omit<ContextEntry, 'id' | 'timestamp' | 'usage'>,
+  ): Promise<ContextEntry> {
     return this.withLock(jobId, async () => {
       const memory = await this.getJobMemory(jobId);
       if (!memory) {
@@ -284,7 +297,7 @@ export class JobMemoryManager {
         ...context,
         id: this.generateId('context'),
         timestamp: new Date(),
-        usage: []
+        usage: [],
       };
 
       // Add agent type to metadata if not already present
@@ -313,7 +326,7 @@ export class JobMemoryManager {
       const newOutcome: Outcome = {
         ...outcome,
         id: this.generateId('outcome'),
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Add agent type to metadata if not already present
@@ -332,21 +345,25 @@ export class JobMemoryManager {
   /**
    * Resolve a gotcha with solution
    */
-  async resolveGotcha(jobId: string, gotchaId: string, resolution: GotchaResolution): Promise<Gotcha> {
+  async resolveGotcha(
+    jobId: string,
+    gotchaId: string,
+    resolution: GotchaResolution,
+  ): Promise<Gotcha> {
     return this.withLock(jobId, async () => {
       const memory = await this.getJobMemory(jobId);
       if (!memory) {
         throw new Error(`Job memory not found: ${jobId}`);
       }
 
-      const gotcha = memory.gotchas.find(g => g.id === gotchaId);
+      const gotcha = memory.gotchas.find((g) => g.id === gotchaId);
       if (!gotcha) {
         throw new Error(`Gotcha not found: ${gotchaId}`);
       }
 
       gotcha.resolution = {
         ...resolution,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       await this.saveJobMemory(memory);
@@ -359,21 +376,25 @@ export class JobMemoryManager {
   /**
    * Update decision outcome
    */
-  async updateDecisionOutcome(jobId: string, decisionId: string, outcome: DecisionOutcome): Promise<Decision> {
+  async updateDecisionOutcome(
+    jobId: string,
+    decisionId: string,
+    outcome: DecisionOutcome,
+  ): Promise<Decision> {
     return this.withLock(jobId, async () => {
       const memory = await this.getJobMemory(jobId);
       if (!memory) {
         throw new Error(`Job memory not found: ${jobId}`);
       }
 
-      const decision = memory.decisions.find(d => d.id === decisionId);
+      const decision = memory.decisions.find((d) => d.id === decisionId);
       if (!decision) {
         throw new Error(`Decision not found: ${decisionId}`);
       }
 
       decision.outcome = {
         ...outcome,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       await this.saveJobMemory(memory);
@@ -386,21 +407,25 @@ export class JobMemoryManager {
   /**
    * Track context usage
    */
-  async trackContextUsage(jobId: string, contextId: string, usage: Omit<ContextUsage, 'timestamp'>): Promise<void> {
+  async trackContextUsage(
+    jobId: string,
+    contextId: string,
+    usage: Omit<ContextUsage, 'timestamp'>,
+  ): Promise<void> {
     return this.withLock(jobId, async () => {
       const memory = await this.getJobMemory(jobId);
       if (!memory) {
         throw new Error(`Job memory not found: ${jobId}`);
       }
 
-      const context = memory.context.find(c => c.id === contextId);
+      const context = memory.context.find((c) => c.id === contextId);
       if (!context) {
         throw new Error(`Context not found: ${contextId}`);
       }
 
       context.usage.push({
         ...usage,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       await this.saveJobMemory(memory);
@@ -415,10 +440,12 @@ export class JobMemoryManager {
   async getJobsByIssue(issueId: string): Promise<GlobalJobEntry[]> {
     try {
       const globalLog = await this.getGlobalJobLog();
-      return globalLog.filter(entry => entry.issueId === issueId);
+      return globalLog.filter((entry) => entry.issueId === issueId);
     } catch (error) {
       logger.error(`Failed to get jobs for issue ${issueId}:`, error);
-      throw new Error(`Failed to get jobs by issue: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get jobs by issue: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -428,10 +455,12 @@ export class JobMemoryManager {
   async getJobsByAgent(agentType: string): Promise<GlobalJobEntry[]> {
     try {
       const globalLog = await this.getGlobalJobLog();
-      return globalLog.filter(entry => entry.agentTypes.includes(agentType));
+      return globalLog.filter((entry) => entry.agentTypes.includes(agentType));
     } catch (error) {
       logger.error(`Failed to get jobs for agent ${agentType}:`, error);
-      throw new Error(`Failed to get jobs by agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get jobs by agent: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -442,18 +471,23 @@ export class JobMemoryManager {
     try {
       const globalLogPath = this.getGlobalJobLogPath();
       const exists = await this.fileExists(globalLogPath);
-      
+
       if (!exists) {
         return [];
       }
 
       const data = await fs.readFile(globalLogPath, 'utf-8');
-      const lines = data.trim().split('\n').filter(line => line);
-      
-      return lines.map(line => JSON.parse(line, this.dateReviver) as GlobalJobEntry);
+      const lines = data
+        .trim()
+        .split('\n')
+        .filter((line) => line);
+
+      return lines.map((line) => JSON.parse(line, this.dateReviver) as GlobalJobEntry);
     } catch (error) {
       logger.error('Failed to get global job log:', error);
-      throw new Error(`Failed to get global job log: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get global job log: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -494,7 +528,9 @@ export class JobMemoryManager {
       logger.info(`Archived job memory: ${jobId}`);
     } catch (error) {
       logger.error(`Failed to archive job memory ${jobId}:`, error);
-      throw new Error(`Failed to archive job memory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to archive job memory: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -507,7 +543,7 @@ export class JobMemoryManager {
       cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
       const globalLog = await this.getGlobalJobLog();
-      const oldJobs = globalLog.filter(entry => entry.endTime && entry.endTime < cutoffDate);
+      const oldJobs = globalLog.filter((entry) => entry.endTime && entry.endTime < cutoffDate);
 
       let cleanedCount = 0;
       for (const job of oldJobs) {
@@ -520,14 +556,18 @@ export class JobMemoryManager {
       }
 
       // Update global job log
-      const remainingJobs = globalLog.filter(entry => !entry.endTime || entry.endTime >= cutoffDate);
+      const remainingJobs = globalLog.filter(
+        (entry) => !entry.endTime || entry.endTime >= cutoffDate,
+      );
       await this.saveGlobalJobLog(remainingJobs);
 
       logger.info(`Cleaned up ${cleanedCount} old job memories`);
       return cleanedCount;
     } catch (error) {
       logger.error('Failed to cleanup job memories:', error);
-      throw new Error(`Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -542,7 +582,7 @@ export class JobMemoryManager {
 
     // Create new lock
     let resolveLock: () => void;
-    const lockPromise = new Promise<void>(resolve => {
+    const lockPromise = new Promise<void>((resolve) => {
       resolveLock = resolve;
     });
     this.memoryLocks.set(jobId, lockPromise);
@@ -553,18 +593,18 @@ export class JobMemoryManager {
     } finally {
       // Release lock
       this.memoryLocks.delete(jobId);
-      resolveLock!();
+      resolveLock();
     }
   }
 
   private async saveJobMemory(memory: JobMemory): Promise<void> {
     const filePath = this.getJobMemoryPath(memory.jobId);
     const tempPath = `${filePath}.tmp`;
-    
+
     try {
       // Write to temp file first for atomic operation
       await fs.writeFile(tempPath, JSON.stringify(memory, null, 2));
-      
+
       // Rename to actual file (atomic on most filesystems)
       await fs.rename(tempPath, filePath);
     } catch (error) {
@@ -581,10 +621,10 @@ export class JobMemoryManager {
   private async ensureJobDirectoryStructure(jobId: string): Promise<void> {
     const jobDir = this.getJobDirectoryPath(jobId);
     const logDir = path.join(jobDir, 'logs');
-    
+
     await Promise.all([
       fs.mkdir(jobDir, { recursive: true }),
-      fs.mkdir(logDir, { recursive: true })
+      fs.mkdir(logDir, { recursive: true }),
     ]);
   }
 
@@ -597,7 +637,7 @@ export class JobMemoryManager {
       agentTypes: memory.metadata.agentTypes,
       startTime: memory.startTime,
       success: memory.status === 'completed',
-      summary: this.calculateJobSummary(memory)
+      summary: this.calculateJobSummary(memory),
     };
 
     await this.appendGlobalJobEntry(entry);
@@ -606,8 +646,8 @@ export class JobMemoryManager {
   private async updateGlobalJobEntry(memory: JobMemory): Promise<void> {
     try {
       const globalLog = await this.getGlobalJobLog();
-      const entryIndex = globalLog.findIndex(entry => entry.jobId === memory.jobId);
-      
+      const entryIndex = globalLog.findIndex((entry) => entry.jobId === memory.jobId);
+
       if (entryIndex === -1) {
         // Entry doesn't exist, create it
         await this.recordGlobalJobEntry(memory);
@@ -633,7 +673,7 @@ export class JobMemoryManager {
   private async appendGlobalJobEntry(entry: GlobalJobEntry): Promise<void> {
     const globalLogPath = this.getGlobalJobLogPath();
     const line = JSON.stringify(entry) + '\n';
-    
+
     try {
       await fs.appendFile(globalLogPath, line);
     } catch (error) {
@@ -644,14 +684,14 @@ export class JobMemoryManager {
 
   private async saveGlobalJobLog(entries: GlobalJobEntry[]): Promise<void> {
     const globalLogPath = this.getGlobalJobLogPath();
-    const lines = entries.map(entry => JSON.stringify(entry)).join('\n') + '\n';
+    const lines = entries.map((entry) => JSON.stringify(entry)).join('\n') + '\n';
     await fs.writeFile(globalLogPath, lines);
   }
 
   private calculateJobSummary(memory: JobMemory): JobSummary {
-    const resolvedGotchas = memory.gotchas.filter(g => g.resolution?.resolved).length;
-    const successfulOutcomes = memory.outcomes.filter(o => o.type === 'success').length;
-    
+    const resolvedGotchas = memory.gotchas.filter((g) => g.resolution?.resolved).length;
+    const successfulOutcomes = memory.outcomes.filter((o) => o.type === 'success').length;
+
     return {
       decisionsCount: memory.decisions.length,
       gotchasCount: memory.gotchas.length,
@@ -660,7 +700,7 @@ export class JobMemoryManager {
       outcomesCount: memory.outcomes.length,
       successfulOutcomes,
       keyLearnings: [], // TODO: Extract key learnings
-      promotedGotchas: [] // TODO: Track promoted gotchas
+      promotedGotchas: [], // TODO: Track promoted gotchas
     };
   }
 
@@ -669,10 +709,10 @@ export class JobMemoryManager {
     return {
       ...memory,
       // Keep only high-level summaries for context entries
-      context: memory.context.map(c => ({
+      context: memory.context.map((c) => ({
         ...c,
-        content: c.content.length > 500 ? c.content.substring(0, 500) + '...' : c.content
-      }))
+        content: c.content.length > 500 ? c.content.substring(0, 500) + '...' : c.content,
+      })),
     };
   }
 

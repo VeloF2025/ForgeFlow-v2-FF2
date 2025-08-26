@@ -4,7 +4,7 @@
 
 import { EventEmitter } from 'events';
 import { performance } from 'perf_hooks';
-import {
+import type {
   IndexProvider,
   IndexCapabilities,
   IndexProviderConfig,
@@ -19,9 +19,8 @@ import {
   SearchQuery,
   SearchResults,
   SearchResult,
-  IndexError,
-  IndexErrorCode
 } from './types.js';
+import { IndexError, IndexErrorCode } from './types.js';
 
 export class VectorSearchProvider extends EventEmitter implements IndexProvider, VectorIndex {
   readonly name = 'vector-search';
@@ -33,7 +32,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
     facetedSearch: false,
     geospatialSearch: false,
     maxContentLength: 100000,
-    supportedLanguages: ['en', 'multilingual']
+    supportedLanguages: ['en', 'multilingual'],
   };
 
   // Vector storage and index
@@ -45,7 +44,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
   // Configuration
   private config: VectorProviderConfig;
   private embeddingService: EmbeddingService;
-  
+
   // Performance metrics
   private metrics: VectorProviderMetrics;
   private indexBuildTime = 0;
@@ -56,7 +55,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
 
   constructor(config: Partial<VectorProviderConfig> = {}) {
     super();
-    
+
     this.config = {
       vectorDimension: config.vectorDimension || 384, // Default for sentence-transformers
       similarityMetric: config.similarityMetric || 'cosine',
@@ -68,7 +67,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       apiKey: config.apiKey,
       apiUrl: config.apiUrl,
       settings: {},
-      ...config
+      ...config,
     };
 
     this.embeddingService = new EmbeddingService(this.config);
@@ -84,32 +83,32 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
 
       // Merge configuration
       this.config = { ...this.config, ...config.settings };
-      
+
       // Initialize embedding service
       await this.embeddingService.initialize();
-      
+
       // Build initial vector index
       if (this.vectors.size > 0) {
         await this.buildVectorIndex(this.dimension);
       }
-      
+
       const duration = performance.now() - startTime;
       this.isInitialized = true;
-      
+
       this.emit('initialized', {
         provider: this.name,
         vectorCount: this.vectors.size,
         dimension: this.dimension,
-        duration
+        duration,
       });
-      
+
       console.log(`✅ Vector Search Provider initialized in ${duration.toFixed(2)}ms`);
     } catch (error) {
       this.emit('error', error);
       throw new IndexError(
         `Failed to initialize Vector Search Provider: ${(error as Error).message}`,
         IndexErrorCode.DATABASE_CONNECTION_FAILED,
-        { error, config }
+        { error, config },
       );
     }
   }
@@ -117,14 +116,14 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
   // 🟢 WORKING: Graceful shutdown
   async shutdown(): Promise<void> {
     console.log('🛑 Shutting down Vector Search Provider...');
-    
+
     try {
       await this.embeddingService.shutdown();
-      
+
       this.vectors.clear();
       this.vectorIndex = null;
       this.isInitialized = false;
-      
+
       this.emit('shutdown');
       console.log('✅ Vector Search Provider shut down successfully');
     } catch (error) {
@@ -136,7 +135,10 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
 
   async index(entries: IndexEntry[]): Promise<void> {
     if (!this.isInitialized) {
-      throw new IndexError('Vector Search Provider not initialized', IndexErrorCode.DATABASE_CONNECTION_FAILED);
+      throw new IndexError(
+        'Vector Search Provider not initialized',
+        IndexErrorCode.DATABASE_CONNECTION_FAILED,
+      );
     }
 
     const startTime = performance.now();
@@ -150,16 +152,17 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       for (const batch of batches) {
         await this.processBatch(batch);
         processedCount += batch.length;
-        
+
         this.emit('batch_processed', {
           processed: processedCount,
           total: entries.length,
-          progress: processedCount / entries.length
+          progress: processedCount / entries.length,
         });
       }
 
       // Rebuild index if needed
-      if (entries.length > 100) { // Rebuild for large batches
+      if (entries.length > 100) {
+        // Rebuild for large batches
         await this.buildVectorIndex(this.dimension);
       }
 
@@ -169,7 +172,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       this.emit('indexing_completed', {
         entriesCount: entries.length,
         duration,
-        vectorsTotal: this.vectors.size
+        vectorsTotal: this.vectors.size,
       });
 
       console.log(`✅ Vector indexed ${entries.length} entries in ${duration.toFixed(2)}ms`);
@@ -179,19 +182,22 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       throw new IndexError(
         `Vector indexing failed: ${(error as Error).message}`,
         IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-        { entriesCount: entries.length, error }
+        { entriesCount: entries.length, error },
       );
     }
   }
 
   async delete(ids: string[]): Promise<void> {
     if (!this.isInitialized) {
-      throw new IndexError('Vector Search Provider not initialized', IndexErrorCode.DATABASE_CONNECTION_FAILED);
+      throw new IndexError(
+        'Vector Search Provider not initialized',
+        IndexErrorCode.DATABASE_CONNECTION_FAILED,
+      );
     }
 
     try {
       console.log(`🗑️ Deleting ${ids.length} vectors...`);
-      
+
       let deletedCount = 0;
       for (const id of ids) {
         if (this.vectors.delete(id)) {
@@ -211,7 +217,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       throw new IndexError(
         `Vector deletion failed: ${(error as Error).message}`,
         IndexErrorCode.CONCURRENT_UPDATE_CONFLICT,
-        { ids, error }
+        { ids, error },
       );
     }
   }
@@ -220,7 +226,10 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
 
   async search(query: SearchQuery): Promise<SearchResults> {
     if (!this.isInitialized) {
-      throw new IndexError('Vector Search Provider not initialized', IndexErrorCode.DATABASE_CONNECTION_FAILED);
+      throw new IndexError(
+        'Vector Search Provider not initialized',
+        IndexErrorCode.DATABASE_CONNECTION_FAILED,
+      );
     }
 
     const startTime = performance.now();
@@ -231,12 +240,12 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       const vectorResults = await this.searchVectors(
         queryEmbedding,
         query.limit || 20,
-        query.minScore || 0.3
+        query.minScore || 0.3,
       );
 
       // Convert vector results to search results
       const searchResults = await this.convertVectorToSearchResults(vectorResults, query);
-      
+
       const duration = performance.now() - startTime;
       this.metrics.recordSearch(vectorResults.length, duration);
 
@@ -247,24 +256,24 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         currentPage: 1,
         executionTime: duration,
         facets: { types: [], categories: [], tags: [], projects: [], agents: [], languages: [] },
-        suggestions: []
+        suggestions: [],
       };
 
       this.emit('search_completed', {
         query: query.query,
         results: results.totalMatches,
-        duration
+        duration,
       });
 
       return results;
     } catch (error) {
       const duration = performance.now() - startTime;
       this.metrics.recordError();
-      
+
       throw new IndexError(
         `Vector search failed: ${(error as Error).message}`,
         IndexErrorCode.SEARCH_TIMEOUT,
-        { query, duration, error }
+        { query, duration, error },
       );
     }
   }
@@ -277,13 +286,13 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         throw new IndexError(
           `Vector dimension mismatch: expected ${this.dimension}, got ${entry.vector.length}`,
           IndexErrorCode.CONTENT_EXTRACTION_FAILED,
-          { entryId: entry.id, expectedDim: this.dimension, actualDim: entry.vector.length }
+          { entryId: entry.id, expectedDim: this.dimension, actualDim: entry.vector.length },
         );
       }
 
       this.vectors.set(entry.id, {
         ...entry,
-        timestamp: entry.timestamp || new Date()
+        timestamp: entry.timestamp || new Date(),
       });
     }
 
@@ -295,11 +304,11 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       if (this.vectors.has(entry.id)) {
         this.vectors.set(entry.id, {
           ...entry,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
-    
+
     this.emit('vectors_updated', { count: entries.length });
   }
 
@@ -310,20 +319,29 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         removedCount++;
       }
     }
-    
+
     this.emit('vectors_removed', { count: removedCount, total: this.vectors.size });
   }
 
-  async searchVectors(vector: number[], limit: number, threshold = 0.0): Promise<VectorSearchResult[]> {
+  async searchVectors(
+    vector: number[],
+    limit: number,
+    threshold = 0.0,
+  ): Promise<VectorSearchResult[]> {
     if (vector.length !== this.dimension) {
       throw new IndexError(
         `Query vector dimension mismatch: expected ${this.dimension}, got ${vector.length}`,
         IndexErrorCode.INVALID_QUERY,
-        { expectedDim: this.dimension, actualDim: vector.length }
+        { expectedDim: this.dimension, actualDim: vector.length },
       );
     }
 
-    const results: Array<{ id: string; similarity: number; distance: number; metadata: Record<string, unknown> }> = [];
+    const results: Array<{
+      id: string;
+      similarity: number;
+      distance: number;
+      metadata: Record<string, unknown>;
+    }> = [];
 
     // Compute similarities
     for (const [id, entry] of this.vectors) {
@@ -335,7 +353,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
           id,
           similarity,
           distance,
-          metadata: entry.metadata
+          metadata: entry.metadata,
         });
       }
     }
@@ -347,24 +365,28 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
     return results.slice(0, limit);
   }
 
-  async hybridSearch(textQuery: string, vector?: number[], weights?: HybridSearchWeights): Promise<SearchResults> {
+  async hybridSearch(
+    textQuery: string,
+    vector?: number[],
+    weights?: HybridSearchWeights,
+  ): Promise<SearchResults> {
     if (!this.textSearchProvider) {
       throw new IndexError(
         'Text search provider not configured for hybrid search',
-        IndexErrorCode.INVALID_QUERY
+        IndexErrorCode.INVALID_QUERY,
       );
     }
 
     const hybridWeights = {
       textWeight: weights?.textWeight || 0.7,
       vectorWeight: weights?.vectorWeight || 0.3,
-      fusionMethod: weights?.fusionMethod || 'linear' as const
+      fusionMethod: weights?.fusionMethod || ('linear' as const),
     };
 
     // Get text search results
     const textResults = await this.textSearchProvider.search({
       query: textQuery,
-      limit: 50 // Get more for fusion
+      limit: 50, // Get more for fusion
     });
 
     // Get vector search results
@@ -382,7 +404,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
 
     return {
       ...fusedResults,
-      executionTime: textResults.executionTime + vectorResults.executionTime
+      executionTime: textResults.executionTime + vectorResults.executionTime,
     };
   }
 
@@ -399,14 +421,14 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       dimension,
       size: this.vectors.size,
       built: true,
-      buildTime: Date.now()
+      buildTime: Date.now(),
     };
 
     this.indexBuildTime = performance.now() - startTime;
     this.emit('index_built', {
       dimension,
       vectorCount: this.vectors.size,
-      buildTime: this.indexBuildTime
+      buildTime: this.indexBuildTime,
     });
 
     console.log(`✅ Vector index built in ${this.indexBuildTime.toFixed(2)}ms`);
@@ -440,7 +462,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       dimension: this.dimension,
       indexSize: this.estimateIndexSize(),
       buildTime: this.indexBuildTime,
-      lastOptimized: this.lastOptimized
+      lastOptimized: this.lastOptimized,
     };
   }
 
@@ -468,7 +490,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         latency,
         errorRate,
         uptime: this.metrics.getUptime(),
-        lastCheck: new Date()
+        lastCheck: new Date(),
       };
     } catch (error) {
       return {
@@ -476,7 +498,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         latency: 0,
         errorRate: 100,
         uptime: this.metrics.getUptime(),
-        lastCheck: new Date()
+        lastCheck: new Date(),
       };
     }
   }
@@ -487,7 +509,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       indexSize: this.estimateIndexSize(),
       queriesPerSecond: this.metrics.getQueriesPerSecond(),
       averageLatency: this.metrics.getAverageLatency(),
-      cacheHitRate: 0 // No caching in this simple implementation
+      cacheHitRate: 0, // No caching in this simple implementation
     };
   }
 
@@ -506,9 +528,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
     for (const entry of entries) {
       try {
         // Generate embedding
-        const vector = await this.embeddingService.embed(
-          `${entry.title}\n\n${entry.content}`
-        );
+        const vector = await this.embeddingService.embed(`${entry.title}\n\n${entry.content}`);
 
         vectorEntries.push({
           id: entry.id,
@@ -518,9 +538,9 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
             type: entry.type,
             path: entry.path,
             lastModified: entry.lastModified,
-            ...entry.metadata
+            ...entry.metadata,
           },
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       } catch (error) {
         console.warn(`⚠️ Failed to generate embedding for entry ${entry.id}:`, error);
@@ -548,7 +568,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
     const dotProduct = vec1.reduce((sum, a, i) => sum + a * vec2[i], 0);
     const magnitude1 = Math.sqrt(vec1.reduce((sum, a) => sum + a * a, 0));
     const magnitude2 = Math.sqrt(vec2.reduce((sum, a) => sum + a * a, 0));
-    
+
     return magnitude1 && magnitude2 ? dotProduct / (magnitude1 * magnitude2) : 0;
   }
 
@@ -560,7 +580,10 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
     return vec1.reduce((sum, a, i) => sum + a * vec2[i], 0);
   }
 
-  private async convertVectorToSearchResults(vectorResults: VectorSearchResult[], query: SearchQuery): Promise<SearchResult[]> {
+  private async convertVectorToSearchResults(
+    vectorResults: VectorSearchResult[],
+    query: SearchQuery,
+  ): Promise<SearchResult[]> {
     return vectorResults.map((result, index) => ({
       entry: {
         id: result.id,
@@ -568,8 +591,9 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         title: (result.metadata.title as string) || 'Unknown',
         content: '', // Vector search doesn't store full content
         path: (result.metadata.path as string) || '',
+        hash: (result.metadata.hash as string) || '',
         metadata: result.metadata as any,
-        lastModified: new Date(result.metadata.lastModified as any || Date.now())
+        lastModified: new Date((result.metadata.lastModified as any) || Date.now()),
       },
       score: result.similarity,
       rank: index + 1,
@@ -583,23 +607,27 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
         categoryMatch: 0,
         recencyBoost: 0,
         effectivenessBoost: 0,
-        usageBoost: 0
-      }
+        usageBoost: 0,
+      },
     }));
   }
 
-  private fuseResults(textResults: SearchResults, vectorResults: SearchResults, weights: HybridSearchWeights): SearchResults {
+  private fuseResults(
+    textResults: SearchResults,
+    vectorResults: SearchResults,
+    weights: HybridSearchWeights,
+  ): SearchResults {
     // Simple linear fusion - in production, you might use more sophisticated methods
     const combinedResults = new Map<string, SearchResult>();
-    
+
     // Add text results with text weight
     for (const result of textResults.results) {
       combinedResults.set(result.entry.id, {
         ...result,
-        score: result.score * weights.textWeight
+        score: result.score * weights.textWeight,
       });
     }
-    
+
     // Add or combine vector results with vector weight
     for (const result of vectorResults.results) {
       const existing = combinedResults.get(result.entry.id);
@@ -609,16 +637,16 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       } else {
         combinedResults.set(result.entry.id, {
           ...result,
-          score: result.score * weights.vectorWeight
+          score: result.score * weights.vectorWeight,
         });
       }
     }
-    
+
     // Sort by combined score and re-rank
     const fusedResults = Array.from(combinedResults.values())
       .sort((a, b) => b.score - a.score)
       .map((result, index) => ({ ...result, rank: index + 1 }));
-    
+
     return {
       results: fusedResults,
       totalMatches: fusedResults.length,
@@ -626,7 +654,7 @@ export class VectorSearchProvider extends EventEmitter implements IndexProvider,
       currentPage: 1,
       executionTime: 0, // Will be set by caller
       facets: textResults.facets, // Use text search facets
-      suggestions: [...textResults.suggestions, ...vectorResults.suggestions].slice(0, 10)
+      suggestions: [...textResults.suggestions, ...vectorResults.suggestions].slice(0, 10),
     };
   }
 
@@ -656,7 +684,7 @@ class EmbeddingService {
   async initialize(): Promise<void> {
     // Initialize embedding model/service
     console.log(`🧠 Initializing embedding service: ${this.config.embeddingModel}`);
-    
+
     if (this.config.useLocalEmbeddings) {
       // In production, you might load a local model here
       console.log('📦 Using local embeddings (simulated)');
@@ -667,7 +695,7 @@ class EmbeddingService {
       }
       console.log('🌐 Using remote embedding API');
     }
-    
+
     this.isInitialized = true;
   }
 
@@ -684,16 +712,16 @@ class EmbeddingService {
   private generateSimulatedEmbedding(text: string): number[] {
     // Generate a deterministic but varied embedding based on text content
     const embedding = new Array(this.config.vectorDimension).fill(0);
-    
+
     for (let i = 0; i < this.config.vectorDimension; i++) {
       // Use text content and position to generate pseudo-random values
       const seed = text.charCodeAt(i % text.length) * (i + 1);
       embedding[i] = (Math.sin(seed) + Math.cos(seed * 2)) / 2;
     }
-    
+
     // Normalize the vector
     const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    return embedding.map(val => val / magnitude);
+    return embedding.map((val) => val / magnitude);
   }
 
   async shutdown(): Promise<void> {

@@ -6,14 +6,10 @@ import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } 
 import { existsSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { SQLiteFTS5Engine, SQLiteFTS5Config } from '../sqlite-fts5-engine.js';
-import { 
-  IndexEntry, 
-  SearchQuery, 
-  IndexContentType, 
-  IndexMetadata,
-  SearchResults 
-} from '../types.js';
+import type { SQLiteFTS5Config } from '../sqlite-fts5-engine.js';
+import { SQLiteFTS5Engine } from '../sqlite-fts5-engine.js';
+import type { IndexEntry, SearchQuery, IndexContentType, IndexMetadata } from '../types.js';
+import { SearchResults } from '../types.js';
 
 describe('SQLiteFTS5Engine', () => {
   let engine: SQLiteFTS5Engine;
@@ -21,28 +17,40 @@ describe('SQLiteFTS5Engine', () => {
   let testConfig: SQLiteFTS5Config;
 
   // 🟢 WORKING: Test data setup
-  const createTestEntry = (id: string, overrides: Partial<IndexEntry> = {}): IndexEntry => ({
-    id,
-    type: 'knowledge' as IndexContentType,
-    title: `Test Entry ${id}`,
-    content: `This is test content for entry ${id} with some searchable text about ForgeFlow and AI orchestration.`,
-    path: `/test/path/${id}.md`,
-    metadata: {
-      tags: ['test', 'forgeflow', 'ai'],
-      category: 'testing',
-      usageCount: 1,
-      lastUsed: new Date(),
-      fileSize: 1024,
-      agentTypes: ['test-agent'],
-      relatedIds: [],
-      childIds: [],
-    } as IndexMetadata,
-    lastModified: new Date(),
-    ...overrides,
-  });
+  const createTestEntry = (id: string, overrides: Partial<IndexEntry> = {}): IndexEntry => {
+    const crypto = require('crypto');
+    const title = `Test Entry ${id}`;
+    const content = `This is test content for entry ${id} with some searchable text about ForgeFlow and AI orchestration.`;
+    const hash = crypto
+      .createHash('sha256')
+      .update(content + title + id)
+      .digest('hex')
+      .substring(0, 8);
+
+    return {
+      id,
+      type: 'knowledge' as IndexContentType,
+      title,
+      content,
+      path: `/test/path/${id}.md`,
+      hash,
+      metadata: {
+        tags: ['test', 'forgeflow', 'ai'],
+        category: 'testing',
+        usageCount: 1,
+        lastUsed: new Date(),
+        fileSize: 1024,
+        agentTypes: ['test-agent'],
+        relatedIds: [],
+        childIds: [],
+      } as IndexMetadata,
+      lastModified: new Date(),
+      ...overrides,
+    };
+  };
 
   const createLargeTestDataset = (count: number): IndexEntry[] => {
-    return Array.from({ length: count }, (_, i) => 
+    return Array.from({ length: count }, (_, i) =>
       createTestEntry(`large-${i}`, {
         title: `Large Dataset Entry ${i}`,
         content: `This is entry number ${i} with unique content about ${i % 2 === 0 ? 'machine learning' : 'software engineering'}. It contains keywords like ${i % 3 === 0 ? 'python' : i % 3 === 1 ? 'typescript' : 'javascript'}.`,
@@ -57,14 +65,17 @@ describe('SQLiteFTS5Engine', () => {
           childIds: [],
         } as IndexMetadata,
         lastModified: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-      })
+      }),
     );
   };
 
   beforeAll(() => {
     // 🟢 WORKING: Create unique test database path
-    testDbPath = join(tmpdir(), `test-fts5-engine-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.db`);
-    
+    testDbPath = join(
+      tmpdir(),
+      `test-fts5-engine-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.db`,
+    );
+
     testConfig = {
       databasePath: testDbPath,
       maxDatabaseSize: 10 * 1024 * 1024, // 10MB for tests
@@ -91,7 +102,7 @@ describe('SQLiteFTS5Engine', () => {
     if (existsSync(testDbPath)) {
       unlinkSync(testDbPath);
     }
-    
+
     // 🟢 WORKING: Create fresh engine instance
     engine = new SQLiteFTS5Engine(testConfig);
   });
@@ -122,7 +133,7 @@ describe('SQLiteFTS5Engine', () => {
     it('should initialize successfully with default config', async () => {
       // 🟢 WORKING: Expected behavior test
       await expect(engine.initialize()).resolves.not.toThrow();
-      
+
       const health = await engine.getHealth();
       expect(health.status).toBe('healthy');
       expect(health.checks.databaseConnection).toBe(true);
@@ -137,9 +148,9 @@ describe('SQLiteFTS5Engine', () => {
         caseSensitive: true,
         batchSize: 25,
       };
-      
+
       const customEngine = new SQLiteFTS5Engine(customConfig);
-      
+
       await expect(customEngine.initialize()).resolves.not.toThrow();
       await customEngine.shutdown();
     });
@@ -176,9 +187,9 @@ describe('SQLiteFTS5Engine', () => {
     it('should index single entry successfully', async () => {
       // 🟢 WORKING: Expected behavior test
       const entry = createTestEntry('test-1');
-      
+
       await expect(engine.indexEntries([entry])).resolves.not.toThrow();
-      
+
       const metrics = await engine.getMetrics();
       expect(metrics.totalEntries).toBe(1);
     });
@@ -186,9 +197,9 @@ describe('SQLiteFTS5Engine', () => {
     it('should index multiple entries in batches', async () => {
       // 🟢 WORKING: Expected behavior test
       const entries = Array.from({ length: 150 }, (_, i) => createTestEntry(`batch-${i}`));
-      
+
       await expect(engine.indexEntries(entries)).resolves.not.toThrow();
-      
+
       const metrics = await engine.getMetrics();
       expect(metrics.totalEntries).toBe(150);
     });
@@ -198,7 +209,7 @@ describe('SQLiteFTS5Engine', () => {
       const entry = createTestEntry('large-content', {
         content: 'x'.repeat(50000), // Exceeds maxContentLength
       });
-      
+
       await expect(engine.indexEntries([entry])).resolves.not.toThrow();
     });
 
@@ -210,10 +221,11 @@ describe('SQLiteFTS5Engine', () => {
         title: '',
         content: '',
         path: '',
+        hash: '',
         metadata: {} as IndexMetadata,
         lastModified: new Date(),
       };
-      
+
       await expect(engine.indexEntries([invalidEntry])).rejects.toThrow();
     });
 
@@ -221,13 +233,13 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const originalEntry = createTestEntry('update-test');
       await engine.indexEntries([originalEntry]);
-      
+
       const updatedEntry = {
         ...originalEntry,
         title: 'Updated Title',
         content: 'Updated content with new information',
       };
-      
+
       await expect(engine.updateEntries([updatedEntry])).resolves.not.toThrow();
     });
 
@@ -235,7 +247,7 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const entries = [createTestEntry('delete-1'), createTestEntry('delete-2')];
       await engine.indexEntries(entries);
-      
+
       await expect(engine.deleteEntries(['delete-1'])).resolves.not.toThrow();
     });
 
@@ -248,7 +260,7 @@ describe('SQLiteFTS5Engine', () => {
   describe('Search Operations', () => {
     beforeEach(async () => {
       await engine.initialize();
-      
+
       // 🟢 WORKING: Set up test data
       const testEntries = [
         createTestEntry('search-1', {
@@ -267,7 +279,8 @@ describe('SQLiteFTS5Engine', () => {
         }),
         createTestEntry('search-2', {
           title: 'Python Machine Learning',
-          content: 'Python is excellent for machine learning with libraries like TensorFlow and PyTorch.',
+          content:
+            'Python is excellent for machine learning with libraries like TensorFlow and PyTorch.',
           metadata: {
             tags: ['python', 'ml', 'ai'],
             category: 'machine-learning',
@@ -281,7 +294,8 @@ describe('SQLiteFTS5Engine', () => {
         }),
         createTestEntry('search-3', {
           title: 'TypeScript Best Practices',
-          content: 'TypeScript provides type safety for JavaScript development with excellent tooling.',
+          content:
+            'TypeScript provides type safety for JavaScript development with excellent tooling.',
           metadata: {
             tags: ['typescript', 'javascript', 'types'],
             category: 'development',
@@ -294,7 +308,7 @@ describe('SQLiteFTS5Engine', () => {
           } as IndexMetadata,
         }),
       ];
-      
+
       await engine.indexEntries(testEntries);
     });
 
@@ -304,9 +318,9 @@ describe('SQLiteFTS5Engine', () => {
         query: 'JavaScript',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results).toHaveLength(2); // JavaScript and TypeScript entries
       expect(results.executionTime).toBeLessThan(500); // Sub-500ms requirement
       expect(results.results[0].score).toBeGreaterThan(0);
@@ -319,9 +333,9 @@ describe('SQLiteFTS5Engine', () => {
         queryType: 'phrase',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results).toHaveLength(1);
       expect(results.results[0].entry.title).toContain('Python Machine Learning');
     });
@@ -333,9 +347,9 @@ describe('SQLiteFTS5Engine', () => {
         queryType: 'fuzzy',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results.length).toBeGreaterThan(0);
     });
 
@@ -346,10 +360,10 @@ describe('SQLiteFTS5Engine', () => {
         type: 'knowledge',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
-      results.results.forEach(result => {
+
+      results.results.forEach((result) => {
         expect(result.entry.type).toBe('knowledge');
       });
     });
@@ -360,9 +374,9 @@ describe('SQLiteFTS5Engine', () => {
         query: 'nonexistentterms12345',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results).toHaveLength(0);
       expect(results.totalMatches).toBe(0);
     });
@@ -373,9 +387,9 @@ describe('SQLiteFTS5Engine', () => {
         query: '',
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results).toHaveLength(0);
     });
 
@@ -385,9 +399,9 @@ describe('SQLiteFTS5Engine', () => {
         query: 'development',
         limit: 1,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results).toHaveLength(1);
     });
 
@@ -399,9 +413,9 @@ describe('SQLiteFTS5Engine', () => {
         snippetLength: 100,
         limit: 10,
       };
-      
+
       const results = await engine.search(query);
-      
+
       expect(results.results.length).toBeGreaterThan(0);
       expect(results.results[0].contentSnippets).toHaveLength(1);
       expect(results.results[0].contentSnippets[0].text.length).toBeLessThanOrEqual(100);
@@ -410,7 +424,7 @@ describe('SQLiteFTS5Engine', () => {
     it('should generate search suggestions', async () => {
       // 🟢 WORKING: Expected behavior test
       const suggestions = await engine.suggest('java');
-      
+
       expect(suggestions).toBeInstanceOf(Array);
       expect(suggestions.length).toBeGreaterThanOrEqual(0);
     });
@@ -418,16 +432,16 @@ describe('SQLiteFTS5Engine', () => {
     it('should find similar entries', async () => {
       // 🟢 WORKING: Expected behavior test
       const results = await engine.findSimilar('search-1', 5);
-      
+
       expect(results.results).toBeInstanceOf(Array);
       // Should not include the original entry
-      expect(results.results.every(r => r.entry.id !== 'search-1')).toBe(true);
+      expect(results.results.every((r) => r.entry.id !== 'search-1')).toBe(true);
     });
 
     it('should handle similar search for non-existent entry', async () => {
       // 🟢 WORKING: Edge case test
       const results = await engine.findSimilar('non-existent', 5);
-      
+
       expect(results.results).toHaveLength(0);
     });
   });
@@ -441,22 +455,22 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const entry = createTestEntry('cache-test');
       await engine.indexEntries([entry]);
-      
+
       const query: SearchQuery = { query: 'cache test', limit: 10 };
-      
+
       // First search
       const start1 = performance.now();
       const results1 = await engine.search(query);
       const duration1 = performance.now() - start1;
-      
+
       // Second search (should be cached)
       const start2 = performance.now();
       const results2 = await engine.search(query);
       const duration2 = performance.now() - start2;
-      
+
       expect(results1.results).toEqual(results2.results);
       expect(duration2).toBeLessThan(duration1); // Cache should be faster
-      
+
       const metrics = await engine.getMetrics();
       expect(metrics.queryCacheHits).toBeGreaterThan(0);
     });
@@ -465,16 +479,16 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Performance test
       const largeDataset = createLargeTestDataset(1000);
       await engine.indexEntries(largeDataset);
-      
+
       const query: SearchQuery = {
         query: 'machine learning typescript',
         limit: 20,
       };
-      
+
       const start = performance.now();
       const results = await engine.search(query);
       const duration = performance.now() - start;
-      
+
       expect(duration).toBeLessThan(500); // Sub-500ms requirement
       expect(results.results.length).toBeGreaterThan(0);
     });
@@ -483,7 +497,7 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Concurrency test
       const entries = createLargeTestDataset(500);
       await engine.indexEntries(entries);
-      
+
       const queries = [
         { query: 'machine learning', limit: 10 },
         { query: 'typescript javascript', limit: 10 },
@@ -491,14 +505,14 @@ describe('SQLiteFTS5Engine', () => {
         { query: 'python data', limit: 10 },
         { query: 'ai development', limit: 10 },
       ];
-      
+
       const start = performance.now();
-      const results = await Promise.all(queries.map(q => engine.search(q)));
+      const results = await Promise.all(queries.map((q) => engine.search(q)));
       const duration = performance.now() - start;
-      
+
       expect(results).toHaveLength(5);
       expect(duration).toBeLessThan(2000); // Should handle concurrent requests efficiently
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.executionTime).toBeLessThan(500);
       });
     });
@@ -512,7 +526,7 @@ describe('SQLiteFTS5Engine', () => {
     it('should report healthy status', async () => {
       // 🟢 WORKING: Expected behavior test
       const health = await engine.getHealth();
-      
+
       expect(health.status).toBe('healthy');
       expect(health.checks.databaseConnection).toBe(true);
       expect(health.checks.indexIntegrity).toBe(true);
@@ -526,11 +540,11 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const entries = createLargeTestDataset(100);
       await engine.indexEntries(entries);
-      
+
       await engine.search({ query: 'test', limit: 10 });
-      
+
       const metrics = await engine.getMetrics();
-      
+
       expect(metrics.totalEntries).toBe(100);
       expect(metrics.totalQueries).toBeGreaterThan(0);
       expect(metrics.totalIndexOperations).toBeGreaterThan(0);
@@ -541,7 +555,7 @@ describe('SQLiteFTS5Engine', () => {
     it('should provide detailed diagnostics', async () => {
       // 🟢 WORKING: Expected behavior test
       const diagnostics = await engine.getDiagnostics();
-      
+
       expect(diagnostics.databaseInfo.version).toBeDefined();
       expect(diagnostics.databaseInfo.pageSize).toBeGreaterThan(0);
       expect(diagnostics.ftsInfo.version).toBe('5');
@@ -560,7 +574,7 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const entries = createLargeTestDataset(200);
       await engine.indexEntries(entries);
-      
+
       await expect(engine.optimize()).resolves.not.toThrow();
     });
 
@@ -568,12 +582,12 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Expected behavior test
       const entries = createLargeTestDataset(100);
       await engine.indexEntries(entries);
-      
+
       // Add and remove some entries to create fragmentation
       const moreEntries = createLargeTestDataset(50);
       await engine.indexEntries(moreEntries);
-      await engine.deleteEntries(moreEntries.slice(0, 25).map(e => e.id));
-      
+      await engine.deleteEntries(moreEntries.slice(0, 25).map((e) => e.id));
+
       await expect(engine.vacuum()).resolves.not.toThrow();
     });
 
@@ -592,7 +606,7 @@ describe('SQLiteFTS5Engine', () => {
     it('should handle search on uninitialized engine', async () => {
       // 🟢 WORKING: Error case test
       const uninitializedEngine = new SQLiteFTS5Engine(testConfig);
-      
+
       const query: SearchQuery = { query: 'test', limit: 10 };
       await expect(uninitializedEngine.search(query)).rejects.toThrow();
     });
@@ -601,7 +615,7 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Error case test
       const uninitializedEngine = new SQLiteFTS5Engine(testConfig);
       const entry = createTestEntry('test');
-      
+
       await expect(uninitializedEngine.indexEntries([entry])).rejects.toThrow();
     });
 
@@ -609,10 +623,10 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Edge case test
       const entry = createTestEntry('large-query-test');
       await engine.indexEntries([entry]);
-      
+
       const largeQuery = 'word '.repeat(1000).trim(); // 1000 word query
       const query: SearchQuery = { query: largeQuery, limit: 10 };
-      
+
       await expect(engine.search(query)).resolves.not.toThrow();
     });
 
@@ -622,9 +636,9 @@ describe('SQLiteFTS5Engine', () => {
         content: 'Testing with special characters: @#$%^&*()[]{}|\\:";\'<>?,./~`',
       });
       await engine.indexEntries([entry]);
-      
+
       const query: SearchQuery = { query: '@#$%', limit: 10 };
-      
+
       await expect(engine.search(query)).resolves.not.toThrow();
     });
 
@@ -635,9 +649,9 @@ describe('SQLiteFTS5Engine', () => {
         content: 'Testing Unicode: العربية русский 日本語 한국어 ñáéíóú',
       });
       await engine.indexEntries([entry]);
-      
+
       const query: SearchQuery = { query: '你好', limit: 10 };
-      
+
       const results = await engine.search(query);
       expect(results).toBeDefined();
     });
@@ -652,7 +666,7 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Compatibility test
       const entry = createTestEntry('compatibility-test');
       await engine.indexEntries([entry]);
-      
+
       // Test all SearchQuery properties
       const query: SearchQuery = {
         query: 'compatibility',
@@ -676,7 +690,7 @@ describe('SQLiteFTS5Engine', () => {
         createdAfter: new Date(Date.now() - 24 * 60 * 60 * 1000),
         createdBefore: new Date(),
       };
-      
+
       const results = await engine.search(query);
       expect(results).toBeDefined();
       expect(results.results).toBeInstanceOf(Array);
@@ -688,9 +702,9 @@ describe('SQLiteFTS5Engine', () => {
       // 🟢 WORKING: Interface compatibility test
       const entry = createTestEntry('format-test');
       await engine.indexEntries([entry]);
-      
+
       const results = await engine.search({ query: 'format', limit: 10 });
-      
+
       // Verify SearchResults structure
       expect(results).toHaveProperty('results');
       expect(results).toHaveProperty('totalMatches');
@@ -699,7 +713,7 @@ describe('SQLiteFTS5Engine', () => {
       expect(results).toHaveProperty('executionTime');
       expect(results).toHaveProperty('facets');
       expect(results).toHaveProperty('suggestions');
-      
+
       if (results.results.length > 0) {
         const result = results.results[0];
         expect(result).toHaveProperty('entry');

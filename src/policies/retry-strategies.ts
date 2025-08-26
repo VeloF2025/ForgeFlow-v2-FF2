@@ -4,7 +4,8 @@
  */
 
 import { enhancedLogger } from '../utils/enhanced-logger';
-import { ForgeFlowError, ErrorCategory, ErrorSeverity } from '../utils/errors';
+import type { ErrorCategory } from '../utils/errors';
+import { ForgeFlowError, ErrorSeverity } from '../utils/errors';
 
 export interface BackoffStrategy {
   calculateDelay(attempt: number, baseDelay: number, maxDelay: number, multiplier?: number): number;
@@ -49,7 +50,7 @@ export class ExponentialBackoffStrategy implements BackoffStrategy {
     attempt: number,
     baseDelay: number,
     maxDelay: number,
-    multiplier: number = 2
+    multiplier: number = 2,
   ): number {
     const delay = baseDelay * Math.pow(multiplier, attempt - 1);
     return Math.min(delay, maxDelay);
@@ -60,18 +61,18 @@ export class ExponentialBackoffStrategy implements BackoffStrategy {
       case 'full':
         // Random jitter between 0 and calculated delay
         return Math.random() * delay;
-      
+
       case 'equal':
         // Add/subtract up to 50% of the delay
         const jitterAmount = delay * 0.5;
         return delay + (Math.random() - 0.5) * 2 * jitterAmount;
-      
+
       case 'decorrelated':
         // Base jitter on previous delay to reduce correlation
         const decorrelatedBase = delay * 0.1;
         const decorrelatedMax = delay * 3;
         return Math.min(decorrelatedBase + Math.random() * delay, decorrelatedMax);
-      
+
       case 'none':
       default:
         return delay;
@@ -85,7 +86,7 @@ export class LinearBackoffStrategy implements BackoffStrategy {
     attempt: number,
     baseDelay: number,
     maxDelay: number,
-    increment: number = 1000
+    increment: number = 1000,
   ): number {
     const delay = baseDelay + (attempt - 1) * increment;
     return Math.min(delay, maxDelay);
@@ -104,7 +105,7 @@ export class FixedDelayStrategy implements BackoffStrategy {
     attempt: number,
     baseDelay: number,
     maxDelay: number,
-    multiplier?: number
+    multiplier?: number,
   ): number {
     return Math.min(baseDelay, maxDelay);
   }
@@ -149,7 +150,7 @@ export class FibonacciBackoffStrategy implements BackoffStrategy {
     attempt: number,
     baseDelay: number,
     maxDelay: number,
-    multiplier: number = 1
+    multiplier: number = 1,
   ): number {
     const fibNumber = this.fibonacci(attempt);
     const delay = baseDelay * fibNumber * multiplier;
@@ -163,9 +164,9 @@ export class FibonacciBackoffStrategy implements BackoffStrategy {
 
   private fibonacci(n: number): number {
     if (n <= 1) return 1;
-    
+
     if (this.fibonacciCache.has(n)) {
-      return this.fibonacciCache.get(n)!;
+      return this.fibonacciCache.get(n);
     }
 
     const result = this.fibonacci(n - 1) + this.fibonacci(n - 2);
@@ -176,29 +177,32 @@ export class FibonacciBackoffStrategy implements BackoffStrategy {
 
 // 🟢 WORKING: Adaptive Backoff Strategy
 export class AdaptiveBackoffStrategy implements BackoffStrategy {
-  private performanceMetrics = new Map<string, {
-    attempts: number;
-    successes: number;
-    averageDelay: number;
-    lastSuccessDelay: number;
-  }>();
+  private performanceMetrics = new Map<
+    string,
+    {
+      attempts: number;
+      successes: number;
+      averageDelay: number;
+      lastSuccessDelay: number;
+    }
+  >();
 
   calculateDelay(
     attempt: number,
     baseDelay: number,
     maxDelay: number,
-    multiplier: number = 2
+    multiplier: number = 2,
   ): number {
     // Start with exponential backoff as base
     let delay = baseDelay * Math.pow(multiplier, attempt - 1);
-    
+
     // Adapt based on historical performance
     const operationKey = 'global'; // Could be made operation-specific
     const metrics = this.performanceMetrics.get(operationKey);
-    
+
     if (metrics && metrics.attempts > 10) {
       const successRate = metrics.successes / metrics.attempts;
-      
+
       if (successRate < 0.5) {
         // Poor success rate - increase delays more aggressively
         delay *= 1.5;
@@ -206,13 +210,13 @@ export class AdaptiveBackoffStrategy implements BackoffStrategy {
         // Good success rate - can be more aggressive
         delay *= 0.8;
       }
-      
+
       // If we have a recent success with a specific delay, bias towards that
       if (metrics.lastSuccessDelay > 0 && attempt <= 3) {
         delay = (delay + metrics.lastSuccessDelay) / 2;
       }
     }
-    
+
     return Math.min(delay, maxDelay);
   }
 
@@ -226,7 +230,7 @@ export class AdaptiveBackoffStrategy implements BackoffStrategy {
       attempts: 0,
       successes: 0,
       averageDelay: 0,
-      lastSuccessDelay: 0
+      lastSuccessDelay: 0,
     };
 
     metrics.attempts++;
@@ -236,12 +240,15 @@ export class AdaptiveBackoffStrategy implements BackoffStrategy {
     }
 
     // Update average delay
-    metrics.averageDelay = (metrics.averageDelay * (metrics.attempts - 1) + delay) / metrics.attempts;
-    
+    metrics.averageDelay =
+      (metrics.averageDelay * (metrics.attempts - 1) + delay) / metrics.attempts;
+
     this.performanceMetrics.set(operationName, metrics);
   }
 
-  getMetrics(operationName: string): typeof this.performanceMetrics extends Map<string, infer T> ? T : never {
+  getMetrics(
+    operationName: string,
+  ): typeof this.performanceMetrics extends Map<string, infer T> ? T : never {
     return this.performanceMetrics.get(operationName);
   }
 }
@@ -258,9 +265,9 @@ export class RetryStrategy {
       ['linear', new LinearBackoffStrategy()],
       ['fixed', new FixedDelayStrategy()],
       ['fibonacci', new FibonacciBackoffStrategy()],
-      ['adaptive', new AdaptiveBackoffStrategy()]
+      ['adaptive', new AdaptiveBackoffStrategy()],
     ]);
-    
+
     this.adaptiveStrategy = this.strategies.get('adaptive') as AdaptiveBackoffStrategy;
 
     // Register fibonacci as a custom strategy example
@@ -269,22 +276,18 @@ export class RetryStrategy {
   }
 
   // 🟢 WORKING: Calculate delay using specified strategy
-  async calculateDelay(
-    config: RetryConfiguration,
-    attempt: number,
-    error: Error
-  ): Promise<number> {
+  async calculateDelay(config: RetryConfiguration, attempt: number, error: Error): Promise<number> {
     const startTime = Date.now();
-    
+
     try {
       let strategy = this.strategies.get(config.strategyType);
-      
+
       // Handle custom strategies
       if (config.strategyType === 'custom' && config.customStrategy) {
         strategy = CustomStrategyRegistry.get(config.customStrategy);
         if (!strategy) {
           enhancedLogger.warn('Custom retry strategy not found, falling back to exponential', {
-            customStrategy: config.customStrategy
+            customStrategy: config.customStrategy,
           });
           strategy = this.strategies.get('exponential')!;
         }
@@ -292,7 +295,7 @@ export class RetryStrategy {
 
       if (!strategy) {
         enhancedLogger.warn('Retry strategy not found, using exponential backoff', {
-          strategyType: config.strategyType
+          strategyType: config.strategyType,
         });
         strategy = this.strategies.get('exponential')!;
       }
@@ -302,7 +305,7 @@ export class RetryStrategy {
         attempt,
         config.initialDelay,
         config.maxDelay,
-        config.backoffMultiplier
+        config.backoffMultiplier,
       );
 
       // Apply jitter if enabled
@@ -323,23 +326,19 @@ export class RetryStrategy {
         attempt,
         delay,
         jitter: config.jitter,
-        jitterType: config.jitterType
+        jitterType: config.jitterType,
       });
 
       return Math.round(delay);
-
     } catch (error) {
       enhancedLogger.error('Failed to calculate retry delay, using default', {
-        error: error.message,
+        errorMessage: error instanceof Error ? error.message : String(error),
         strategyType: config.strategyType,
-        attempt
-      });
-      
+        attempt,
+      } as any);
+
       // Fallback to simple exponential backoff
-      return Math.min(
-        config.initialDelay * Math.pow(2, attempt - 1),
-        config.maxDelay
-      );
+      return Math.min(config.initialDelay * Math.pow(2, attempt - 1), config.maxDelay);
     }
   }
 
@@ -351,7 +350,7 @@ export class RetryStrategy {
       totalDelay: 0,
       averageDelay: 0,
       successRate: 0,
-      jitterEffectiveness: 0
+      jitterEffectiveness: 0,
     };
 
     metrics.totalAttempts++;
@@ -367,7 +366,7 @@ export class RetryStrategy {
     operationName: string,
     success: boolean,
     delay: number,
-    context?: RetryContext
+    context?: RetryContext,
   ): void {
     // Update adaptive strategy metrics
     if (strategyType === 'adaptive') {
@@ -387,7 +386,7 @@ export class RetryStrategy {
       operationName,
       success,
       delay,
-      attempt: context?.attempt
+      attempt: context?.attempt,
     });
   }
 
@@ -396,7 +395,7 @@ export class RetryStrategy {
     if (strategyType) {
       return this.metrics.get(strategyType) || null;
     }
-    
+
     return Object.fromEntries(this.metrics.entries());
   }
 
@@ -405,7 +404,7 @@ export class RetryStrategy {
     if (operationName) {
       return this.adaptiveStrategy.getMetrics(operationName) || {};
     }
-    
+
     // Get all adaptive metrics
     const allMetrics: Record<string, unknown> = {};
     // This would need additional tracking in AdaptiveBackoffStrategy
@@ -440,8 +439,11 @@ export class RetryStrategy {
       errors.push('customStrategy must be specified when strategyType is "custom"');
     }
 
-    if (config.strategyType === 'custom' && config.customStrategy &&
-        !CustomStrategyRegistry.get(config.customStrategy)) {
+    if (
+      config.strategyType === 'custom' &&
+      config.customStrategy &&
+      !CustomStrategyRegistry.get(config.customStrategy)
+    ) {
       errors.push(`Custom strategy "${config.customStrategy}" is not registered`);
     }
 
@@ -466,7 +468,7 @@ export class RetryStrategy {
           backoffMultiplier: 2,
           jitter: true,
           jitterType: 'full',
-          giveUpAfter: 300000 // 5 minutes
+          giveUpAfter: 300000, // 5 minutes
         };
 
       case 'git-operation':
@@ -478,7 +480,7 @@ export class RetryStrategy {
           maxDelay: 10000,
           jitter: true,
           jitterType: 'equal',
-          giveUpAfter: 120000 // 2 minutes
+          giveUpAfter: 120000, // 2 minutes
         };
 
       case 'network':
@@ -491,20 +493,20 @@ export class RetryStrategy {
           backoffMultiplier: 1.5,
           jitter: true,
           jitterType: 'decorrelated',
-          giveUpAfter: 180000 // 3 minutes
+          giveUpAfter: 180000, // 3 minutes
         };
 
       case 'database':
       case 'external-service':
         return {
-          strategyType: 'adaptive',
+          strategyType: 'custom',
           maxAttempts: 4,
           initialDelay: 1500,
           maxDelay: 45000,
           backoffMultiplier: 1.8,
           jitter: true,
           jitterType: 'full',
-          giveUpAfter: 240000 // 4 minutes
+          giveUpAfter: 240000, // 4 minutes
         };
 
       case 'quick-operation':
@@ -515,7 +517,7 @@ export class RetryStrategy {
           initialDelay: 500,
           maxDelay: 2000,
           jitter: false,
-          giveUpAfter: 10000 // 10 seconds
+          giveUpAfter: 10000, // 10 seconds
         };
 
       default:
@@ -528,7 +530,7 @@ export class RetryStrategy {
           backoffMultiplier: 2,
           jitter: true,
           jitterType: 'full',
-          giveUpAfter: 60000 // 1 minute
+          giveUpAfter: 60000, // 1 minute
         };
     }
   }
@@ -543,12 +545,15 @@ export class RetryStrategy {
   getAvailableStrategies(): { builtin: string[]; custom: string[] } {
     return {
       builtin: Array.from(this.strategies.keys()),
-      custom: CustomStrategyRegistry.list()
+      custom: CustomStrategyRegistry.list(),
     };
   }
 
   // 🟢 WORKING: Test retry strategy configuration
-  async testStrategy(config: RetryConfiguration, simulatedAttempts: number = 5): Promise<{
+  async testStrategy(
+    config: RetryConfiguration,
+    simulatedAttempts: number = 5,
+  ): Promise<{
     delays: number[];
     totalTime: number;
     averageDelay: number;
@@ -567,7 +572,7 @@ export class RetryStrategy {
       delays,
       totalTime,
       averageDelay: totalTime / delays.length,
-      configuration: config
+      configuration: config,
     };
   }
 }
@@ -576,56 +581,46 @@ export class RetryStrategy {
 
 export function createRetryDecorator(config: RetryConfiguration) {
   const retryStrategy = new RetryStrategy();
-  
+
   return function <T extends (...args: any[]) => Promise<any>>(
     target: any,
     propertyKey: string,
-    descriptor: TypedPropertyDescriptor<T>
+    descriptor: TypedPropertyDescriptor<T>,
   ) {
-    const originalMethod = descriptor.value!;
-    
+    const originalMethod = descriptor.value;
+
     descriptor.value = async function (this: any, ...args: any[]) {
       let lastError: Error;
-      
+
       for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
         try {
           const result = await originalMethod.apply(this, args);
-          
+
           // Record successful outcome
-          retryStrategy.recordRetryOutcome(
-            config.strategyType,
-            propertyKey,
-            true,
-            0
-          );
-          
+          retryStrategy.recordRetryOutcome(config.strategyType, propertyKey, true, 0);
+
           return result;
         } catch (error) {
           lastError = error as Error;
-          
+
           if (attempt === config.maxAttempts) {
             break;
           }
-          
+
           const delay = await retryStrategy.calculateDelay(config, attempt, lastError);
-          
+
           if (delay > 0) {
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise((resolve) => setTimeout(resolve, delay));
           }
-          
+
           // Record retry attempt
-          retryStrategy.recordRetryOutcome(
-            config.strategyType,
-            propertyKey,
-            false,
-            delay
-          );
+          retryStrategy.recordRetryOutcome(config.strategyType, propertyKey, false, delay);
         }
       }
-      
+
       throw lastError;
     } as T;
-    
+
     return descriptor;
   };
 }
@@ -636,28 +631,28 @@ export async function exponentialBackoffWithJitter(
   maxAttempts: number = 3,
   initialDelay: number = 1000,
   maxDelay: number = 30000,
-  jitterType: JitterType = 'full'
+  jitterType: JitterType = 'full',
 ): Promise<any> {
   const strategy = new ExponentialBackoffStrategy();
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         break;
       }
-      
+
       let delay = strategy.calculateDelay(attempt, initialDelay, maxDelay);
       delay = strategy.addJitter(delay, jitterType);
-      
-      await new Promise(resolve => setTimeout(resolve, delay));
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError;
 }
 

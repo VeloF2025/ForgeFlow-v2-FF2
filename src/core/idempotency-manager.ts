@@ -50,7 +50,7 @@ export class IdempotencyManager {
   constructor(options: IdempotencyOptions = {}) {
     this.storePath = options.storePath || path.join('.ff2-worktrees', 'idempotency');
     this.logger = new LogContext('IdempotencyManager');
-    
+
     // Initialize storage and load existing records
     this.initializeStorage();
   }
@@ -79,9 +79,9 @@ export class IdempotencyManager {
   }> {
     const key = this.generateKey(keyData);
     await this.loadRecord(key);
-    
+
     const record = this.records.get(key);
-    
+
     if (!record) {
       return {
         execute: true,
@@ -109,7 +109,8 @@ export class IdempotencyManager {
       case 'pending':
         // Check if operation might be stuck
         const timeSinceStart = Date.now() - record.startTime;
-        if (timeSinceStart > 10 * 60 * 1000) { // 10 minutes
+        if (timeSinceStart > 10 * 60 * 1000) {
+          // 10 minutes
           this.logger.warning(`Pending operation appears stuck: ${key}, resetting`);
           await this.removeRecord(key);
           return {
@@ -117,7 +118,7 @@ export class IdempotencyManager {
             reason: 'Stuck pending operation reset',
           };
         }
-        
+
         return {
           execute: false,
           record,
@@ -135,8 +136,9 @@ export class IdempotencyManager {
 
         // Check retry backoff
         const timeSinceLastAttempt = Date.now() - record.lastAttemptTime;
-        const backoffTime = IdempotencyManager.DEFAULT_OPTIONS.retryBackoff * Math.pow(2, record.attempts - 1);
-        
+        const backoffTime =
+          IdempotencyManager.DEFAULT_OPTIONS.retryBackoff * Math.pow(2, record.attempts - 1);
+
         if (timeSinceLastAttempt < backoffTime) {
           return {
             execute: false,
@@ -188,7 +190,9 @@ export class IdempotencyManager {
     this.records.set(key, record);
     await this.saveRecord(key, record);
 
-    this.logger.info(`Started operation: ${keyData.operation}, key: ${key}, attempt: ${record.attempts}`);
+    this.logger.info(
+      `Started operation: ${keyData.operation}, key: ${key}, attempt: ${record.attempts}`,
+    );
     return key;
   }
 
@@ -206,9 +210,11 @@ export class IdempotencyManager {
     record.result = result;
 
     await this.saveRecord(key, record);
-    
+
     const duration = record.endTime - record.startTime;
-    this.logger.info(`Completed operation: ${record.operation}, key: ${key}, duration: ${duration}ms`);
+    this.logger.info(
+      `Completed operation: ${record.operation}, key: ${key}, duration: ${duration}ms`,
+    );
   }
 
   /**
@@ -225,15 +231,20 @@ export class IdempotencyManager {
     record.error = error instanceof Error ? error.message : error;
 
     await this.saveRecord(key, record);
-    
+
     const duration = record.endTime - record.startTime;
-    this.logger.error(`Failed operation: ${record.operation}, key: ${key}, attempt: ${record.attempts}, duration: ${duration}ms, error: ${record.error}`);
+    this.logger.error(
+      `Failed operation: ${record.operation}, key: ${key}, attempt: ${record.attempts}, duration: ${duration}ms, error: ${record.error}`,
+    );
   }
 
   /**
    * Rollback operation and optionally execute rollback function
    */
-  async rollbackOperation(key: string, rollbackFn?: (data?: unknown) => Promise<void>): Promise<void> {
+  async rollbackOperation(
+    key: string,
+    rollbackFn?: (data?: unknown) => Promise<void>,
+  ): Promise<void> {
     const record = this.records.get(key);
     if (!record) {
       throw new Error(`No operation record found for key: ${key}`);
@@ -242,7 +253,9 @@ export class IdempotencyManager {
     try {
       if (rollbackFn && record.rollbackData) {
         await rollbackFn(record.rollbackData);
-        this.logger.info(`Executed rollback function for operation: ${record.operation}, key: ${key}`);
+        this.logger.info(
+          `Executed rollback function for operation: ${record.operation}, key: ${key}`,
+        );
       }
 
       record.status = 'rolled_back';
@@ -250,7 +263,6 @@ export class IdempotencyManager {
 
       await this.saveRecord(key, record);
       this.logger.info(`Rolled back operation: ${record.operation}, key: ${key}`);
-
     } catch (error) {
       this.logger.error(`Rollback failed for operation: ${record.operation}, key: ${key}`, error);
       throw new Error(`Rollback failed: ${String(error)}`);
@@ -270,7 +282,7 @@ export class IdempotencyManager {
    */
   async getOperationRecords(operation: string): Promise<IdempotencyRecord[]> {
     await this.loadAllRecords();
-    
+
     const records: IdempotencyRecord[] = [];
     this.records.forEach((record) => {
       if (record.operation === operation) {
@@ -286,9 +298,9 @@ export class IdempotencyManager {
   async cleanup(maxAge?: number): Promise<number> {
     const ageThreshold = maxAge || IdempotencyManager.DEFAULT_OPTIONS.maxAge;
     const cutoffTime = Date.now() - ageThreshold;
-    
+
     await this.loadAllRecords();
-    
+
     let cleanedCount = 0;
     const keysToRemove: string[] = [];
     this.records.forEach((record, key) => {
@@ -296,7 +308,7 @@ export class IdempotencyManager {
         keysToRemove.push(key);
       }
     });
-    
+
     for (const key of keysToRemove) {
       await this.removeRecord(key);
       cleanedCount++;
@@ -317,7 +329,7 @@ export class IdempotencyManager {
     successRate: number;
   }> {
     await this.loadAllRecords();
-    
+
     const records: IdempotencyRecord[] = [];
     this.records.forEach((record) => {
       records.push(record);
@@ -331,7 +343,7 @@ export class IdempotencyManager {
       const record = records[i];
       byStatus[record.status] = (byStatus[record.status] || 0) + 1;
       byOperation[record.operation] = (byOperation[record.operation] || 0) + 1;
-      
+
       if (record.endTime) {
         totalDuration += record.endTime - record.startTime;
         if (record.status === 'completed') {
@@ -394,7 +406,7 @@ export class IdempotencyManager {
       }
 
       const files = await fs.readdir(this.storePath);
-      const jsonFiles = files.filter(file => file.endsWith('.json'));
+      const jsonFiles = files.filter((file) => file.endsWith('.json'));
 
       for (const file of jsonFiles) {
         const key = path.basename(file, '.json');
@@ -446,13 +458,13 @@ export class IdempotencyManager {
    */
   private normalizeParameters(params: Record<string, unknown>): Record<string, unknown> {
     const normalized: Record<string, unknown> = {};
-    
+
     // Sort keys for consistent ordering
     const sortedKeys = Object.keys(params).sort();
-    
+
     for (const key of sortedKeys) {
       const value = params[key];
-      
+
       // Normalize common types
       if (value === null || value === undefined) {
         normalized[key] = null;

@@ -43,8 +43,8 @@ export class BrowserMCPClient {
 
       // Create transport and client for Browser MCP server
       this.transport = new StdioClientTransport({
-        command: this.config.serverCommand!,
-        args: this.config.serverArgs!,
+        command: this.config.serverCommand,
+        args: this.config.serverArgs,
         env: { ...process.env },
       });
 
@@ -55,17 +55,16 @@ export class BrowserMCPClient {
         },
         {
           capabilities: {},
-        }
+        },
       );
 
       // Connect to the server
       await this.client.connect(this.transport);
-      
+
       this.logger.info('Browser MCP client connected successfully');
 
       this.isConnected = true;
       this.reconnectAttempts = 0;
-
     } catch (error) {
       this.logger.error('Failed to connect to Browser MCP server:', error);
       await this.cleanup();
@@ -102,15 +101,17 @@ export class BrowserMCPClient {
   }
 
   private async attemptReconnect(): Promise<void> {
-    if (this.reconnectAttempts >= this.config.reconnectAttempts!) {
+    if (this.reconnectAttempts >= this.config.reconnectAttempts) {
       this.logger.error('Max reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
-    this.logger.info(`Attempting to reconnect (${this.reconnectAttempts}/${this.config.reconnectAttempts})...`);
+    this.logger.info(
+      `Attempting to reconnect (${this.reconnectAttempts}/${this.config.reconnectAttempts})...`,
+    );
 
-    await this.delay(this.config.reconnectDelay!);
+    await this.delay(this.config.reconnectDelay);
 
     try {
       await this.connect();
@@ -136,10 +137,10 @@ export class BrowserMCPClient {
       this.logger.debug(`Tool result for ${toolName}:`, result);
 
       if (result.isError) {
-        const errorContent = Array.isArray(result.content) 
+        const errorContent = Array.isArray(result.content)
           ? result.content.map((c: any) => c.text || c).join('\n')
           : (result.content as string) || 'Unknown error';
-        
+
         return {
           success: false,
           error: errorContent,
@@ -148,13 +149,12 @@ export class BrowserMCPClient {
 
       // Extract data from MCP response
       const data = this.extractDataFromMCPResponse(result);
-      
+
       return {
         success: true,
         data,
         screenshot: this.extractScreenshotFromResponse(result),
       };
-
     } catch (error) {
       this.logger.error(`Error calling tool ${toolName}:`, error);
       return {
@@ -171,8 +171,8 @@ export class BrowserMCPClient {
 
     // Extract text content
     const textContent = result.content
-      .filter(c => c.type === 'text')
-      .map(c => c.text)
+      .filter((c) => c.type === 'text')
+      .map((c) => c.text)
       .join('\n');
 
     // Try to parse as JSON if it looks like JSON
@@ -193,15 +193,15 @@ export class BrowserMCPClient {
     }
 
     // Look for image content
-    const imageContent = result.content.find(c => c.type === 'image');
+    const imageContent = result.content.find((c) => c.type === 'image');
     if (imageContent?.data) {
       return imageContent.data;
     }
 
     // Look for base64 image in text content
     const textContent = result.content
-      .filter(c => c.type === 'text')
-      .map(c => c.text)
+      .filter((c) => c.type === 'text')
+      .map((c) => c.text)
       .join('\n');
 
     const base64Match = textContent.match(/data:image\/[^;]+;base64,([^"'\s]+)/);
@@ -261,7 +261,12 @@ export class BrowserMCPClient {
     return this.callTool('browser_select_option', { element, ref, option });
   }
 
-  async drag(fromElement: string, fromRef: string, toElement: string, toRef: string): Promise<BrowserMCPResponse> {
+  async drag(
+    fromElement: string,
+    fromRef: string,
+    toElement: string,
+    toRef: string,
+  ): Promise<BrowserMCPResponse> {
     return this.callTool('browser_drag', {
       from_element: fromElement,
       from_ref: fromRef,

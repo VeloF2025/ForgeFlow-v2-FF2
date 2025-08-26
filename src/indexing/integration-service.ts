@@ -3,21 +3,16 @@
 // Provides real-time updates, intelligent batching, and cross-layer synchronization
 
 import { EventEmitter } from 'events';
-import { ForgeFlowIndexManager } from './index-manager.js';
+import type { ForgeFlowIndexManager } from './index-manager.js';
 import { ContentExtractor } from './content-extractor.js';
-import { 
-  IndexEntry, 
-  IndexBatch, 
-  IndexUpdateOperation, 
-  ContentChange,
-  IndexContentType 
-} from './types.js';
+import type { IndexEntry, IndexBatch, IndexUpdateOperation, ContentChange } from './types.js';
+import { IndexContentType } from './types.js';
 
 // Import from existing layers
-import { KnowledgeManager } from '../knowledge/knowledge-manager.js';
-import { MemoryManager } from '../memory/memory-manager.js';
-import { ADRManager } from '../knowledge/adr-manager.js';
-import { GotchaTracker } from '../knowledge/gotcha-tracker.js';
+import type { KnowledgeManager } from '../knowledge/knowledge-manager.js';
+import type { MemoryManager } from '../memory/memory-manager.js';
+import type { ADRManager } from '../knowledge/adr-manager.js';
+import type { GotchaTracker } from '../knowledge/gotcha-tracker.js';
 
 export class IndexIntegrationService extends EventEmitter {
   private indexManager: ForgeFlowIndexManager;
@@ -35,7 +30,7 @@ export class IndexIntegrationService extends EventEmitter {
   private changeBuffer = new ChangeBuffer();
   private crossReferences = new CrossReferenceTracker();
   private conflictResolver = new ConflictResolver();
-  
+
   // 🟢 WORKING: Performance and reliability
   private retryQueue = new RetryQueue();
   private batchProcessor = new BatchProcessor();
@@ -45,7 +40,7 @@ export class IndexIntegrationService extends EventEmitter {
     super();
     this.indexManager = indexManager;
     this.contentExtractor = new ContentExtractor();
-    
+
     // 🟢 WORKING: Initialize advanced components
     this.setupAdvancedIntegration();
   }
@@ -54,12 +49,12 @@ export class IndexIntegrationService extends EventEmitter {
   private setupAdvancedIntegration(): void {
     // Initialize advanced integration components
     console.log('🔧 Setting up advanced integration features...');
-    
+
     // Configure sync scheduler for optimized batch processing
     // Configure change buffer for efficient update batching
     // Configure cross-reference tracking for relationship management
     // Configure conflict resolution for data consistency
-    
+
     console.log('✅ Advanced integration features configured');
   }
 
@@ -100,7 +95,7 @@ export class IndexIntegrationService extends EventEmitter {
     if (this.knowledgeManager) {
       this.knowledgeManager.removeAllListeners();
     }
-    
+
     if (this.memoryManager) {
       this.memoryManager.removeAllListeners();
     }
@@ -163,17 +158,19 @@ export class IndexIntegrationService extends EventEmitter {
       }
 
       const duration = Date.now() - startTime;
-      console.log(`✅ Initial indexing completed: ${allEntries.length} total entries in ${duration}ms`);
+      console.log(
+        `✅ Initial indexing completed: ${allEntries.length} total entries in ${duration}ms`,
+      );
 
       this.emit('initial_indexing_completed', {
         totalEntries: allEntries.length,
         duration,
         breakdown: {
-          knowledge: allEntries.filter(e => e.type === 'knowledge').length,
-          memory: allEntries.filter(e => e.type === 'memory').length,
-          adr: allEntries.filter(e => e.type === 'adr').length,
-          gotcha: allEntries.filter(e => e.type === 'gotcha').length
-        }
+          knowledge: allEntries.filter((e) => e.type === 'knowledge').length,
+          memory: allEntries.filter((e) => e.type === 'memory').length,
+          adr: allEntries.filter((e) => e.type === 'adr').length,
+          gotcha: allEntries.filter((e) => e.type === 'gotcha').length,
+        },
       });
     } catch (error) {
       console.error('❌ Initial indexing failed:', error);
@@ -192,7 +189,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromKnowledgeCard(event.card);
         const operation: IndexUpdateOperation = {
           type: 'insert',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('knowledge_indexed', { cardId: event.card.frontmatter.id, operation: 'insert' });
@@ -208,7 +205,9 @@ export class IndexIntegrationService extends EventEmitter {
         const operation: IndexUpdateOperation = {
           type: 'update',
           entry,
-          previousVersion: event.previousCard ? await this.contentExtractor.extractFromKnowledgeCard(event.previousCard) : undefined
+          previousVersion: event.previousCard
+            ? await this.contentExtractor.extractFromKnowledgeCard(event.previousCard)
+            : undefined,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('knowledge_indexed', { cardId: event.card.frontmatter.id, operation: 'update' });
@@ -239,7 +238,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromMemoryEntry(event.jobMemory);
         const operation: IndexUpdateOperation = {
           type: 'insert',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('memory_indexed', { jobId: event.jobMemory.jobId, operation: 'insert' });
@@ -254,7 +253,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromMemoryEntry(event.jobMemory);
         const operation: IndexUpdateOperation = {
           type: 'update',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('memory_indexed', { jobId: event.jobMemory.jobId, operation: 'update' });
@@ -270,7 +269,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromMemoryEntry(event.jobMemory);
         const operation: IndexUpdateOperation = {
           type: 'update',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('memory_indexed', { jobId: event.jobMemory.jobId, operation: 'complete' });
@@ -290,7 +289,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromADR(event.adr);
         const operation: IndexUpdateOperation = {
           type: 'insert',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('adr_indexed', { adrId: event.adr.frontmatter.id, operation: 'insert' });
@@ -305,7 +304,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromADR(event.adr);
         const operation: IndexUpdateOperation = {
           type: 'update',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('adr_indexed', { adrId: event.adr.frontmatter.id, operation: 'update' });
@@ -325,7 +324,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromGotcha(event.gotcha);
         const operation: IndexUpdateOperation = {
           type: 'insert',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('gotcha_indexed', { gotchaId: event.gotcha.frontmatter.id, operation: 'insert' });
@@ -340,7 +339,7 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromGotcha(event.gotcha);
         const operation: IndexUpdateOperation = {
           type: 'update',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
         this.emit('gotcha_indexed', { gotchaId: event.gotcha.frontmatter.id, operation: 'update' });
@@ -356,10 +355,13 @@ export class IndexIntegrationService extends EventEmitter {
         const entry = await this.contentExtractor.extractFromGotcha(event.gotcha);
         const operation: IndexUpdateOperation = {
           type: 'update',
-          entry
+          entry,
         };
         await this.indexManager.updateIndex(operation);
-        this.emit('gotcha_indexed', { gotchaId: event.gotcha.frontmatter.id, operation: 'promote' });
+        this.emit('gotcha_indexed', {
+          gotchaId: event.gotcha.frontmatter.id,
+          operation: 'promote',
+        });
       } catch (error) {
         console.error('Failed to update promoted gotcha in index:', error);
         this.emit('indexing_error', { source: 'gotcha', operation: 'promote', error });
@@ -489,7 +491,7 @@ export class IndexIntegrationService extends EventEmitter {
               if (entry) {
                 operations.push({
                   type: change.type === 'created' ? 'insert' : 'update',
-                  entry
+                  entry,
                 });
               }
               break;
@@ -498,7 +500,7 @@ export class IndexIntegrationService extends EventEmitter {
               const entryId = this.generateEntryIdFromPath(change.path);
               operations.push({
                 type: 'delete',
-                entry: { id: entryId } as IndexEntry // Minimal entry for deletion
+                entry: { id: entryId } as IndexEntry, // Minimal entry for deletion
               });
               break;
           }
@@ -511,19 +513,21 @@ export class IndexIntegrationService extends EventEmitter {
         const batch: IndexBatch = {
           operations,
           timestamp: new Date(),
-          source: 'batch_update'
+          source: 'batch_update',
         };
 
         await this.indexManager.indexBatch(batch);
       }
 
       const duration = Date.now() - startTime;
-      console.log(`✅ Batch processing completed: ${operations.length} operations in ${duration}ms`);
+      console.log(
+        `✅ Batch processing completed: ${operations.length} operations in ${duration}ms`,
+      );
 
       this.emit('batch_processed', {
         changesCount: changes.length,
         operationsCount: operations.length,
-        duration
+        duration,
       });
     } catch (error) {
       console.error('❌ Batch processing failed:', error);
@@ -543,7 +547,7 @@ export class IndexIntegrationService extends EventEmitter {
     lastError?: Error;
   } {
     const connectedComponents: string[] = [];
-    
+
     if (this.knowledgeManager) connectedComponents.push('knowledge');
     if (this.memoryManager) connectedComponents.push('memory');
     if (this.adrManager) connectedComponents.push('adr');
@@ -551,7 +555,7 @@ export class IndexIntegrationService extends EventEmitter {
 
     return {
       isListening: this.isListening,
-      connectedComponents
+      connectedComponents,
     };
   }
 }
@@ -562,11 +566,11 @@ export class IndexIntegrationService extends EventEmitter {
 class SyncScheduler {
   // Handles scheduling of sync operations
   constructor() {}
-  
+
   schedule(operation: any, delay: number = 0): void {
     // Implementation would handle scheduling
   }
-  
+
   cancel(operationId: string): void {
     // Implementation would cancel scheduled operations
   }
@@ -574,19 +578,19 @@ class SyncScheduler {
 
 class ChangeBuffer {
   private buffer: any[] = [];
-  
+
   constructor() {}
-  
+
   add(change: any): void {
     this.buffer.push(change);
   }
-  
+
   flush(): any[] {
     const changes = [...this.buffer];
     this.buffer = [];
     return changes;
   }
-  
+
   size(): number {
     return this.buffer.length;
   }
@@ -594,20 +598,20 @@ class ChangeBuffer {
 
 class CrossReferenceTracker {
   private references = new Map<string, string[]>();
-  
+
   constructor() {}
-  
+
   addReference(fromId: string, toId: string): void {
     if (!this.references.has(fromId)) {
       this.references.set(fromId, []);
     }
     this.references.get(fromId)?.push(toId);
   }
-  
+
   getReferences(id: string): string[] {
     return this.references.get(id) || [];
   }
-  
+
   removeReference(fromId: string, toId?: string): void {
     if (toId) {
       const refs = this.references.get(fromId);
@@ -625,11 +629,11 @@ class CrossReferenceTracker {
 
 class ConflictResolver {
   constructor() {}
-  
+
   resolve(conflicts: any[]): any[] {
     // Simple resolution strategy - take the most recent
-    return conflicts.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    return conflicts.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
   }
 }
@@ -637,13 +641,13 @@ class ConflictResolver {
 class RetryQueue {
   private queue: any[] = [];
   private maxRetries = 3;
-  
+
   constructor() {}
-  
+
   add(operation: any, retryCount: number = 0): void {
     this.queue.push({ ...operation, retryCount });
   }
-  
+
   process(): Promise<void> {
     return Promise.all(
       this.queue.map(async (item) => {
@@ -657,12 +661,12 @@ class RetryQueue {
             console.error('Max retries exceeded for operation:', item, error);
           }
         }
-      })
+      }),
     ).then(() => {
       this.queue = [];
     });
   }
-  
+
   private async executeOperation(operation: any): Promise<void> {
     // Placeholder implementation
     return Promise.resolve();
@@ -672,25 +676,25 @@ class RetryQueue {
 class BatchProcessor {
   private batchSize = 100;
   private processingQueue: any[] = [];
-  
+
   constructor() {}
-  
+
   add(item: any): void {
     this.processingQueue.push(item);
-    
+
     if (this.processingQueue.length >= this.batchSize) {
       this.processBatch();
     }
   }
-  
+
   private processBatch(): void {
     if (this.processingQueue.length === 0) return;
-    
+
     const batch = this.processingQueue.splice(0, this.batchSize);
     // Process batch asynchronously
     this.processBatchAsync(batch);
   }
-  
+
   private async processBatchAsync(batch: any[]): Promise<void> {
     try {
       // Placeholder batch processing
@@ -699,7 +703,7 @@ class BatchProcessor {
       console.error('Batch processing failed:', error);
     }
   }
-  
+
   flush(): void {
     if (this.processingQueue.length > 0) {
       this.processBatch();
@@ -712,35 +716,36 @@ class IntegrationHealthMonitor {
     totalOperations: 0,
     successfulOperations: 0,
     failedOperations: 0,
-    averageLatency: 0
+    averageLatency: 0,
   };
-  
+
   constructor() {}
-  
+
   recordOperation(success: boolean, latency: number): void {
     this.healthStats.totalOperations++;
-    
+
     if (success) {
       this.healthStats.successfulOperations++;
     } else {
       this.healthStats.failedOperations++;
     }
-    
+
     // Update average latency
-    this.healthStats.averageLatency = 
-      (this.healthStats.averageLatency * (this.healthStats.totalOperations - 1) + latency) / 
+    this.healthStats.averageLatency =
+      (this.healthStats.averageLatency * (this.healthStats.totalOperations - 1) + latency) /
       this.healthStats.totalOperations;
   }
-  
+
   getHealth(): any {
-    const successRate = this.healthStats.totalOperations > 0 
-      ? (this.healthStats.successfulOperations / this.healthStats.totalOperations) * 100 
-      : 0;
-      
+    const successRate =
+      this.healthStats.totalOperations > 0
+        ? (this.healthStats.successfulOperations / this.healthStats.totalOperations) * 100
+        : 0;
+
     return {
       ...this.healthStats,
       successRate,
-      status: successRate > 95 ? 'healthy' : successRate > 80 ? 'degraded' : 'unhealthy'
+      status: successRate > 95 ? 'healthy' : successRate > 80 ? 'degraded' : 'unhealthy',
     };
   }
 }

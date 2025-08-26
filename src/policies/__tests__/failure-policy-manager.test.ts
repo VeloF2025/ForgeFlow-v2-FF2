@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi, MockedFunction } from 'vitest';
-import { FailurePolicyManager, FailurePolicy } from '../failure-policy-manager';
+import type { FailurePolicy } from '../failure-policy-manager';
+import { FailurePolicyManager } from '../failure-policy-manager';
 import { ErrorCategory, ErrorSeverity, ForgeFlowError } from '../../utils/errors';
 import * as fs from 'fs-extra';
 import * as yaml from 'yaml';
@@ -16,8 +17,8 @@ vi.mock('../../utils/enhanced-logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
-  }
+    debug: vi.fn(),
+  },
 }));
 
 const mockFs = fs as any;
@@ -30,10 +31,10 @@ describe('FailurePolicyManager', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Get fresh instance
     policyManager = FailurePolicyManager.getInstance();
-    
+
     // Setup mock policy
     mockPolicy = {
       id: 'test-policy',
@@ -45,8 +46,8 @@ describe('FailurePolicyManager', () => {
         {
           field: 'category',
           operator: 'equals',
-          value: 'github_integration'
-        }
+          value: 'github_integration',
+        },
       ],
       retryStrategy: {
         strategyType: 'exponential',
@@ -55,8 +56,8 @@ describe('FailurePolicyManager', () => {
         maxDelay: 10000,
         backoffMultiplier: 2,
         jitter: true,
-        jitterType: 'full'
-      }
+        jitterType: 'full',
+      },
     };
 
     // Setup fs mocks
@@ -64,7 +65,7 @@ describe('FailurePolicyManager', () => {
     mockFs.readFile = vi.fn();
     mockFs.writeFile = vi.fn();
     mockFs.ensureDir = vi.fn();
-    
+
     // Setup yaml mocks
     mockYaml.parse = vi.fn();
     mockYaml.stringify = vi.fn();
@@ -78,7 +79,7 @@ describe('FailurePolicyManager', () => {
     it('should load policies from YAML configuration', async () => {
       const mockConfig = {
         version: '1.0',
-        policies: [mockPolicy]
+        policies: [mockPolicy],
       };
 
       mockFs.pathExists.mockResolvedValue(true);
@@ -90,7 +91,7 @@ describe('FailurePolicyManager', () => {
       expect(mockFs.pathExists).toHaveBeenCalled();
       expect(mockFs.readFile).toHaveBeenCalled();
       expect(mockYaml.parse).toHaveBeenCalled();
-      
+
       const policies = policyManager.getAllPolicies();
       expect(policies).toHaveLength(1);
       expect(policies[0].id).toBe('test-policy');
@@ -107,7 +108,7 @@ describe('FailurePolicyManager', () => {
       expect(mockFs.pathExists).toHaveBeenCalled();
       expect(mockFs.ensureDir).toHaveBeenCalled();
       expect(mockFs.writeFile).toHaveBeenCalled();
-      
+
       const policies = policyManager.getAllPolicies();
       expect(policies.length).toBeGreaterThan(0);
     });
@@ -128,7 +129,7 @@ describe('FailurePolicyManager', () => {
       mockFs.ensureDir.mockResolvedValue(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
       mockYaml.stringify.mockReturnValue('mock yaml');
-      
+
       await policyManager.loadPolicies();
       await policyManager.addPolicy(mockPolicy);
     });
@@ -138,7 +139,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -147,7 +148,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -163,7 +164,7 @@ describe('FailurePolicyManager', () => {
         code: 'UNKNOWN_ERROR',
         message: 'Unknown error',
         category: ErrorCategory.INTERNAL_ERROR,
-        severity: ErrorSeverity.LOW
+        severity: ErrorSeverity.LOW,
       });
 
       const context = {
@@ -172,7 +173,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -186,7 +187,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -195,7 +196,7 @@ describe('FailurePolicyManager', () => {
         attempt: 5, // Exceeds maxAttempts
         totalAttempts: 5,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -212,9 +213,9 @@ describe('FailurePolicyManager', () => {
           {
             field: 'category',
             operator: 'equals',
-            value: 'github_integration'
-          }
-        ]
+            value: 'github_integration',
+          },
+        ],
       };
 
       await policyManager.addPolicy(policy);
@@ -223,7 +224,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -232,7 +233,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -246,9 +247,9 @@ describe('FailurePolicyManager', () => {
           {
             field: 'message',
             operator: 'contains',
-            value: 'timeout'
-          }
-        ]
+            value: 'timeout',
+          },
+        ],
       };
 
       await policyManager.addPolicy(policy);
@@ -260,7 +261,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -274,9 +275,9 @@ describe('FailurePolicyManager', () => {
           {
             field: 'category',
             operator: 'in',
-            value: ['github_integration', 'external_service']
-          }
-        ]
+            value: ['github_integration', 'external_service'],
+          },
+        ],
       };
 
       await policyManager.addPolicy(policy);
@@ -285,7 +286,7 @@ describe('FailurePolicyManager', () => {
         code: 'SERVICE_ERROR',
         message: 'Service unavailable',
         category: ErrorCategory.EXTERNAL_SERVICE,
-        severity: ErrorSeverity.HIGH
+        severity: ErrorSeverity.HIGH,
       });
 
       const context = {
@@ -294,7 +295,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -309,9 +310,9 @@ describe('FailurePolicyManager', () => {
             field: 'severity',
             operator: 'equals',
             value: 'critical',
-            negate: true
-          }
-        ]
+            negate: true,
+          },
+        ],
       };
 
       await policyManager.addPolicy(policy);
@@ -320,7 +321,7 @@ describe('FailurePolicyManager', () => {
         code: 'LOW_PRIORITY_ERROR',
         message: 'Non-critical error',
         category: ErrorCategory.INTERNAL_ERROR,
-        severity: ErrorSeverity.LOW
+        severity: ErrorSeverity.LOW,
       });
 
       const context = {
@@ -329,7 +330,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -342,13 +343,13 @@ describe('FailurePolicyManager', () => {
       const lowPriorityPolicy: FailurePolicy = {
         ...mockPolicy,
         id: 'low-priority',
-        priority: 1
+        priority: 1,
       };
 
       const highPriorityPolicy: FailurePolicy = {
         ...mockPolicy,
         id: 'high-priority',
-        priority: 10
+        priority: 10,
       };
 
       await policyManager.addPolicy(lowPriorityPolicy);
@@ -358,7 +359,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -367,7 +368,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       const result = await policyManager.executePolicy(context);
@@ -378,32 +379,32 @@ describe('FailurePolicyManager', () => {
   describe('Policy Management', () => {
     it('should add policy successfully', async () => {
       await policyManager.addPolicy(mockPolicy);
-      
+
       const policies = policyManager.getAllPolicies();
-      const addedPolicy = policies.find(p => p.id === 'test-policy');
+      const addedPolicy = policies.find((p) => p.id === 'test-policy');
       expect(addedPolicy).toBeDefined();
-      expect(addedPolicy!.name).toBe('Test Policy');
+      expect(addedPolicy.name).toBe('Test Policy');
     });
 
     it('should remove policy successfully', async () => {
       await policyManager.addPolicy(mockPolicy);
       const removed = policyManager.removePolicy('test-policy');
-      
+
       expect(removed).toBe(true);
-      
+
       const policies = policyManager.getAllPolicies();
-      const removedPolicy = policies.find(p => p.id === 'test-policy');
+      const removedPolicy = policies.find((p) => p.id === 'test-policy');
       expect(removedPolicy).toBeUndefined();
     });
 
     it('should toggle policy enabled state', async () => {
       await policyManager.addPolicy(mockPolicy);
-      
+
       const toggled = policyManager.togglePolicy('test-policy', false);
       expect(toggled).toBe(true);
-      
+
       const policy = policyManager.getPolicy('test-policy');
-      expect(policy!.enabled).toBe(false);
+      expect(policy.enabled).toBe(false);
     });
 
     it('should return false when trying to toggle non-existent policy', () => {
@@ -419,7 +420,7 @@ describe('FailurePolicyManager', () => {
 
     it('should record policy outcomes correctly', () => {
       policyManager.recordPolicyOutcome('test-operation', 'test-policy', true, 1000);
-      
+
       const metrics = policyManager.getPolicyMetrics();
       expect(metrics).toBeDefined();
       expect(typeof metrics.systemResilience).toBe('number');
@@ -431,7 +432,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -440,7 +441,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       await policyManager.executePolicy(context);
@@ -463,22 +464,22 @@ describe('FailurePolicyManager', () => {
           {
             field: 'category',
             operator: 'equals',
-            value: 'github_integration'
-          }
+            value: 'github_integration',
+          },
         ],
         retryStrategy: {
           strategyType: 'exponential',
           maxAttempts: 2,
           initialDelay: 500,
-          maxDelay: 5000
+          maxDelay: 5000,
         },
         recoveryActions: [
           {
             actionType: 'parent-action',
             parameters: { test: true },
-            priority: 5
-          }
-        ]
+            priority: 5,
+          },
+        ],
       };
 
       const childPolicy: FailurePolicy = {
@@ -491,15 +492,15 @@ describe('FailurePolicyManager', () => {
           {
             field: 'severity',
             operator: 'equals',
-            value: 'high'
-          }
+            value: 'high',
+          },
         ],
         retryStrategy: {
           strategyType: 'linear',
           maxAttempts: 3,
           initialDelay: 1000,
-          maxDelay: 10000
-        }
+          maxDelay: 10000,
+        },
       };
 
       await policyManager.addPolicy(parentPolicy);
@@ -507,8 +508,8 @@ describe('FailurePolicyManager', () => {
 
       const retrievedChild = policyManager.getPolicy('child-policy');
       expect(retrievedChild).toBeDefined();
-      expect(retrievedChild!.conditions).toHaveLength(2); // Parent + child conditions
-      expect(retrievedChild!.retryStrategy.maxAttempts).toBe(3); // Child overrides
+      expect(retrievedChild.conditions).toHaveLength(2); // Parent + child conditions
+      expect(retrievedChild.retryStrategy.maxAttempts).toBe(3); // Child overrides
     });
   });
 
@@ -524,15 +525,15 @@ describe('FailurePolicyManager', () => {
           {
             field: 'category',
             operator: 'equals',
-            value: 'github_integration'
-          }
+            value: 'github_integration',
+          },
         ],
         retryStrategy: {
           strategyType: 'exponential',
           maxAttempts: -1, // Invalid value
           initialDelay: 1000,
-          maxDelay: 10000
-        }
+          maxDelay: 10000,
+        },
       };
 
       await policyManager.addPolicy(problematicPolicy);
@@ -541,7 +542,7 @@ describe('FailurePolicyManager', () => {
         code: 'GITHUB_API_ERROR',
         message: 'API request failed',
         category: ErrorCategory.GITHUB_INTEGRATION,
-        severity: ErrorSeverity.MEDIUM
+        severity: ErrorSeverity.MEDIUM,
       });
 
       const context = {
@@ -550,7 +551,7 @@ describe('FailurePolicyManager', () => {
         attempt: 1,
         totalAttempts: 1,
         previousAttempts: [],
-        metadata: {}
+        metadata: {},
       };
 
       // Should not throw, but return default policy result
@@ -561,17 +562,17 @@ describe('FailurePolicyManager', () => {
 
     it('should validate policy configuration', async () => {
       const invalidPolicy: FailurePolicy = {
-        id: '',  // Invalid empty ID
+        id: '', // Invalid empty ID
         name: 'Invalid Policy',
         enabled: true,
-        priority: -1,  // Invalid priority
+        priority: -1, // Invalid priority
         conditions: [],
         retryStrategy: {
           strategyType: 'exponential',
-          maxAttempts: 0,  // Invalid max attempts
-          initialDelay: -100,  // Invalid delay
-          maxDelay: 10
-        }
+          maxAttempts: 0, // Invalid max attempts
+          initialDelay: -100, // Invalid delay
+          maxDelay: 10,
+        },
       };
 
       // This should handle the invalid policy gracefully
@@ -586,7 +587,7 @@ describe('FailurePolicyManager', () => {
       mockYaml.stringify.mockReturnValue('mock yaml content');
 
       await policyManager.addPolicy(mockPolicy);
-      
+
       // This would be called internally during policy creation
       expect(mockYaml.stringify).toHaveBeenCalled();
     });
@@ -594,7 +595,7 @@ describe('FailurePolicyManager', () => {
     it('should handle configuration save errors gracefully', async () => {
       mockFs.ensureDir.mockRejectedValue(new Error('Permission denied'));
       mockFs.writeFile.mockRejectedValue(new Error('Disk full'));
-      
+
       // Should not throw when saving fails
       await expect(policyManager.addPolicy(mockPolicy)).resolves.not.toThrow();
     });

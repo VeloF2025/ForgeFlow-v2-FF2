@@ -1,18 +1,17 @@
 // Search CLI Commands - Enhanced search interface for FF2
 // Provides powerful search capabilities through command line interface
 
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import chalk from 'chalk';
 import { table } from 'table';
 import inquirer from 'inquirer';
-import {
-  ForgeFlowIndexManager,
+import type {
   ForgeFlowSearchEngine,
   SearchQuery,
   SearchResults,
   IndexConfig,
-  IndexStats
 } from '../../indexing/index.js';
+import { ForgeFlowIndexManager, IndexStats } from '../../indexing/index.js';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
@@ -29,7 +28,7 @@ export class SearchCommands {
 
   private createDefaultConfig(): IndexConfig {
     const dataPath = process.env.FF2_DATA_PATH || join(process.cwd(), '.ff2', 'data');
-    
+
     return {
       databasePath: join(dataPath, 'index.db'),
       maxDatabaseSize: 500 * 1024 * 1024, // 500MB
@@ -48,7 +47,7 @@ export class SearchCommands {
       defaultLimit: 20,
       maxLimit: 1000,
       snippetLength: 150,
-      maxSnippets: 3
+      maxSnippets: 3,
     };
   }
 
@@ -105,9 +104,7 @@ export class SearchCommands {
       });
 
     // Index management commands
-    const indexCmd = program
-      .command('index')
-      .description('Manage search index');
+    const indexCmd = program.command('index').description('Manage search index');
 
     indexCmd
       .command('rebuild')
@@ -151,7 +148,7 @@ export class SearchCommands {
 
     try {
       console.log(chalk.blue(`🔍 Searching for: "${query}"`));
-      
+
       const searchQuery: SearchQuery = {
         query,
         type: options.type,
@@ -161,7 +158,7 @@ export class SearchCommands {
         includeSnippets: options.snippets !== false,
         highlightResults: options.highlight !== false,
         boostRecent: options.recent,
-        boostEffective: options.effective
+        boostEffective: options.effective,
       };
 
       const startTime = Date.now();
@@ -199,8 +196,8 @@ export class SearchCommands {
                 return 'Please enter a search query';
               }
               return true;
-            }
-          }
+            },
+          },
         ]);
 
         const query = answers.query.trim();
@@ -227,12 +224,12 @@ export class SearchCommands {
           query,
           limit: 10,
           includeSnippets: true,
-          highlightResults: true
+          highlightResults: true,
         });
         const searchTime = Date.now() - startTime;
 
         this.displaySearchResults(results, searchTime);
-        
+
         // Offer to view detailed result
         if (results.results.length > 0) {
           const viewAnswer = await inquirer.prompt([
@@ -244,9 +241,9 @@ export class SearchCommands {
                 'Continue searching',
                 'View detailed result',
                 'Find similar content',
-                'Exit'
-              ]
-            }
+                'Exit',
+              ],
+            },
           ]);
 
           if (viewAnswer.action === 'Exit') {
@@ -296,7 +293,7 @@ export class SearchCommands {
       query: searchTerms || value,
       limit: 10,
       includeSnippets: true,
-      highlightResults: true
+      highlightResults: true,
     };
 
     switch (cmd.toLowerCase()) {
@@ -307,7 +304,7 @@ export class SearchCommands {
         searchQuery.category = value;
         break;
       case 'tags':
-        searchQuery.tags = value.split(',').map(t => t.trim());
+        searchQuery.tags = value.split(',').map((t) => t.trim());
         break;
       case 'recent':
         searchQuery.boostRecent = true;
@@ -332,7 +329,7 @@ export class SearchCommands {
   private async handleDetailedView(results: SearchResults): Promise<void> {
     const choices = results.results.map((result, index) => ({
       name: `${index + 1}. ${result.entry.title} (Score: ${result.score.toFixed(2)})`,
-      value: index
+      value: index,
     }));
 
     const answer = await inquirer.prompt([
@@ -340,8 +337,8 @@ export class SearchCommands {
         type: 'list',
         name: 'resultIndex',
         message: 'Select result to view:',
-        choices
-      }
+        choices,
+      },
     ]);
 
     const selectedResult = results.results[answer.resultIndex];
@@ -351,7 +348,7 @@ export class SearchCommands {
   private async handleSimilarFromResults(results: SearchResults): Promise<void> {
     const choices = results.results.map((result, index) => ({
       name: `${index + 1}. ${result.entry.title}`,
-      value: result.entry.id
+      value: result.entry.id,
     }));
 
     const answer = await inquirer.prompt([
@@ -359,8 +356,8 @@ export class SearchCommands {
         type: 'list',
         name: 'entryId',
         message: 'Find content similar to:',
-        choices
-      }
+        choices,
+      },
     ]);
 
     await this.handleSimilarSearch(answer.entryId, { limit: '10' });
@@ -371,7 +368,7 @@ export class SearchCommands {
 
     try {
       console.log(chalk.blue(`🎯 Finding content similar to: ${entryId}`));
-      
+
       const startTime = Date.now();
       const results = await this.searchEngine.searchSimilar(entryId, parseInt(options.limit) || 10);
       const searchTime = Date.now() - startTime;
@@ -391,48 +388,60 @@ export class SearchCommands {
       const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000);
 
       console.log(chalk.blue(`📊 Search Analytics (Last ${days} days)`));
-      
+
       const analytics = await this.searchEngine.getAnalytics(startDate, endDate);
-      
+
       console.log();
       console.log(chalk.green('Query Statistics:'));
       console.log(`  Total queries: ${chalk.yellow(analytics.totalQueries.toLocaleString())}`);
       console.log(`  Unique queries: ${chalk.yellow(analytics.uniqueQueries.toLocaleString())}`);
-      console.log(`  Average query length: ${chalk.yellow(analytics.averageQueryLength.toFixed(1))} chars`);
-      console.log(`  Zero result queries: ${chalk.yellow(analytics.zeroResultQueries.toLocaleString())}`);
-      
+      console.log(
+        `  Average query length: ${chalk.yellow(analytics.averageQueryLength.toFixed(1))} chars`,
+      );
+      console.log(
+        `  Zero result queries: ${chalk.yellow(analytics.zeroResultQueries.toLocaleString())}`,
+      );
+
       console.log();
       console.log(chalk.green('Performance Metrics:'));
-      console.log(`  Average response time: ${chalk.yellow(analytics.averageResponseTime.toFixed(2))}ms`);
+      console.log(
+        `  Average response time: ${chalk.yellow(analytics.averageResponseTime.toFixed(2))}ms`,
+      );
       console.log(`  Cache hit rate: ${chalk.yellow(analytics.cacheMetrics.hitRate.toFixed(1))}%`);
-      console.log(`  Average results per query: ${chalk.yellow(analytics.averageResults.toFixed(1))}`);
-      
+      console.log(
+        `  Average results per query: ${chalk.yellow(analytics.averageResults.toFixed(1))}`,
+      );
+
       if (analytics.topQueries.length > 0) {
         console.log();
         console.log(chalk.green('Top Queries:'));
-        const topQueriesTable = analytics.topQueries.slice(0, 10).map(q => [
-          q.query,
-          q.count.toString(),
-          `${q.averageResults.toFixed(1)}`,
-          `${q.averageResponseTime.toFixed(0)}ms`,
-          `${(q.successRate * 100).toFixed(1)}%`
-        ]);
+        const topQueriesTable = analytics.topQueries
+          .slice(0, 10)
+          .map((q) => [
+            q.query,
+            q.count.toString(),
+            `${q.averageResults.toFixed(1)}`,
+            `${q.averageResponseTime.toFixed(0)}ms`,
+            `${(q.successRate * 100).toFixed(1)}%`,
+          ]);
 
-        console.log(table([
-          ['Query', 'Count', 'Avg Results', 'Avg Time', 'Success Rate'],
-          ...topQueriesTable
-        ], {
-          header: {
-            alignment: 'center',
-            content: chalk.bold('Top Search Queries')
-          }
-        }));
+        console.log(
+          table(
+            [['Query', 'Count', 'Avg Results', 'Avg Time', 'Success Rate'], ...topQueriesTable],
+            {
+              header: {
+                alignment: 'center',
+                content: chalk.bold('Top Search Queries'),
+              },
+            },
+          ),
+        );
       }
 
       if (analytics.slowQueries.length > 0) {
         console.log();
         console.log(chalk.yellow('Slow Queries (>1s):'));
-        analytics.slowQueries.slice(0, 5).forEach(sq => {
+        analytics.slowQueries.slice(0, 5).forEach((sq) => {
           console.log(`  ${chalk.red(sq.responseTime)}ms: "${sq.query}"`);
         });
       }
@@ -446,9 +455,9 @@ export class SearchCommands {
 
     try {
       console.log(chalk.yellow('🔄 Rebuilding search index...'));
-      
+
       const startTime = Date.now();
-      
+
       if (options.type) {
         await this.indexManager.rebuildPartialIndex(options.type);
         console.log(chalk.green(`✅ Rebuilt ${options.type} index in ${Date.now() - startTime}ms`));
@@ -458,7 +467,9 @@ export class SearchCommands {
       }
 
       const stats = await this.indexManager.getStats();
-      console.log(`📊 Index now contains ${chalk.yellow(stats.totalEntries.toLocaleString())} entries`);
+      console.log(
+        `📊 Index now contains ${chalk.yellow(stats.totalEntries.toLocaleString())} entries`,
+      );
     } catch (error) {
       console.error(chalk.red('❌ Index rebuild failed:'), error);
     }
@@ -469,12 +480,14 @@ export class SearchCommands {
 
     try {
       console.log(chalk.yellow('🧹 Optimizing search index...'));
-      
+
       const result = await this.indexManager.vacuum();
-      
+
       if (result.vacuumPerformed) {
         console.log(chalk.green('✅ Index optimization completed'));
-        console.log(`💾 Space reclaimed: ${chalk.yellow((result.spaceReclaimed / 1024 / 1024).toFixed(2))}MB`);
+        console.log(
+          `💾 Space reclaimed: ${chalk.yellow((result.spaceReclaimed / 1024 / 1024).toFixed(2))}MB`,
+        );
         console.log(`⏱️  Duration: ${chalk.yellow(result.duration)}ms`);
       } else {
         console.log(chalk.yellow('⚠️ Index optimization not needed'));
@@ -482,7 +495,7 @@ export class SearchCommands {
 
       if (result.errors.length > 0) {
         console.log(chalk.red('Errors encountered:'));
-        result.errors.forEach(error => console.log(`  ${error}`));
+        result.errors.forEach((error) => console.log(`  ${error}`));
       }
     } catch (error) {
       console.error(chalk.red('❌ Index vacuum failed:'), error);
@@ -494,22 +507,26 @@ export class SearchCommands {
 
     try {
       console.log(chalk.blue('📊 Search Index Status'));
-      
+
       const stats = await this.indexManager.getStats();
-      
+
       console.log();
       console.log(chalk.green('General Information:'));
       console.log(`  Total entries: ${chalk.yellow(stats.totalEntries.toLocaleString())}`);
-      console.log(`  Database size: ${chalk.yellow((stats.databaseSize / 1024 / 1024).toFixed(2))}MB`);
+      console.log(
+        `  Database size: ${chalk.yellow((stats.databaseSize / 1024 / 1024).toFixed(2))}MB`,
+      );
       console.log(`  Index size: ${chalk.yellow((stats.indexSize / 1024 / 1024).toFixed(2))}MB`);
       console.log(`  Last updated: ${chalk.yellow(stats.lastUpdated.toLocaleString())}`);
-      
+
       console.log();
       console.log(chalk.green('Performance Metrics:'));
       console.log(`  Average search time: ${chalk.yellow(stats.averageSearchTime.toFixed(2))}ms`);
-      console.log(`  Average index time: ${chalk.yellow(stats.averageIndexTime.toFixed(2))}ms per entry`);
+      console.log(
+        `  Average index time: ${chalk.yellow(stats.averageIndexTime.toFixed(2))}ms per entry`,
+      );
       console.log(`  Cache hit rate: ${chalk.yellow(stats.cacheHitRate.toFixed(1))}%`);
-      
+
       console.log();
       console.log(chalk.green('Content Breakdown:'));
       Object.entries(stats.typeBreakdown).forEach(([type, breakdown]) => {
@@ -517,11 +534,11 @@ export class SearchCommands {
           console.log(`  ${type}: ${chalk.yellow(breakdown.count.toLocaleString())} entries`);
         }
       });
-      
+
       console.log();
       console.log(chalk.green('Maintenance:'));
       console.log(`  Vacuum needed: ${stats.vacuumNeeded ? chalk.red('Yes') : chalk.green('No')}`);
-      
+
       if (stats.vacuumNeeded) {
         console.log(chalk.yellow('💡 Run "ff2 index vacuum" to optimize the database'));
       }
@@ -530,18 +547,22 @@ export class SearchCommands {
     }
   }
 
-  private displaySearchResults(results: SearchResults, searchTime: number, title = 'Search Results'): void {
+  private displaySearchResults(
+    results: SearchResults,
+    searchTime: number,
+    title = 'Search Results',
+  ): void {
     console.log();
     console.log(chalk.green(`📋 ${title}`));
     console.log(chalk.gray(`Found ${results.totalMatches} results in ${searchTime}ms`));
-    
+
     if (results.results.length === 0) {
       console.log(chalk.yellow('No results found.'));
-      
+
       if (results.suggestions.length > 0) {
         console.log();
         console.log(chalk.blue('💡 Did you mean:'));
-        results.suggestions.slice(0, 5).forEach(suggestion => {
+        results.suggestions.slice(0, 5).forEach((suggestion) => {
           console.log(`  ${chalk.cyan(suggestion)}`);
         });
       }
@@ -552,21 +573,26 @@ export class SearchCommands {
 
     results.results.forEach((result, index) => {
       const entry = result.entry;
-      
+
       console.log(chalk.bold(`${index + 1}. ${entry.title}`));
-      console.log(chalk.gray(`   Type: ${entry.type} | Score: ${result.score.toFixed(2)} | Path: ${entry.path}`));
-      
+      console.log(
+        chalk.gray(
+          `   Type: ${entry.type} | Score: ${result.score.toFixed(2)} | Path: ${entry.path}`,
+        ),
+      );
+
       if (entry.metadata.tags.length > 0) {
         console.log(chalk.blue(`   Tags: ${entry.metadata.tags.join(', ')}`));
       }
 
       if (result.contentSnippets.length > 0) {
         const snippet = result.contentSnippets[0];
-        const cleanHighlight = snippet.highlighted.replace(/<mark>/g, chalk.yellow(''))
+        const cleanHighlight = snippet.highlighted
+          .replace(/<mark>/g, chalk.yellow(''))
           .replace(/<\/mark>/g, chalk.reset(''));
         console.log(chalk.gray(`   ${cleanHighlight.substring(0, 120)}...`));
       }
-      
+
       console.log();
     });
 
@@ -576,17 +602,26 @@ export class SearchCommands {
     }
 
     // Show facets if available
-    if (results.facets && (results.facets.types.length > 0 || results.facets.categories.length > 0)) {
+    if (
+      results.facets &&
+      (results.facets.types.length > 0 || results.facets.categories.length > 0)
+    ) {
       console.log();
       console.log(chalk.blue('🏷️  Available Filters:'));
-      
+
       if (results.facets.types.length > 0) {
-        const types = results.facets.types.slice(0, 5).map(f => `${f.value} (${f.count})`).join(', ');
+        const types = results.facets.types
+          .slice(0, 5)
+          .map((f) => `${f.value} (${f.count})`)
+          .join(', ');
         console.log(chalk.gray(`   Types: ${types}`));
       }
-      
+
       if (results.facets.categories.length > 0) {
-        const categories = results.facets.categories.slice(0, 5).map(f => `${f.value} (${f.count})`).join(', ');
+        const categories = results.facets.categories
+          .slice(0, 5)
+          .map((f) => `${f.value} (${f.count})`)
+          .join(', ');
         console.log(chalk.gray(`   Categories: ${categories}`));
       }
     }
@@ -594,7 +629,7 @@ export class SearchCommands {
 
   private displayDetailedResult(result: any): void {
     const entry = result.entry;
-    
+
     console.log();
     console.log(chalk.bold.green(`📄 ${entry.title}`));
     console.log(chalk.gray(`ID: ${entry.id}`));
@@ -602,29 +637,32 @@ export class SearchCommands {
     console.log(chalk.gray(`Path: ${entry.path}`));
     console.log(chalk.gray(`Last Modified: ${entry.lastModified.toLocaleString()}`));
     console.log(chalk.gray(`Score: ${result.score.toFixed(2)}`));
-    
+
     if (entry.metadata.tags.length > 0) {
       console.log(chalk.blue(`Tags: ${entry.metadata.tags.join(', ')}`));
     }
-    
+
     if (entry.metadata.category) {
       console.log(chalk.blue(`Category: ${entry.metadata.category}`));
     }
-    
+
     console.log();
     console.log(chalk.bold('Content:'));
-    console.log(chalk.white(entry.content.substring(0, 500) + (entry.content.length > 500 ? '...' : '')));
-    
+    console.log(
+      chalk.white(entry.content.substring(0, 500) + (entry.content.length > 500 ? '...' : '')),
+    );
+
     if (result.contentSnippets.length > 0) {
       console.log();
       console.log(chalk.bold('Relevant Snippets:'));
       result.contentSnippets.forEach((snippet: any, index: number) => {
-        const cleanHighlight = snippet.highlighted.replace(/<mark>/g, chalk.yellow(''))
+        const cleanHighlight = snippet.highlighted
+          .replace(/<mark>/g, chalk.yellow(''))
           .replace(/<\/mark>/g, chalk.reset(''));
         console.log(`${index + 1}. ${cleanHighlight}`);
       });
     }
-    
+
     console.log();
   }
 

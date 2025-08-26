@@ -5,7 +5,8 @@ import { EventEmitter } from 'events';
 import { join, resolve } from 'path';
 import { readFile, writeFile, mkdir, access } from 'fs/promises';
 import { createHash, randomUUID } from 'crypto';
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
+import { spawn } from 'child_process';
 import { Worker, isMainThread, parentPort } from 'worker_threads';
 import type { Agent } from '../types';
 import { LogContext } from '@utils/logger';
@@ -157,7 +158,7 @@ export class PluginManager extends EventEmitter {
   private async loadPluginsFromPath(pluginPath: string): Promise<void> {
     try {
       const plugins = await this.loader.loadAgentsFromDirectory(pluginPath);
-      
+
       for (const plugin of plugins) {
         await this.registerPlugin(plugin);
       }
@@ -185,7 +186,9 @@ export class PluginManager extends EventEmitter {
       // 🟢 WORKING: Update dependency graph
       this.updateDependencyGraph(plugin);
 
-      this.logger.info(`Registered plugin: ${definition.name} (${definition.type}) v${definition.version}`);
+      this.logger.info(
+        `Registered plugin: ${definition.name} (${definition.type}) v${definition.version}`,
+      );
       this.emit('pluginRegistered', plugin);
     } catch (error) {
       this.logger.error(`Failed to register plugin: ${definition.type}`, error);
@@ -214,7 +217,9 @@ export class PluginManager extends EventEmitter {
     if (compatibility.nodeVersion) {
       const currentNodeVersion = process.version;
       if (!this.isVersionCompatible(currentNodeVersion, compatibility.nodeVersion)) {
-        throw new Error(`Plugin requires Node.js ${compatibility.nodeVersion}, got ${currentNodeVersion}`);
+        throw new Error(
+          `Plugin requires Node.js ${compatibility.nodeVersion}, got ${currentNodeVersion}`,
+        );
       }
     }
 
@@ -223,7 +228,9 @@ export class PluginManager extends EventEmitter {
       // TODO: Get actual ForgeFlow version
       const forgeflowVersion = '2.0.0';
       if (!this.isVersionCompatible(forgeflowVersion, compatibility.forgeflowVersion)) {
-        throw new Error(`Plugin requires ForgeFlow ${compatibility.forgeflowVersion}, got ${forgeflowVersion}`);
+        throw new Error(
+          `Plugin requires ForgeFlow ${compatibility.forgeflowVersion}, got ${forgeflowVersion}`,
+        );
       }
     }
   }
@@ -271,7 +278,7 @@ export class PluginManager extends EventEmitter {
   // 🟢 WORKING: Create agent instance with security sandbox
   async createSecureAgentInstance(
     agentType: string,
-    context: PluginExecutionContext
+    context: PluginExecutionContext,
   ): Promise<Agent | null> {
     const plugin = this.pluginCache.get(agentType);
     if (!plugin) {
@@ -307,10 +314,10 @@ export class PluginManager extends EventEmitter {
   private async createSandboxedAgent(
     plugin: CustomAgentPlugin,
     config: CustomAgentRuntimeConfig,
-    context: PluginExecutionContext
+    context: PluginExecutionContext,
   ): Promise<Agent | null> {
     const sandboxId = randomUUID();
-    
+
     try {
       // 🟢 WORKING: Create security sandbox
       const sandbox = await this.createSecuritySandbox(sandboxId, config, context);
@@ -328,7 +335,7 @@ export class PluginManager extends EventEmitter {
   private async createSecuritySandbox(
     sandboxId: string,
     config: CustomAgentRuntimeConfig,
-    context: PluginExecutionContext
+    context: PluginExecutionContext,
   ): Promise<SecuritySandbox> {
     const sandbox: SecuritySandbox = {
       id: sandboxId,
@@ -340,7 +347,7 @@ export class PluginManager extends EventEmitter {
 
     // 🟢 WORKING: Choose isolation method based on configuration
     const isolationLevel = this.config.isolation;
-    
+
     if (isolationLevel.enableSandbox) {
       if (config.isolation === 'container') {
         // 🟡 PARTIAL: Docker container isolation
@@ -357,10 +364,10 @@ export class PluginManager extends EventEmitter {
   // 🟢 WORKING: Create worker thread sandbox
   private async createWorkerSandbox(
     config: CustomAgentRuntimeConfig,
-    context: PluginExecutionContext
+    context: PluginExecutionContext,
   ): Promise<Worker> {
     const workerScript = resolve(__dirname, '../workers/sandbox-worker.js');
-    
+
     const worker = new Worker(workerScript, {
       workerData: {
         config,
@@ -390,7 +397,7 @@ export class PluginManager extends EventEmitter {
   // 🟡 PARTIAL: Create container sandbox
   private async createContainerSandbox(
     config: CustomAgentRuntimeConfig,
-    context: PluginExecutionContext
+    context: PluginExecutionContext,
   ): Promise<ChildProcess> {
     // TODO: Implement Docker container sandbox
     throw new Error('Container sandbox not yet implemented');
@@ -399,7 +406,7 @@ export class PluginManager extends EventEmitter {
   // 🟢 WORKING: Install NPM dependencies
   private async installNpmDependencies(
     plugin: CustomAgentPlugin,
-    dependencies: Record<string, string>
+    dependencies: Record<string, string>,
   ): Promise<void> {
     const pluginDir = resolve(plugin.sourcePath, '..');
     const packageJsonPath = join(pluginDir, 'package.json');
@@ -439,12 +446,12 @@ export class PluginManager extends EventEmitter {
   private async isToolAvailable(toolName: string, version?: string): Promise<boolean> {
     try {
       const result = await this.runCommand(toolName, ['--version'], { timeout: 5000 });
-      
+
       if (version) {
         // Simple version check - could be enhanced with semver
         return result.includes(version);
       }
-      
+
       return true;
     } catch {
       return false;
@@ -455,7 +462,7 @@ export class PluginManager extends EventEmitter {
   private async runCommand(
     command: string,
     args: string[],
-    options: { cwd?: string; timeout?: number } = {}
+    options: { cwd?: string; timeout?: number } = {},
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const child = spawn(command, args, {
@@ -481,7 +488,7 @@ export class PluginManager extends EventEmitter {
 
       child.on('close', (code) => {
         clearTimeout(timeout);
-        
+
         if (code === 0) {
           resolve(stdout);
         } else {
@@ -510,7 +517,7 @@ export class PluginManager extends EventEmitter {
     // 🟢 WORKING: Check sandbox health
     for (const [sandboxId, sandbox] of this.activeSandboxes) {
       const timeSinceActivity = now.getTime() - sandbox.lastActivity.getTime();
-      
+
       if (timeSinceActivity > staleThreshold) {
         this.logger.warning(`Cleaning up stale sandbox: ${sandboxId}`);
         await this.cleanupSandbox(sandboxId);
@@ -530,7 +537,7 @@ export class PluginManager extends EventEmitter {
       if (sandbox.worker) {
         await sandbox.worker.terminate();
       }
-      
+
       if (sandbox.process) {
         sandbox.process.kill('SIGTERM');
       }
@@ -551,7 +558,7 @@ export class PluginManager extends EventEmitter {
           const resourceUsage = await sandbox.worker.getHeapSnapshot();
           // TODO: Parse resource usage
         }
-        
+
         if (sandbox.process && sandbox.process.pid) {
           // Get process resource usage
           // TODO: Implement process resource monitoring
@@ -580,10 +587,14 @@ export class PluginManager extends EventEmitter {
   private getCurrentPlatform(): Platform {
     const platform = process.platform;
     switch (platform) {
-      case 'win32': return 'windows';
-      case 'darwin': return 'darwin';
-      case 'linux': return 'linux';
-      default: return 'linux';
+      case 'win32':
+        return 'windows';
+      case 'darwin':
+        return 'darwin';
+      case 'linux':
+        return 'linux';
+      default:
+        return 'linux';
     }
   }
 
@@ -591,22 +602,26 @@ export class PluginManager extends EventEmitter {
     // Simple version compatibility check - could be enhanced with semver library
     const currentVersion = current.replace(/^v/, '');
     const requiredVersion = required.replace(/^[~^]/, '');
-    
+
     return currentVersion >= requiredVersion;
   }
 
   private parseMemoryLimit(memoryStr: string): number {
     const match = memoryStr.match(/^(\d+)(KB|MB|GB)$/i);
     if (!match) return 512; // Default 512MB
-    
+
     const value = parseInt(match[1]);
     const unit = match[2].toUpperCase();
-    
+
     switch (unit) {
-      case 'KB': return Math.ceil(value / 1024);
-      case 'MB': return value;
-      case 'GB': return value * 1024;
-      default: return 512;
+      case 'KB':
+        return Math.ceil(value / 1024);
+      case 'MB':
+        return value;
+      case 'GB':
+        return value * 1024;
+      default:
+        return 512;
     }
   }
 
@@ -650,8 +665,8 @@ export class PluginManager extends EventEmitter {
     }
 
     // 🟢 WORKING: Cleanup all sandboxes
-    const cleanupPromises = Array.from(this.activeSandboxes.keys()).map(
-      sandboxId => this.cleanupSandbox(sandboxId)
+    const cleanupPromises = Array.from(this.activeSandboxes.keys()).map((sandboxId) =>
+      this.cleanupSandbox(sandboxId),
     );
     await Promise.allSettled(cleanupPromises);
 
@@ -684,7 +699,7 @@ class SandboxedAgentProxy extends EventEmitter implements Agent {
     this.definition = definition;
     this.sandbox = sandbox;
     this.logger = logger;
-    
+
     this.id = `${definition.type}-sandbox-${sandbox.id.slice(0, 8)}`;
     this.type = definition.type;
     this.capabilities = definition.capabilities;
@@ -716,7 +731,7 @@ class SandboxedAgentProxy extends EventEmitter implements Agent {
 
   private async executeInWorker(issueId: string, worktreeId: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const worker = this.sandbox.worker!;
+      const worker = this.sandbox.worker;
       const timeout = setTimeout(() => {
         reject(new Error('Worker execution timeout'));
       }, 300000); // 5 minute timeout
@@ -740,7 +755,7 @@ class SandboxedAgentProxy extends EventEmitter implements Agent {
       };
 
       worker.on('message', handleMessage);
-      
+
       worker.on('error', (error) => {
         clearTimeout(timeout);
         reject(error);

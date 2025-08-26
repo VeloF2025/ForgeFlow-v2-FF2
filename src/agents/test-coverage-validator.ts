@@ -3,7 +3,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { execa } from 'execa';
 import { globby } from 'globby';
-import { BrowserMCPTool, BrowserAction } from '../tools/browser-mcp-tool';
+import type { BrowserAction } from '../tools/browser-mcp-tool';
+import { BrowserMCPTool } from '../tools/browser-mcp-tool';
 import type { ToolExecutionContext } from '../types';
 
 interface CoverageReport {
@@ -862,15 +863,21 @@ test.describe('ForgeFlow API E2E', () => {
 
     try {
       // Test basic navigation and functionality
-      await this.browserTool.executeAction({
-        type: 'navigate',
-        url: 'http://localhost:3010',
-      }, context);
+      await this.browserTool.executeAction(
+        {
+          type: 'navigate',
+          url: 'http://localhost:3010',
+        },
+        context,
+      );
 
       // Take screenshot for baseline
-      const screenshotResult = await this.browserTool.executeAction({
-        type: 'screenshot',
-      }, context);
+      const screenshotResult = await this.browserTool.executeAction(
+        {
+          type: 'screenshot',
+        },
+        context,
+      );
 
       // Test user workflows
       const testWorkflows: Array<{ name: string; actions: BrowserAction[] }> = [
@@ -1105,7 +1112,6 @@ describe('Browser MCP E2E Tests', () => {
 
       await fs.writeFile(path.join(testDir, 'browser-mcp.test.ts'), testContent, 'utf8');
       this.logger.info('Browser MCP E2E test file created successfully');
-
     } catch (error) {
       this.logger.warning('Failed to create Browser MCP E2E tests', error);
     }

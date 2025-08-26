@@ -8,7 +8,7 @@ import {
   CircuitBreakerManager,
   CircuitBreakerConfig,
   circuitBreaker,
-  OperationResult
+  OperationResult,
 } from '../circuit-breaker';
 import { ForgeFlowError, ErrorCategory, ErrorSeverity } from '../../utils/errors';
 
@@ -18,8 +18,8 @@ vi.mock('../../utils/enhanced-logger', () => ({
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
-  }
+    debug: vi.fn(),
+  },
 }));
 
 describe('Circuit Breaker', () => {
@@ -40,7 +40,7 @@ describe('Circuit Breaker', () => {
         slowCallRateThreshold: 50,
         healthCheckInterval: 30000,
         enableHealthChecks: false,
-        adaptiveThresholds: false
+        adaptiveThresholds: false,
       };
 
       circuitBreaker = new CircuitBreaker('test-operation', config);
@@ -67,7 +67,7 @@ describe('Circuit Breaker', () => {
             success: false,
             duration: 1000,
             error: new Error('Test failure'),
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -91,7 +91,7 @@ describe('Circuit Breaker', () => {
         expect(cb.getMetrics().state).toBe('open');
 
         // Wait for timeout
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise((resolve) => setTimeout(resolve, 150));
 
         // Should allow execution (transitioning to half-open)
         expect(cb.canExecute()).toBe(true);
@@ -107,7 +107,7 @@ describe('Circuit Breaker', () => {
           circuitBreaker.recordResult({
             success: true,
             duration: 1000,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -122,7 +122,7 @@ describe('Circuit Breaker', () => {
           success: false,
           duration: 1000,
           error: new Error('Test failure'),
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         const metrics = circuitBreaker.getMetrics();
@@ -136,7 +136,7 @@ describe('Circuit Breaker', () => {
           success: false,
           duration: 1000,
           error: new Error('Test failure'),
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         const metrics = circuitBreaker.getMetrics();
@@ -148,7 +148,7 @@ describe('Circuit Breaker', () => {
         circuitBreaker.recordResult({
           success: true,
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         const metrics = circuitBreaker.getMetrics();
@@ -163,7 +163,7 @@ describe('Circuit Breaker', () => {
             success: false,
             duration: 1000,
             error: new Error('Test failure'),
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -171,7 +171,7 @@ describe('Circuit Breaker', () => {
           circuitBreaker.recordResult({
             success: true,
             duration: 1000,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -180,14 +180,14 @@ describe('Circuit Breaker', () => {
       });
 
       it('should calculate slow call rate correctly', () => {
-        const slowThreshold = config.slowCallDurationThreshold!;
-        
+        const slowThreshold = config.slowCallDurationThreshold;
+
         // Record 3 slow calls and 7 fast calls (30% slow rate)
         for (let i = 0; i < 3; i++) {
           circuitBreaker.recordResult({
             success: true,
             duration: slowThreshold + 1000,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -195,7 +195,7 @@ describe('Circuit Breaker', () => {
           circuitBreaker.recordResult({
             success: true,
             duration: slowThreshold - 1000,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -215,7 +215,7 @@ describe('Circuit Breaker', () => {
             success: i < 8, // 7 failures out of 15 = ~47% error rate
             duration: 1000,
             error: i >= 8 ? new Error('Test failure') : undefined,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -229,7 +229,7 @@ describe('Circuit Breaker', () => {
         const slowCallConfig = {
           ...config,
           slowCallRateThreshold: 40,
-          slowCallDurationThreshold: 3000
+          slowCallDurationThreshold: 3000,
         };
         const cb = new CircuitBreaker('slow-call-test', slowCallConfig);
 
@@ -238,7 +238,7 @@ describe('Circuit Breaker', () => {
           cb.recordResult({
             success: true,
             duration: i < 8 ? 5000 : 1000, // 8 slow calls out of 15 = ~53% slow rate
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -258,7 +258,7 @@ describe('Circuit Breaker', () => {
             success: false,
             duration: 1000,
             error: new Error('Test failure'),
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -281,7 +281,7 @@ describe('Circuit Breaker', () => {
           circuitBreaker.recordResult({
             success: true,
             duration: 1000,
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -305,13 +305,13 @@ describe('Circuit Breaker', () => {
         circuitBreaker.recordResult({
           success: true,
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         circuitBreaker.recordResult({
           success: true,
           duration: 2000,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         const metrics = circuitBreaker.getMetrics();
@@ -332,7 +332,7 @@ describe('Circuit Breaker', () => {
             success: false,
             duration: 1000,
             error: new Error('Test failure'),
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -364,7 +364,7 @@ describe('Circuit Breaker', () => {
           cb.recordResult({
             success: true,
             duration: 500, // Fast responses
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
 
@@ -381,7 +381,7 @@ describe('Circuit Breaker', () => {
         const invalidConfig = {
           ...config,
           failureThreshold: 0, // Invalid
-          timeout: 500 // Too short
+          timeout: 500, // Too short
         };
 
         expect(() => {
@@ -395,12 +395,12 @@ describe('Circuit Breaker', () => {
         const healthCheckConfig = {
           ...config,
           enableHealthChecks: true,
-          healthCheckInterval: 1000
+          healthCheckInterval: 1000,
         };
 
         const cb = new CircuitBreaker('health-test', healthCheckConfig);
         expect(cb).toBeDefined();
-        
+
         // Health checks would run in background
         cb.destroy();
       });
@@ -435,7 +435,7 @@ describe('Circuit Breaker', () => {
           enabled: true,
           failureThreshold: 10,
           successThreshold: 3,
-          timeout: 120000
+          timeout: 120000,
         };
 
         const circuit = manager.getCircuit('custom-operation', customConfig);
@@ -446,11 +446,8 @@ describe('Circuit Breaker', () => {
     describe('Operation Execution', () => {
       it('should execute operation successfully', async () => {
         const operation = vi.fn().mockResolvedValue('success');
-        
-        const result = await manager.executeWithCircuitBreaker(
-          'test-operation',
-          operation
-        );
+
+        const result = await manager.executeWithCircuitBreaker('test-operation', operation);
 
         expect(result).toBe('success');
         expect(operation).toHaveBeenCalledTimes(1);
@@ -458,7 +455,7 @@ describe('Circuit Breaker', () => {
 
       it('should record successful operation', async () => {
         const operation = vi.fn().mockResolvedValue('success');
-        
+
         await manager.executeWithCircuitBreaker('test-operation', operation);
 
         const metrics = manager.getAllMetrics();
@@ -467,9 +464,9 @@ describe('Circuit Breaker', () => {
 
       it('should record failed operation', async () => {
         const operation = vi.fn().mockRejectedValue(new Error('Operation failed'));
-        
+
         await expect(
-          manager.executeWithCircuitBreaker('test-operation', operation)
+          manager.executeWithCircuitBreaker('test-operation', operation),
         ).rejects.toThrow('Operation failed');
 
         const metrics = manager.getAllMetrics();
@@ -483,7 +480,7 @@ describe('Circuit Breaker', () => {
         const operation = vi.fn().mockResolvedValue('success');
 
         await expect(
-          manager.executeWithCircuitBreaker('test-operation', operation)
+          manager.executeWithCircuitBreaker('test-operation', operation),
         ).rejects.toThrow(ForgeFlowError);
 
         expect(operation).not.toHaveBeenCalled();
@@ -501,7 +498,7 @@ describe('Circuit Breaker', () => {
         circuit3.forceState('half-open', 'Test');
 
         const health = manager.getSystemHealth();
-        
+
         expect(health.totalCircuits).toBe(3);
         expect(health.closedCircuits).toBe(1);
         expect(health.openCircuits).toBe(1);
@@ -511,7 +508,7 @@ describe('Circuit Breaker', () => {
 
       it('should handle empty system health', () => {
         const health = manager.getSystemHealth();
-        
+
         expect(health.totalCircuits).toBe(0);
         expect(health.overallHealthScore).toBe(100);
       });
@@ -545,7 +542,7 @@ describe('Circuit Breaker', () => {
       it('should remove circuit', () => {
         manager.getCircuit('temp-operation');
         const removed = manager.removeCircuit('temp-operation');
-        
+
         expect(removed).toBe(true);
         expect(manager.getCircuitNames()).not.toContain('temp-operation');
       });
@@ -560,7 +557,7 @@ describe('Circuit Breaker', () => {
       it('should update default configuration', () => {
         const newDefaults = {
           failureThreshold: 10,
-          timeout: 120000
+          timeout: 120000,
         };
 
         manager.updateDefaultConfig(newDefaults);
@@ -588,18 +585,18 @@ describe('Circuit Breaker', () => {
         circuit1.recordResult({
           success: true,
           duration: 1000,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         circuit2.recordResult({
           success: false,
           duration: 2000,
           error: new Error('Test'),
-          timestamp: new Date()
+          timestamp: new Date(),
         });
 
         const allMetrics = manager.getAllMetrics();
-        
+
         expect(allMetrics['operation-1'].successes).toBe(1);
         expect(allMetrics['operation-2'].failures).toBe(1);
       });
@@ -617,7 +614,7 @@ describe('Circuit Breaker', () => {
 
       const service = new TestService();
       const result = await service.testMethod();
-      
+
       expect(result).toBe('success');
     });
 
@@ -636,11 +633,11 @@ describe('Circuit Breaker', () => {
       }
 
       const service = new TestService();
-      
+
       // First two calls should fail
       await expect(service.failingMethod()).rejects.toThrow('Method failure');
       await expect(service.failingMethod()).rejects.toThrow('Method failure');
-      
+
       // Circuit should be open now, but we can still call the method
       // The decorator implementation would determine the exact behavior
     });
@@ -659,41 +656,39 @@ describe('Circuit Breaker', () => {
 
     it('should handle high-frequency operations', async () => {
       const operation = vi.fn().mockResolvedValue('success');
-      
+
       const promises = [];
       for (let i = 0; i < 1000; i++) {
-        promises.push(
-          manager.executeWithCircuitBreaker(`operation-${i % 10}`, operation)
-        );
+        promises.push(manager.executeWithCircuitBreaker(`operation-${i % 10}`, operation));
       }
 
       const results = await Promise.allSettled(promises);
-      const successful = results.filter(r => r.status === 'fulfilled');
-      
+      const successful = results.filter((r) => r.status === 'fulfilled');
+
       expect(successful.length).toBe(1000);
       expect(operation).toHaveBeenCalledTimes(1000);
     });
 
     it('should handle concurrent state changes safely', async () => {
       const circuit = manager.getCircuit('concurrent-test');
-      
+
       const promises = [];
       for (let i = 0; i < 100; i++) {
         promises.push(
-          new Promise<void>(resolve => {
+          new Promise<void>((resolve) => {
             circuit.recordResult({
               success: i % 2 === 0,
               duration: 1000,
               error: i % 2 === 1 ? new Error('Test') : undefined,
-              timestamp: new Date()
+              timestamp: new Date(),
             });
             resolve();
-          })
+          }),
         );
       }
 
       await Promise.all(promises);
-      
+
       const metrics = circuit.getMetrics();
       expect(metrics.totalCalls).toBe(100);
       expect(metrics.successes + metrics.failures).toBe(100);
@@ -705,7 +700,7 @@ describe('Circuit Breaker', () => {
       }
 
       expect(manager.getCircuitNames()).toHaveLength(1000);
-      
+
       const health = manager.getSystemHealth();
       expect(health.totalCircuits).toBe(1000);
     });
@@ -717,11 +712,11 @@ describe('Circuit Breaker', () => {
         healthCheckInterval: 100,
         failureThreshold: 5,
         successThreshold: 2,
-        timeout: 60000
+        timeout: 60000,
       });
 
       expect(circuit).toBeDefined();
-      
+
       // Destroy should cleanup health check timers
       expect(() => manager.destroy()).not.toThrow();
     });

@@ -1,7 +1,7 @@
 // Enhanced CLI Commands - Foundation Layer Integration
 // Provides CLI access to Knowledge Management and Memory Layer functionality
 
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import chalk from 'chalk';
 import { table } from 'table';
 import inquirer from 'inquirer';
@@ -9,17 +9,10 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 // Import Foundation Layer components
-import { 
-  MemoryManager, 
-  createMemoryLayer, 
-  defaultMemoryConfig, 
-  developmentMemoryConfig 
-} from '../memory';
-import { 
-  KnowledgeManager, 
-  initializeKnowledgeSystem, 
-  createKnowledgeConfig 
-} from '../knowledge';
+import type { MemoryManager } from '../memory';
+import { createMemoryLayer, defaultMemoryConfig, developmentMemoryConfig } from '../memory';
+import type { KnowledgeManager } from '../knowledge';
+import { initializeKnowledgeSystem, createKnowledgeConfig } from '../knowledge';
 import { logger } from '../utils/logger';
 
 // Global instances (lazy-loaded)
@@ -35,10 +28,16 @@ export async function areEnhancedCommandsAvailable(): Promise<boolean> {
     // Check if configuration directories exist
     const memoryPath = path.resolve('.ff2/memory');
     const knowledgePath = path.resolve('.ff2/knowledge');
-    
+
     const [memoryExists, knowledgeExists] = await Promise.all([
-      fs.access(memoryPath).then(() => true).catch(() => false),
-      fs.access(knowledgePath).then(() => true).catch(() => false)
+      fs
+        .access(memoryPath)
+        .then(() => true)
+        .catch(() => false),
+      fs
+        .access(knowledgePath)
+        .then(() => true)
+        .catch(() => false),
     ]);
 
     return memoryExists || knowledgeExists;
@@ -60,7 +59,7 @@ async function initializeFoundationLayer(): Promise<void> {
 
     // Determine environment
     const isDevelopment = process.env.NODE_ENV === 'development';
-    
+
     // Initialize Knowledge Management System
     const knowledgeConfig = createKnowledgeConfig('.ff2/knowledge');
     knowledgeManager = await initializeKnowledgeSystem(knowledgeConfig);
@@ -72,7 +71,9 @@ async function initializeFoundationLayer(): Promise<void> {
     logger.info('Foundation Layer initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize Foundation Layer:', error);
-    throw new Error(`Foundation Layer initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Foundation Layer initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -156,7 +157,10 @@ export function addEnhancedCommands(program: Command): void {
           ['Reuse Score', `${(analytics.reuseScore * 100).toFixed(1)}%`],
           ['Innovation Score', `${(analytics.innovationScore * 100).toFixed(1)}%`],
           ['Avg Decision Time', `${analytics.efficiencyMetrics.decisionTime.toFixed(0)}min`],
-          ['Context Retrieval Time', `${analytics.efficiencyMetrics.contextRetrievalTime.toFixed(0)}s`]
+          [
+            'Context Retrieval Time',
+            `${analytics.efficiencyMetrics.contextRetrievalTime.toFixed(0)}s`,
+          ],
         ];
 
         console.log('\n' + table(analyticsTable));
@@ -164,7 +168,9 @@ export function addEnhancedCommands(program: Command): void {
         if (analytics.patternMatches.length > 0) {
           console.log(chalk.cyan('\nIdentified Patterns:'));
           analytics.patternMatches.forEach((pattern, index) => {
-            console.log(`${index + 1}. ${pattern.patternType} [${pattern.patternId}] (confidence: ${(pattern.confidence * 100).toFixed(1)}%)`);
+            console.log(
+              `${index + 1}. ${pattern.patternType} [${pattern.patternId}] (confidence: ${(pattern.confidence * 100).toFixed(1)}%)`,
+            );
           });
         }
       } catch (error) {
@@ -199,16 +205,16 @@ export function addEnhancedCommands(program: Command): void {
 
         const jobTable = [
           ['Job ID', 'Issue ID', 'Session ID', 'Status', 'Created', 'Duration'],
-          ...jobs.map(job => [
+          ...jobs.map((job) => [
             job.jobId.substring(0, 12) + '...',
             job.issueId,
             job.sessionId.substring(0, 12) + '...',
             job.status,
             job.createdAt.toISOString().split('T')[0],
-            job.completedAt 
+            job.completedAt
               ? `${Math.floor((new Date(job.completedAt).getTime() - new Date(job.createdAt).getTime()) / 1000 / 60)}min`
-              : 'N/A'
-          ])
+              : 'N/A',
+          ]),
         ];
 
         console.log('\n' + table(jobTable));
@@ -237,7 +243,7 @@ export function addEnhancedCommands(program: Command): void {
             type: 'input',
             name: 'title',
             message: 'Knowledge card title:',
-            validate: input => input.trim() !== '' || 'Title is required'
+            validate: (input) => input.trim() !== '' || 'Title is required',
           },
           {
             type: 'list',
@@ -253,40 +259,44 @@ export function addEnhancedCommands(program: Command): void {
               'debugging',
               'best-practice',
               'pattern',
-              'other'
-            ]
+              'other',
+            ],
           },
           {
             type: 'list',
             name: 'type',
             message: 'Type:',
-            choices: ['pattern', 'solution', 'best-practice', 'gotcha', 'decision']
+            choices: ['pattern', 'solution', 'best-practice', 'gotcha', 'decision'],
           },
           {
             type: 'editor',
             name: 'content',
-            message: 'Content (markdown supported):'
+            message: 'Content (markdown supported):',
           },
           {
             type: 'input',
             name: 'tags',
             message: 'Tags (comma-separated):',
-            filter: (input: string) => input.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+            filter: (input: string) =>
+              input
+                .split(',')
+                .map((tag) => tag.trim())
+                .filter((tag) => tag !== ''),
           },
           {
             type: 'number',
             name: 'effectiveness',
             message: 'Effectiveness score (0.0-1.0):',
             default: 0.8,
-            validate: input => (input >= 0 && input <= 1) || 'Must be between 0.0 and 1.0'
+            validate: (input) => (input >= 0 && input <= 1) || 'Must be between 0.0 and 1.0',
           },
           {
             type: 'list',
             name: 'priority',
             message: 'Priority:',
             choices: ['low', 'medium', 'high', 'critical'],
-            default: 'medium'
-          }
+            default: 'medium',
+          },
         ]);
 
         const card = await knowledgeManager.createCard({
@@ -301,8 +311,8 @@ export function addEnhancedCommands(program: Command): void {
             scope: 'project',
             agentTypes: [],
             relatedIssues: [],
-            outcomes: []
-          }
+            outcomes: [],
+          },
         });
 
         console.log(chalk.green('✓ Knowledge card created successfully'));
@@ -328,7 +338,7 @@ export function addEnhancedCommands(program: Command): void {
 
         const searchOptions: any = {
           query,
-          limit: parseInt(options.limit)
+          limit: parseInt(options.limit),
         };
 
         if (options.category) {
@@ -341,14 +351,15 @@ export function addEnhancedCommands(program: Command): void {
 
         const results = await knowledgeManager.searchCards(searchOptions);
 
-        if (results.cards.length === 0) {
+        if (results.length === 0) {
           console.log(chalk.yellow('No knowledge cards found'));
           return;
         }
 
-        console.log(chalk.cyan(`Found ${results.cards.length} knowledge card(s):\n`));
+        console.log(chalk.cyan(`Found ${results.length} knowledge card(s):\n`));
 
-        results.cards.forEach((card, index) => {
+        results.forEach((result, index) => {
+          const card = result.card;
           console.log(chalk.bold(`${index + 1}. ${card.title}`));
           console.log(`   ID: ${card.id}`);
           console.log(`   Category: ${card.category} | Type: ${card.type}`);
@@ -384,7 +395,7 @@ export function addEnhancedCommands(program: Command): void {
         console.log(`Category: ${card.category}`);
         console.log(`Type: ${card.type}`);
         console.log(`Effectiveness: ${(card.effectiveness * 100).toFixed(1)}%`);
-        console.log(`Applicability: ${(card.applicabilityScore * 100).toFixed(1)}%`);
+        console.log(`Last Updated: ${card.updatedAt.toISOString()}`);
         console.log(`Usage Count: ${card.usageCount}`);
         console.log(`Created: ${card.createdAt.toISOString()}`);
         console.log(`Last Used: ${card.lastUsed.toISOString()}`);
@@ -409,28 +420,23 @@ export function addEnhancedCommands(program: Command): void {
 
         const statsTable = [
           ['Category', 'Count'],
-          ['Total Cards', stats.cards.total.toString()],
-          ['Active Cards', stats.cards.active.toString()],
-          ['Total Gotchas', stats.gotchas.total.toString()],
-          ['Resolved Gotchas', stats.gotchas.resolved.toString()],
-          ['Total ADRs', stats.adrs.total.toString()],
-          ['Storage Size', `${(stats.storageSize / 1024 / 1024).toFixed(2)} MB`]
+          ['Total Cards', stats.totalCards.toString()],
+          ['Total Gotchas', stats.totalGotchas.toString()],
+          ['Promoted Gotchas', stats.promotedGotchas.toString()],
+          ['Total ADRs', stats.totalADRs.toString()],
+          ['Average Effectiveness', `${(stats.averageEffectiveness * 100).toFixed(1)}%`],
         ];
 
         console.log('\n' + table(statsTable));
 
-        if (stats.topCategories.length > 0) {
-          console.log(chalk.cyan('\nTop Categories:'));
-          stats.topCategories.forEach((cat, index) => {
-            console.log(`${index + 1}. ${cat.name}: ${cat.count} cards`);
-          });
-        }
-
-        if (stats.recentActivity.length > 0) {
-          console.log(chalk.cyan('\nRecent Activity:'));
-          stats.recentActivity.slice(0, 5).forEach((activity, index) => {
-            console.log(`${index + 1}. ${activity.type}: ${activity.description} (${activity.timestamp.toISOString().split('T')[0]})`);
-          });
+        if (Object.keys(stats.cardsByCategory).length > 0) {
+          console.log(chalk.cyan('\nCards by Category:'));
+          Object.entries(stats.cardsByCategory)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .forEach(([category, count], index) => {
+              console.log(`${index + 1}. ${category}: ${count} cards`);
+            });
         }
       } catch (error) {
         console.error(chalk.red('Failed to get knowledge stats:'), error);
@@ -439,9 +445,7 @@ export function addEnhancedCommands(program: Command): void {
     });
 
   // Learning Commands (Integration workflows)
-  const learnCmd = program
-    .command('learn')
-    .description('Learning and knowledge capture workflows');
+  const learnCmd = program.command('learn').description('Learning and knowledge capture workflows');
 
   learnCmd
     .command('gotcha <description>')
@@ -461,18 +465,20 @@ export function addEnhancedCommands(program: Command): void {
           category: options.category,
           solution: options.solution,
           preventionSteps: [],
-          occurrences: [{
-            issueId: 'cli-recorded',
-            agentType: 'cli-user',
-            context: 'CLI manual recording',
-            timestamp: new Date(),
-            resolved: !!options.solution,
-            resolutionTime: options.solution ? 0 : undefined
-          }]
+          occurrences: [
+            {
+              issueId: 'cli-recorded',
+              agentType: 'cli-user',
+              context: 'CLI manual recording',
+              timestamp: new Date(),
+              resolved: !!options.solution,
+              resolutionTime: options.solution ? 0 : undefined,
+            },
+          ],
         };
 
         await knowledgeManager.recordGotcha(gotchaPattern);
-        
+
         console.log(chalk.green('✓ Gotcha pattern recorded successfully'));
         console.log(`Description: ${description}`);
         console.log(`Severity: ${options.severity}`);
@@ -501,7 +507,7 @@ export function addEnhancedCommands(program: Command): void {
 
         // Test 2: Test Knowledge-Memory integration
         console.log('2. Testing Knowledge-Memory integration...');
-        const testCard = await knowledgeManager!.createCard({
+        const testCard = await knowledgeManager.createCard({
           title: 'Integration Test Card',
           category: 'testing',
           type: 'pattern',
@@ -513,35 +519,38 @@ export function addEnhancedCommands(program: Command): void {
             scope: 'project',
             agentTypes: [],
             relatedIssues: [],
-            outcomes: []
-          }
+            outcomes: [],
+          },
         });
-        
-        const testJob = await memoryManager!.initializeJobMemory('test-integration', 'validation-session');
-        
+
+        const testJob = await memoryManager.initializeJobMemory(
+          'test-integration',
+          'validation-session',
+        );
+
         // Record context referencing the knowledge card
-        await memoryManager!.recordContext(testJob.jobId, {
+        await memoryManager.recordContext(testJob.jobId, {
           agentType: 'integration-validator',
-          type: 'knowledge-card',
+          type: 'knowledge-retrieval',
           source: `knowledge:${testCard.id}`,
           content: 'Testing knowledge-memory integration',
-          relevanceScore: 0.9
+          relevanceScore: 0.9,
         });
-        
+
         console.log(chalk.green('   ✓ Knowledge-Memory integration working'));
 
         // Test 3: Test performance targets
         console.log('3. Testing performance targets...');
         const perfStart = Date.now();
-        
-        const searchResults = await knowledgeManager!.searchCards({
-          query: 'integration',
-          limit: 5
+
+        const searchResults = await knowledgeManager.searchCards({
+          text: 'integration',
+          limit: 5,
         });
-        
-        const analytics = await memoryManager!.calculateJobAnalytics(testJob.jobId);
+
+        const analytics = await memoryManager.calculateJobAnalytics(testJob.jobId);
         const perfDuration = Date.now() - perfStart;
-        
+
         if (perfDuration < 500) {
           console.log(chalk.green(`   ✓ Performance targets met (${perfDuration}ms)`));
         } else {
@@ -549,9 +558,11 @@ export function addEnhancedCommands(program: Command): void {
         }
 
         // Cleanup test data
-        await memoryManager!.archiveJobMemory(testJob.jobId);
+        await memoryManager.archiveJobMemory(testJob.jobId);
 
-        console.log(chalk.green('\n✓ Foundation Layer integration validation completed successfully!'));
+        console.log(
+          chalk.green('\n✓ Foundation Layer integration validation completed successfully!'),
+        );
         console.log('Ready for Phase 2 Intelligence Layer development.');
       } catch (error) {
         console.error(chalk.red('Foundation Layer integration validation failed:'), error);
@@ -566,25 +577,25 @@ export function addEnhancedCommands(program: Command): void {
 export function showEnhancedCommandsHelp(): void {
   console.log(chalk.cyan('Enhanced Foundation Layer Commands:'));
   console.log();
-  
+
   console.log(chalk.bold('Memory Layer Commands:'));
   console.log('  memory init <issueId> <sessionId>  Initialize job memory');
   console.log('  memory get <jobId>                 Get job memory details');
   console.log('  memory analytics <jobId>           Get job analytics');
   console.log('  memory list [--issue|--agent]      List job memories');
   console.log();
-  
+
   console.log(chalk.bold('Knowledge Management Commands:'));
   console.log('  knowledge create                   Create knowledge card');
   console.log('  knowledge search <query>           Search knowledge cards');
   console.log('  knowledge get <cardId>             Get knowledge card details');
   console.log('  knowledge stats                    Show knowledge statistics');
   console.log();
-  
+
   console.log(chalk.bold('Learning Commands:'));
   console.log('  learn gotcha <description>         Record gotcha pattern');
   console.log();
-  
+
   console.log(chalk.bold('Validation Commands:'));
   console.log('  validate-integration               Validate Foundation Layer integration');
   console.log();

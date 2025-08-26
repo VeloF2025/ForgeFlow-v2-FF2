@@ -3,20 +3,15 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { 
-  ArchitectureDecisionRecord, 
-  KnowledgeConfig 
-} from '../types';
-import { 
-  ADRFile, 
-  FileOperationResult 
-} from './types';
+import { EventEmitter } from 'events';
+import type { ArchitectureDecisionRecord, KnowledgeConfig } from '../types';
+import { ADRFile, FileOperationResult } from './types';
 import { logger } from '../utils/logger';
 import YAML from 'yaml';
 
 /**
  * ADR Manager Implementation
- * 
+ *
  * Provides comprehensive ADR lifecycle management:
  * - ADR creation with standardized templates
  * - Status transitions (proposed → accepted → deprecated)
@@ -24,16 +19,17 @@ import YAML from 'yaml';
  * - Decision impact assessment
  * - Stakeholder and decider management
  * - Full audit trail preservation
- * 
+ *
  * Performance Target: <75ms per operation
  */
-export class ADRManager {
+export class ADRManager extends EventEmitter {
   private config: KnowledgeConfig;
   private initialized = false;
   private adrIndex: Map<string, ArchitectureDecisionRecord> = new Map();
   private adrCounter = 0; // For sequential numbering
 
   constructor(config: KnowledgeConfig) {
+    super();
     this.config = config;
   }
 
@@ -47,13 +43,13 @@ export class ADRManager {
     try {
       // Ensure ADR directory exists
       await this.ensureADRDirectory();
-      
+
       // Load existing ADRs
       await this.loadExistingADRs();
-      
+
       // Initialize counter from existing ADRs
       this.initializeCounter();
-      
+
       this.initialized = true;
       logger.debug('ADR manager initialized successfully');
     } catch (error) {
@@ -68,16 +64,16 @@ export class ADRManager {
    * @returns Promise resolving to created ADR with generated fields
    */
   async createADR(
-    adr: Omit<ArchitectureDecisionRecord, 'id' | 'date'>
+    adr: Omit<ArchitectureDecisionRecord, 'id' | 'date'>,
   ): Promise<ArchitectureDecisionRecord> {
     this.ensureInitialized();
-    
+
     try {
       const newADR: ArchitectureDecisionRecord = {
         ...adr,
         id: this.generateADRId(),
         date: new Date(),
-        status: adr.status || 'proposed' // Default to proposed if not specified
+        status: adr.status || 'proposed', // Default to proposed if not specified
       };
 
       // Validate ADR structure
@@ -90,15 +86,17 @@ export class ADRManager {
 
       // Save ADR to file
       await this.saveADR(newADR);
-      
+
       // Update index
       this.adrIndex.set(newADR.id, newADR);
-      
+
       logger.info(`Created ADR ${newADR.id}: ${newADR.title}`);
       return newADR;
     } catch (error) {
       logger.error('Failed to create ADR:', error);
-      throw new Error(`Failed to create ADR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create ADR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -108,9 +106,12 @@ export class ADRManager {
    * @param updates Partial ADR updates
    * @returns Promise resolving to updated ADR
    */
-  async updateADR(id: string, updates: Partial<ArchitectureDecisionRecord>): Promise<ArchitectureDecisionRecord> {
+  async updateADR(
+    id: string,
+    updates: Partial<ArchitectureDecisionRecord>,
+  ): Promise<ArchitectureDecisionRecord> {
     this.ensureInitialized();
-    
+
     try {
       const existingADR = await this.getADR(id);
       if (!existingADR) {
@@ -126,7 +127,7 @@ export class ADRManager {
         ...existingADR,
         ...updates,
         id, // Ensure ID cannot be changed
-        date: existingADR.date // Preserve original date
+        date: existingADR.date, // Preserve original date
       };
 
       // Validate updated ADR
@@ -139,15 +140,17 @@ export class ADRManager {
 
       // Save updated ADR
       await this.saveADR(updatedADR);
-      
+
       // Update index
       this.adrIndex.set(id, updatedADR);
-      
+
       logger.info(`Updated ADR ${id}: status=${updatedADR.status}`);
       return updatedADR;
     } catch (error) {
       logger.error(`Failed to update ADR ${id}:`, error);
-      throw new Error(`Failed to update ADR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to update ADR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -158,7 +161,7 @@ export class ADRManager {
    */
   async getADR(id: string): Promise<ArchitectureDecisionRecord | null> {
     this.ensureInitialized();
-    
+
     try {
       const adr = this.adrIndex.get(id);
       if (adr) {
@@ -181,7 +184,9 @@ export class ADRManager {
       return null;
     } catch (error) {
       logger.error(`Failed to get ADR ${id}:`, error);
-      throw new Error(`Failed to get ADR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get ADR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -190,7 +195,7 @@ export class ADRManager {
    * @param filters Optional filters to apply
    * @returns Promise resolving to filtered list of ADRs
    */
-  async listADRs(filters?: { 
+  async listADRs(filters?: {
     status?: ArchitectureDecisionRecord['status'][];
     tags?: string[];
     complexity?: ArchitectureDecisionRecord['metadata']['complexity'][];
@@ -198,45 +203,43 @@ export class ADRManager {
     deciders?: string[];
   }): Promise<ArchitectureDecisionRecord[]> {
     this.ensureInitialized();
-    
+
     try {
       let adrs = Array.from(this.adrIndex.values());
 
       if (filters) {
         // Apply status filter
         if (filters.status && filters.status.length > 0) {
-          adrs = adrs.filter(adr => filters.status!.includes(adr.status));
+          adrs = adrs.filter((adr) => filters.status.includes(adr.status));
         }
 
         // Apply tags filter
         if (filters.tags && filters.tags.length > 0) {
-          adrs = adrs.filter(adr => 
-            filters.tags!.some(tag => 
-              adr.tags.some(adrTag => 
-                adrTag.toLowerCase().includes(tag.toLowerCase())
-              )
-            )
+          adrs = adrs.filter((adr) =>
+            filters.tags.some((tag) =>
+              adr.tags.some((adrTag) => adrTag.toLowerCase().includes(tag.toLowerCase())),
+            ),
           );
         }
 
         // Apply complexity filter
         if (filters.complexity && filters.complexity.length > 0) {
-          adrs = adrs.filter(adr => filters.complexity!.includes(adr.metadata.complexity));
+          adrs = adrs.filter((adr) => filters.complexity.includes(adr.metadata.complexity));
         }
 
         // Apply impact filter
         if (filters.impact && filters.impact.length > 0) {
-          adrs = adrs.filter(adr => filters.impact!.includes(adr.metadata.impact));
+          adrs = adrs.filter((adr) => filters.impact.includes(adr.metadata.impact));
         }
 
         // Apply deciders filter
         if (filters.deciders && filters.deciders.length > 0) {
-          adrs = adrs.filter(adr => 
-            filters.deciders!.some(decider => 
-              adr.deciders.some(adrDecider => 
-                adrDecider.toLowerCase().includes(decider.toLowerCase())
-              )
-            )
+          adrs = adrs.filter((adr) =>
+            filters.deciders.some((decider) =>
+              adr.deciders.some((adrDecider) =>
+                adrDecider.toLowerCase().includes(decider.toLowerCase()),
+              ),
+            ),
           );
         }
       }
@@ -244,10 +247,12 @@ export class ADRManager {
       // Sort by date (newest first)
       adrs.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-      return adrs.map(adr => ({ ...adr })); // Return copies
+      return adrs.map((adr) => ({ ...adr })); // Return copies
     } catch (error) {
       logger.error('Failed to list ADRs:', error);
-      throw new Error(`Failed to list ADRs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to list ADRs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -263,14 +268,14 @@ export class ADRManager {
     recent: number; // ADRs created in last 30 days
   }> {
     this.ensureInitialized();
-    
+
     try {
       const stats = {
         total: 0,
         byStatus: {} as Record<ArchitectureDecisionRecord['status'], number>,
         byComplexity: {} as Record<string, number>,
         byImpact: {} as Record<string, number>,
-        recent: 0
+        recent: 0,
       };
 
       const thirtyDaysAgo = new Date();
@@ -283,7 +288,8 @@ export class ADRManager {
         stats.byStatus[adr.status] = (stats.byStatus[adr.status] || 0) + 1;
 
         // Count by complexity
-        stats.byComplexity[adr.metadata.complexity] = (stats.byComplexity[adr.metadata.complexity] || 0) + 1;
+        stats.byComplexity[adr.metadata.complexity] =
+          (stats.byComplexity[adr.metadata.complexity] || 0) + 1;
 
         // Count by impact
         stats.byImpact[adr.metadata.impact] = (stats.byImpact[adr.metadata.impact] || 0) + 1;
@@ -297,7 +303,9 @@ export class ADRManager {
       return stats;
     } catch (error) {
       logger.error('Failed to get ADR statistics:', error);
-      throw new Error(`Failed to get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -309,7 +317,7 @@ export class ADRManager {
    */
   async deprecateADR(id: string, supersededById: string): Promise<ArchitectureDecisionRecord> {
     this.ensureInitialized();
-    
+
     try {
       const adr = await this.getADR(id);
       if (!adr) {
@@ -324,11 +332,13 @@ export class ADRManager {
       // Update status and supersession
       return await this.updateADR(id, {
         status: 'superseded',
-        supersededBy: supersededById
+        supersededBy: supersededById,
       });
     } catch (error) {
       logger.error(`Failed to deprecate ADR ${id}:`, error);
-      throw new Error(`Failed to deprecate ADR: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to deprecate ADR: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -343,7 +353,7 @@ export class ADRManager {
     related: ArchitectureDecisionRecord[];
   }> {
     this.ensureInitialized();
-    
+
     try {
       const adr = await this.getADR(id);
       if (!adr) {
@@ -353,7 +363,7 @@ export class ADRManager {
       const result = {
         supersedes: [] as ArchitectureDecisionRecord[],
         supersededBy: [] as ArchitectureDecisionRecord[],
-        related: [] as ArchitectureDecisionRecord[]
+        related: [] as ArchitectureDecisionRecord[],
       };
 
       for (const otherADR of this.adrIndex.values()) {
@@ -370,8 +380,7 @@ export class ADRManager {
         }
 
         // Check if related
-        if (adr.relatedDecisions.includes(otherADR.id) || 
-            otherADR.relatedDecisions.includes(id)) {
+        if (adr.relatedDecisions.includes(otherADR.id) || otherADR.relatedDecisions.includes(id)) {
           result.related.push({ ...otherADR });
         }
       }
@@ -379,7 +388,9 @@ export class ADRManager {
       return result;
     } catch (error) {
       logger.error(`Failed to get related ADRs for ${id}:`, error);
-      throw new Error(`Failed to get related ADRs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get related ADRs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -388,13 +399,13 @@ export class ADRManager {
    */
   async cleanup(): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       let cleanedCount = 0;
       const idsToCheck: string[] = [];
 
       for (const id of Array.from(this.adrIndex.keys())) {
-        const adr = this.adrIndex.get(id)!;
+        const adr = this.adrIndex.get(id);
         if (this.shouldCleanupADR(adr)) {
           idsToCheck.push(id);
         }
@@ -403,8 +414,8 @@ export class ADRManager {
       // Validate cleanup candidates (ensure no broken references)
       for (const id of idsToCheck) {
         const relatedADRs = await this.getRelatedADRs(id);
-        const hasActiveReferences = relatedADRs.related.length > 0 || 
-                                  relatedADRs.supersedes.length > 0;
+        const hasActiveReferences =
+          relatedADRs.related.length > 0 || relatedADRs.supersedes.length > 0;
 
         if (!hasActiveReferences) {
           await this.deleteADR(id);
@@ -415,7 +426,9 @@ export class ADRManager {
       logger.info(`ADR cleanup completed: ${cleanedCount} ADRs removed`);
     } catch (error) {
       logger.error('Failed to cleanup ADRs:', error);
-      throw new Error(`Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -436,17 +449,17 @@ export class ADRManager {
     this.adrIndex.clear();
 
     const adrDir = path.join(this.config.storageBasePath, 'adr');
-    
+
     try {
       const files = await fs.readdir(adrDir);
-      
+
       for (const file of files) {
         if (file.endsWith('.md')) {
           const filePath = path.join(adrDir, file);
           try {
             const content = await fs.readFile(filePath, 'utf8');
             const adr = this.deserializeADR(content);
-            
+
             if (adr) {
               this.adrIndex.set(adr.id, adr);
             }
@@ -468,7 +481,7 @@ export class ADRManager {
   private initializeCounter(): void {
     // Extract numeric IDs and find highest
     let maxNumber = 0;
-    
+
     for (const id of Array.from(this.adrIndex.keys())) {
       const match = id.match(/^ADR-(\d+)$/);
       if (match) {
@@ -478,7 +491,7 @@ export class ADRManager {
         }
       }
     }
-    
+
     this.adrCounter = maxNumber;
   }
 
@@ -510,7 +523,11 @@ export class ADRManager {
 
     // Validate status
     const validStatuses: ArchitectureDecisionRecord['status'][] = [
-      'proposed', 'accepted', 'rejected', 'deprecated', 'superseded'
+      'proposed',
+      'accepted',
+      'rejected',
+      'deprecated',
+      'superseded',
     ];
     if (!validStatuses.includes(adr.status)) {
       throw new Error(`Invalid ADR status: ${adr.status}`);
@@ -518,16 +535,19 @@ export class ADRManager {
   }
 
   private validateStatusTransition(
-    currentStatus: ArchitectureDecisionRecord['status'], 
-    newStatus: ArchitectureDecisionRecord['status']
+    currentStatus: ArchitectureDecisionRecord['status'],
+    newStatus: ArchitectureDecisionRecord['status'],
   ): void {
     // Define valid status transitions
-    const validTransitions: Record<ArchitectureDecisionRecord['status'], ArchitectureDecisionRecord['status'][]> = {
-      'proposed': ['accepted', 'rejected'],
-      'accepted': ['deprecated', 'superseded'],
-      'rejected': ['proposed'], // Can be reconsidered
-      'deprecated': ['superseded'],
-      'superseded': [] // Terminal state
+    const validTransitions: Record<
+      ArchitectureDecisionRecord['status'],
+      ArchitectureDecisionRecord['status'][]
+    > = {
+      proposed: ['accepted', 'rejected'],
+      accepted: ['deprecated', 'superseded'],
+      rejected: ['proposed'], // Can be reconsidered
+      deprecated: ['superseded'],
+      superseded: [], // Terminal state
     };
 
     if (!validTransitions[currentStatus]?.includes(newStatus)) {
@@ -540,7 +560,7 @@ export class ADRManager {
     if (supersededADR) {
       await this.updateADR(supersededById, {
         status: 'superseded',
-        supersededBy: supersedingId
+        supersededBy: supersedingId,
       });
     }
   }
@@ -548,18 +568,18 @@ export class ADRManager {
   private shouldCleanupADR(adr: ArchitectureDecisionRecord): boolean {
     // Only cleanup rejected ADRs that are old and have no references
     if (adr.status !== 'rejected') return false;
-    
+
     // Don't cleanup recent rejections (might be reconsidered)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
+
     return adr.date < sixMonthsAgo;
   }
 
   private async saveADR(adr: ArchitectureDecisionRecord): Promise<void> {
     const filePath = this.getADRPath(adr.id);
     const content = this.serializeADR(adr);
-    
+
     // Atomic write
     const tempPath = `${filePath}.tmp`;
     await fs.writeFile(tempPath, content, 'utf8');
@@ -584,11 +604,11 @@ export class ADRManager {
       impact: adr.metadata.impact,
       reversible: adr.metadata.reversible,
       supersededBy: adr.supersededBy,
-      relatedDecisions: adr.relatedDecisions
+      relatedDecisions: adr.relatedDecisions,
     };
 
     const yamlFrontmatter = this.stringifyYaml(frontmatter);
-    
+
     // Generate standardized ADR content
     const content = `# ${adr.id}: ${adr.title}
 
@@ -611,25 +631,29 @@ ${adr.rationale}
 ## Consequences
 
 ### Positive
-${adr.consequences.positive.map(item => `- ${item}`).join('\n')}
+${adr.consequences.positive.map((item) => `- ${item}`).join('\n')}
 
 ### Negative
-${adr.consequences.negative.map(item => `- ${item}`).join('\n')}
+${adr.consequences.negative.map((item) => `- ${item}`).join('\n')}
 
 ### Risks
-${adr.consequences.risks.map(item => `- ${item}`).join('\n')}
+${adr.consequences.risks.map((item) => `- ${item}`).join('\n')}
 
 ## Alternatives Considered
 
-${adr.alternatives.map(alt => `
+${adr.alternatives
+  .map(
+    (alt) => `
 ### ${alt.option}
 
 **Pros:**
-${alt.pros.map(pro => `- ${pro}`).join('\n')}
+${alt.pros.map((pro) => `- ${pro}`).join('\n')}
 
 **Cons:**
-${alt.cons.map(con => `- ${con}`).join('\n')}
-`).join('\n')}
+${alt.cons.map((con) => `- ${con}`).join('\n')}
+`,
+  )
+  .join('\n')}
 
 ## Metadata
 
@@ -639,11 +663,15 @@ ${alt.cons.map(con => `- ${con}`).join('\n')}
 - **Deciders**: ${adr.deciders.join(', ')}
 - **Date**: ${adr.date.toISOString().split('T')[0]}
 
-${adr.relatedDecisions.length > 0 ? `
+${
+  adr.relatedDecisions.length > 0
+    ? `
 ## Related Decisions
 
-${adr.relatedDecisions.map(id => `- ${id}`).join('\n')}
-` : ''}`;
+${adr.relatedDecisions.map((id) => `- ${id}`).join('\n')}
+`
+    : ''
+}`;
 
     return `---\n${yamlFrontmatter}---\n\n${content}`;
   }
@@ -655,7 +683,7 @@ ${adr.relatedDecisions.map(id => `- ${id}`).join('\n')}
 
       const frontmatterYaml = parts[1];
       const content = parts.slice(2).join('---\n').trim();
-      
+
       const frontmatter = this.parseYaml(frontmatterYaml);
       if (!frontmatter || !frontmatter.id) return null;
 
@@ -668,12 +696,12 @@ ${adr.relatedDecisions.map(id => `- ${id}`).join('\n')}
         deciders: frontmatter.deciders || [],
         date: new Date(frontmatter.date),
         context: 'Context extracted from content', // Would parse from content
-        decision: 'Decision extracted from content', // Would parse from content  
+        decision: 'Decision extracted from content', // Would parse from content
         rationale: 'Rationale extracted from content', // Would parse from content
         consequences: {
           positive: [],
           negative: [],
-          risks: []
+          risks: [],
         }, // Would parse from content
         alternatives: [], // Would parse from content
         relatedDecisions: frontmatter.relatedDecisions || [],
@@ -682,8 +710,8 @@ ${adr.relatedDecisions.map(id => `- ${id}`).join('\n')}
         metadata: {
           complexity: frontmatter.complexity || 'medium',
           impact: frontmatter.impact || 'local',
-          reversible: frontmatter.reversible !== false
-        }
+          reversible: frontmatter.reversible !== false,
+        },
       };
 
       return adr;
@@ -697,7 +725,7 @@ ${adr.relatedDecisions.map(id => `- ${id}`).join('\n')}
     return YAML.stringify(obj, {
       indent: 2,
       lineWidth: 0,
-      minContentWidth: 0
+      minContentWidth: 0,
     });
   }
 

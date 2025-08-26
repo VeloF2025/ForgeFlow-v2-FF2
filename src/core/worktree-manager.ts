@@ -1,13 +1,16 @@
+import { EventEmitter } from 'events';
 import type { SimpleGit } from 'simple-git';
 import simpleGit from 'simple-git';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import type { WorktreeConfig, WorktreeInfo } from '../types';
 import { LogContext } from '../utils/logger';
-import { FileLock, LockOptions } from './file-lock';
-import { IdempotencyManager, IdempotencyKey } from './idempotency-manager';
+import type { LockOptions } from './file-lock';
+import { FileLock } from './file-lock';
+import type { IdempotencyKey } from './idempotency-manager';
+import { IdempotencyManager } from './idempotency-manager';
 
-export class WorktreeManager {
+export class WorktreeManager extends EventEmitter {
   private config: WorktreeConfig;
   private git: SimpleGit;
   private worktrees: Map<string, WorktreeInfo>;
@@ -22,6 +25,7 @@ export class WorktreeManager {
   };
 
   constructor(config: WorktreeConfig) {
+    super();
     this.config = config;
     this.logger = new LogContext('WorktreeManager');
     this.worktrees = new Map();
@@ -113,24 +117,34 @@ export class WorktreeManager {
 
       // Mark operation as completed
       await this.idempotencyManager.completeOperation(idempotencyKey_tracking, worktreeId);
-      
+
       this.logger.info(`Worktree created successfully: ${worktreeId} at ${worktreePath}`);
       return worktreeId;
-
     } catch (error) {
       this.logger.error(`Failed to create worktree for issue: ${issueId}`, error);
-      
+
       // Mark operation as failed and attempt rollback
       if (idempotencyKey_tracking) {
         await this.idempotencyManager.failOperation(idempotencyKey_tracking, error as Error);
-        await this.idempotencyManager.rollbackOperation(idempotencyKey_tracking, async (rollbackData) => {
-          if (rollbackData && typeof rollbackData === 'object') {
-            const data = rollbackData as { worktreeId: string; worktreePath: string; branchName: string };
-            await this.rollbackWorktreeCreation(data.worktreeId, data.worktreePath, data.branchName);
-          }
-        });
+        await this.idempotencyManager.rollbackOperation(
+          idempotencyKey_tracking,
+          async (rollbackData) => {
+            if (rollbackData && typeof rollbackData === 'object') {
+              const data = rollbackData as {
+                worktreeId: string;
+                worktreePath: string;
+                branchName: string;
+              };
+              await this.rollbackWorktreeCreation(
+                data.worktreeId,
+                data.worktreePath,
+                data.branchName,
+              );
+            }
+          },
+        );
       }
-      
+
       throw error;
     } finally {
       // Always release the lock
@@ -187,17 +201,16 @@ export class WorktreeManager {
 
       // Mark operation as completed
       await this.idempotencyManager.completeOperation(idempotencyTracking);
-      
-      this.logger.info(`Worktree cleaned up successfully: ${worktreeId}`);
 
+      this.logger.info(`Worktree cleaned up successfully: ${worktreeId}`);
     } catch (error) {
       this.logger.error(`Failed to cleanup worktree: ${worktreeId}`, error);
-      
+
       // Mark operation as failed
       if (idempotencyTracking) {
         await this.idempotencyManager.failOperation(idempotencyTracking, error as Error);
       }
-      
+
       if (this.config.cleanupOnError) {
         await this.forceCleanup(worktreeId);
       }
@@ -261,7 +274,7 @@ export class WorktreeManager {
           staleWorktreeIds.push(id);
         }
       });
-      
+
       for (const id of staleWorktreeIds) {
         this.logger.warning(`Removing stale worktree from tracking: ${id}`);
         this.worktrees.delete(id);
@@ -309,7 +322,13 @@ export class WorktreeManager {
     };
 
     // Check if recent sync was performed (within last 5 minutes)
-    const recentSyncKey = { ...idempotencyKey, context: { ...idempotencyKey.context, timestamp: Math.floor(Date.now() / (5 * 60 * 1000)) * (5 * 60 * 1000) } };
+    const recentSyncKey = {
+      ...idempotencyKey,
+      context: {
+        ...idempotencyKey.context,
+        timestamp: Math.floor(Date.now() / (5 * 60 * 1000)) * (5 * 60 * 1000),
+      },
+    };
     const shouldExecuteResult = await this.idempotencyManager.shouldExecute(recentSyncKey);
     if (!shouldExecuteResult.execute && shouldExecuteResult.record?.status === 'completed') {
       this.logger.debug(`Skipping sync - recent sync completed: ${shouldExecuteResult.reason}`);
@@ -342,14 +361,13 @@ export class WorktreeManager {
       await this.idempotencyManager.completeOperation(idempotencyTracking);
 
       this.logger.debug(`Synced worktree: ${worktreeId}`);
-
     } catch (error) {
       this.logger.error(`Failed to sync worktree: ${worktreeId}`, error);
-      
+
       if (idempotencyTracking) {
         await this.idempotencyManager.failOperation(idempotencyTracking, error as Error);
       }
-      
+
       throw error;
     } finally {
       if (lock.isHeld()) {
@@ -432,7 +450,7 @@ export class WorktreeManager {
    */
   private async hasWorktreeConflict(worktreeId: string): Promise<boolean> {
     const worktreePath = path.join(this.basePath, worktreeId);
-    
+
     // Check if directory already exists
     if (await fs.pathExists(worktreePath)) {
       return true;
@@ -447,7 +465,7 @@ export class WorktreeManager {
     try {
       const result = await this.git.raw(['worktree', 'list', '--porcelain']);
       const lines = result.split('\n').filter(Boolean);
-      
+
       for (let i = 0; i < lines.length; i += 3) {
         const worktreeLine = lines[i];
         if (worktreeLine?.startsWith('worktree ')) {
@@ -471,7 +489,7 @@ export class WorktreeManager {
     worktreeId: string,
     worktreePath: string,
     branchName: string,
-    issueId: string
+    issueId: string,
   ): Promise<void> {
     let gitWorktreeCreated = false;
     let directoryCreated = false;
@@ -502,7 +520,6 @@ export class WorktreeManager {
       this.worktrees.set(worktreeId, info);
       trackingAdded = true;
       this.logger.debug(`Worktree added to tracking: ${worktreeId}`);
-
     } catch (error) {
       this.logger.error('Atomic worktree creation failed, rolling back', error);
 
@@ -582,13 +599,14 @@ export class WorktreeManager {
       // Step 5: Update tracking
       info.status = 'removed';
       this.worktrees.delete(worktreeId);
-
     } catch (error) {
       this.logger.error(`Atomic cleanup failed for worktree: ${worktreeId}`, error);
-      
+
       // Log state for debugging
-      this.logger.debug(`Cleanup state: committed=${changesCommitted}, worktreeRemoved=${worktreeRemoved}, branchDeleted=${branchDeleted}, directoryRemoved=${directoryRemoved}`);
-      
+      this.logger.debug(
+        `Cleanup state: committed=${changesCommitted}, worktreeRemoved=${worktreeRemoved}, branchDeleted=${branchDeleted}, directoryRemoved=${directoryRemoved}`,
+      );
+
       throw error;
     }
   }
@@ -599,7 +617,7 @@ export class WorktreeManager {
   private async rollbackWorktreeCreation(
     worktreeId: string,
     worktreePath: string,
-    branchName: string
+    branchName: string,
   ): Promise<void> {
     this.logger.warning(`Rolling back worktree creation: ${worktreeId}`);
 
@@ -671,11 +689,13 @@ export class WorktreeManager {
   /**
    * Get current lock status
    */
-  async getLockStatus(): Promise<Array<{
-    lockFile: string;
-    operation: string;
-    info: any;
-  }>> {
+  async getLockStatus(): Promise<
+    Array<{
+      lockFile: string;
+      operation: string;
+      info: any;
+    }>
+  > {
     const lockStatus: Array<{ lockFile: string; operation: string; info: any }> = [];
 
     try {

@@ -3,29 +3,26 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { 
-  KnowledgeCard, 
-  KnowledgeQuery, 
-  KnowledgeSearchResult, 
-  KnowledgeConfig 
+import type {
+  KnowledgeCard,
+  KnowledgeQuery,
+  KnowledgeSearchResult,
+  KnowledgeConfig,
 } from '../types';
-import { 
-  KnowledgeCardFile, 
-  FileOperationResult, 
-  SearchIndexEntry 
-} from './types';
+import type { SearchIndexEntry } from './types';
+import { KnowledgeCardFile, FileOperationResult } from './types';
 import { logger } from '../utils/logger';
 import YAML from 'yaml';
 
 /**
  * Card Store Implementation
- * 
+ *
  * Provides markdown-based storage for knowledge cards with:
  * - YAML frontmatter for metadata
  * - Markdown content for card body
  * - File-based indexing for search
  * - Atomic operations for consistency
- * 
+ *
  * Performance Target: <50ms per operation
  */
 export class CardStore {
@@ -47,10 +44,10 @@ export class CardStore {
     try {
       // Ensure directories exist
       await this.ensureDirectories();
-      
+
       // Load existing cards into search index
       await this.rebuildSearchIndex();
-      
+
       this.initialized = true;
       logger.debug('Card store initialized successfully');
     } catch (error) {
@@ -65,23 +62,25 @@ export class CardStore {
    */
   async saveCard(card: KnowledgeCard): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       const filePath = this.getCardPath(card);
       const fileContent = this.serializeCard(card);
-      
+
       // Atomic write operation
       const tempPath = `${filePath}.tmp`;
       await fs.writeFile(tempPath, fileContent, 'utf8');
       await fs.rename(tempPath, filePath);
-      
+
       // Update search index
       this.updateSearchIndex(card);
-      
+
       logger.debug(`Saved knowledge card: ${card.id} at ${filePath}`);
     } catch (error) {
       logger.error(`Failed to save card ${card.id}:`, error);
-      throw new Error(`Failed to save card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to save card: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -92,17 +91,17 @@ export class CardStore {
    */
   async getCard(id: string): Promise<KnowledgeCard | null> {
     this.ensureInitialized();
-    
+
     try {
       let filePath = this.findCardPath(id);
-      
+
       // If not found in index, try both paths
       if (!filePath) {
         const possiblePaths = [
           path.join(this.config.storageBasePath, 'knowledge', 'global', `${id}.md`),
-          path.join(this.config.storageBasePath, 'knowledge', 'project', `${id}.md`)
+          path.join(this.config.storageBasePath, 'knowledge', 'project', `${id}.md`),
         ];
-        
+
         for (const possiblePath of possiblePaths) {
           try {
             await fs.access(possiblePath);
@@ -120,7 +119,7 @@ export class CardStore {
 
       const fileContent = await fs.readFile(filePath, 'utf8');
       const card = this.deserializeCard(fileContent);
-      
+
       if (!card) {
         logger.warn(`Failed to deserialize card ${id} from ${filePath}`);
         return null;
@@ -132,9 +131,11 @@ export class CardStore {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         return null;
       }
-      
+
       logger.error(`Failed to get card ${id}:`, error);
-      throw new Error(`Failed to get card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get card: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -144,7 +145,7 @@ export class CardStore {
    */
   async deleteCard(id: string): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       const filePath = this.findCardPath(id);
       if (!filePath) {
@@ -153,11 +154,13 @@ export class CardStore {
 
       await fs.unlink(filePath);
       this.searchIndex.delete(id);
-      
+
       logger.debug(`Deleted knowledge card: ${id}`);
     } catch (error) {
       logger.error(`Failed to delete card ${id}:`, error);
-      throw new Error(`Failed to delete card: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete card: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -168,14 +171,14 @@ export class CardStore {
    */
   async searchCards(query: KnowledgeQuery): Promise<KnowledgeSearchResult[]> {
     this.ensureInitialized();
-    
+
     try {
       const results: KnowledgeSearchResult[] = [];
       const searchTerms = this.tokenizeSearchText(query.text);
-      
+
       // Search through index entries
       for (const cardId of Array.from(this.searchIndex.keys())) {
-        const indexEntry = this.searchIndex.get(cardId)!;
+        const indexEntry = this.searchIndex.get(cardId);
         // Apply filters first
         if (!this.matchesFilters(indexEntry, query.filters)) {
           continue;
@@ -190,7 +193,7 @@ export class CardStore {
               card,
               relevanceScore,
               matchType: this.getMatchType(indexEntry, searchTerms),
-              snippet: this.generateSnippet(indexEntry.content, searchTerms)
+              snippet: this.generateSnippet(indexEntry.content, searchTerms),
             });
           }
         }
@@ -198,7 +201,7 @@ export class CardStore {
 
       // Sort by relevance score and apply limit
       results.sort((a, b) => b.relevanceScore - a.relevanceScore);
-      
+
       if (query.limit && query.limit > 0) {
         results.splice(query.limit);
       }
@@ -207,7 +210,9 @@ export class CardStore {
       return results;
     } catch (error) {
       logger.error('Failed to search cards:', error);
-      throw new Error(`Failed to search cards: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to search cards: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -222,13 +227,13 @@ export class CardStore {
     averageEffectiveness: number;
   }> {
     this.ensureInitialized();
-    
+
     try {
       const stats = {
         total: 0,
         byType: {} as Record<KnowledgeCard['type'], number>,
         byCategory: {} as Record<string, number>,
-        averageEffectiveness: 0
+        averageEffectiveness: 0,
       };
 
       let totalEffectiveness = 0;
@@ -236,15 +241,15 @@ export class CardStore {
       for (const entry of Array.from(this.searchIndex.values())) {
         if (entry.type === 'knowledge') {
           stats.total++;
-          
+
           const card = await this.getCard(entry.id);
           if (card) {
             // Count by type
             stats.byType[card.type] = (stats.byType[card.type] || 0) + 1;
-            
+
             // Count by category
             stats.byCategory[card.category] = (stats.byCategory[card.category] || 0) + 1;
-            
+
             // Sum effectiveness for average
             totalEffectiveness += card.effectiveness;
           }
@@ -259,7 +264,9 @@ export class CardStore {
       return stats;
     } catch (error) {
       logger.error('Failed to get card statistics:', error);
-      throw new Error(`Failed to get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -268,7 +275,7 @@ export class CardStore {
    */
   async cleanup(): Promise<void> {
     this.ensureInitialized();
-    
+
     try {
       let cleanedCount = 0;
       const cutoffDate = new Date();
@@ -285,7 +292,9 @@ export class CardStore {
       logger.info(`Card cleanup completed: ${cleanedCount} cards removed`);
     } catch (error) {
       logger.error('Failed to cleanup cards:', error);
-      throw new Error(`Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to cleanup: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -300,12 +309,10 @@ export class CardStore {
   private async ensureDirectories(): Promise<void> {
     const dirs = [
       path.join(this.config.storageBasePath, 'knowledge', 'project'),
-      path.join(this.config.storageBasePath, 'knowledge', 'global')
+      path.join(this.config.storageBasePath, 'knowledge', 'global'),
     ];
 
-    await Promise.all(
-      dirs.map(dir => fs.mkdir(dir, { recursive: true }))
-    );
+    await Promise.all(dirs.map((dir) => fs.mkdir(dir, { recursive: true })));
   }
 
   private getCardPath(card: KnowledgeCard): string {
@@ -318,7 +325,7 @@ export class CardStore {
     // Try both project and global directories
     const paths = [
       path.join(this.config.storageBasePath, 'knowledge', 'project', `${id}.md`),
-      path.join(this.config.storageBasePath, 'knowledge', 'global', `${id}.md`)
+      path.join(this.config.storageBasePath, 'knowledge', 'global', `${id}.md`),
     ];
 
     // For performance, check search index first
@@ -350,14 +357,14 @@ export class CardStore {
       scope: card.metadata.scope,
       agentTypes: card.metadata.agentTypes,
       relatedIssues: card.metadata.relatedIssues,
-      outcomes: card.metadata.outcomes.map(outcome => ({
+      outcomes: card.metadata.outcomes.map((outcome) => ({
         ...outcome,
-        timestamp: outcome.timestamp.toISOString()
-      }))
+        timestamp: outcome.timestamp.toISOString(),
+      })),
     };
 
     const yamlFrontmatter = this.stringifyYaml(frontmatter);
-    
+
     return `---\n${yamlFrontmatter}---\n\n${card.content}`;
   }
 
@@ -370,7 +377,7 @@ export class CardStore {
 
       const frontmatterYaml = parts[1];
       const content = parts.slice(2).join('---\n').trim();
-      
+
       const frontmatter = this.parseYaml(frontmatterYaml);
       if (!frontmatter || !frontmatter.id) {
         return null;
@@ -396,9 +403,9 @@ export class CardStore {
           relatedIssues: frontmatter.relatedIssues || [],
           outcomes: (frontmatter.outcomes || []).map((outcome: any) => ({
             ...outcome,
-            timestamp: new Date(outcome.timestamp)
-          }))
-        }
+            timestamp: new Date(outcome.timestamp),
+          })),
+        },
       };
 
       return card;
@@ -413,20 +420,20 @@ export class CardStore {
 
     const knowledgeDirs = [
       path.join(this.config.storageBasePath, 'knowledge', 'project'),
-      path.join(this.config.storageBasePath, 'knowledge', 'global')
+      path.join(this.config.storageBasePath, 'knowledge', 'global'),
     ];
 
     for (const dir of knowledgeDirs) {
       try {
         const files = await fs.readdir(dir);
-        
+
         for (const file of files) {
           if (file.endsWith('.md')) {
             const filePath = path.join(dir, file);
             try {
               const content = await fs.readFile(filePath, 'utf8');
               const card = this.deserializeCard(content);
-              
+
               if (card) {
                 this.updateSearchIndex(card);
               }
@@ -455,7 +462,7 @@ export class CardStore {
       tags: card.tags,
       category: card.category,
       effectiveness: card.effectiveness,
-      lastModified: card.updatedAt
+      lastModified: card.updatedAt,
     };
 
     this.searchIndex.set(card.id, indexEntry);
@@ -466,7 +473,7 @@ export class CardStore {
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter(term => term.length > 2);
+      .filter((term) => term.length > 2);
   }
 
   private matchesFilters(entry: SearchIndexEntry, filters?: KnowledgeQuery['filters']): boolean {
@@ -485,16 +492,18 @@ export class CardStore {
 
     // Tags filter
     if (filters.tags && filters.tags.length > 0) {
-      const hasMatchingTag = filters.tags.some(tag => 
-        entry.tags.some(entryTag => 
-          entryTag.toLowerCase().includes(tag.toLowerCase())
-        )
+      const hasMatchingTag = filters.tags.some((tag) =>
+        entry.tags.some((entryTag) => entryTag.toLowerCase().includes(tag.toLowerCase())),
       );
       if (!hasMatchingTag) return false;
     }
 
     // Effectiveness filter
-    if (filters.minEffectiveness && entry.effectiveness && entry.effectiveness < filters.minEffectiveness) {
+    if (
+      filters.minEffectiveness &&
+      entry.effectiveness &&
+      entry.effectiveness < filters.minEffectiveness
+    ) {
       return false;
     }
 
@@ -537,13 +546,16 @@ export class CardStore {
 
     // Boost by effectiveness
     if (entry.effectiveness) {
-      score *= (1 + entry.effectiveness);
+      score *= 1 + entry.effectiveness;
     }
 
     return Math.round(score * 100) / 100;
   }
 
-  private getMatchType(entry: SearchIndexEntry, searchTerms: string[]): KnowledgeSearchResult['matchType'] {
+  private getMatchType(
+    entry: SearchIndexEntry,
+    searchTerms: string[],
+  ): KnowledgeSearchResult['matchType'] {
     const titleLower = entry.title.toLowerCase();
     for (const term of searchTerms) {
       if (titleLower.includes(term)) {
@@ -565,11 +577,11 @@ export class CardStore {
 
   private generateSnippet(content: string, searchTerms: string[]): string {
     const maxSnippetLength = 200;
-    
+
     // Find first occurrence of any search term
     const contentLower = content.toLowerCase();
     let firstMatchIndex = content.length;
-    
+
     for (const term of searchTerms) {
       const index = contentLower.indexOf(term);
       if (index !== -1 && index < firstMatchIndex) {
@@ -579,18 +591,20 @@ export class CardStore {
 
     if (firstMatchIndex === content.length) {
       // No matches found, return beginning of content
-      return content.substring(0, maxSnippetLength) + (content.length > maxSnippetLength ? '...' : '');
+      return (
+        content.substring(0, maxSnippetLength) + (content.length > maxSnippetLength ? '...' : '')
+      );
     }
 
     // Extract snippet around the match
     const start = Math.max(0, firstMatchIndex - 50);
     const end = Math.min(content.length, start + maxSnippetLength);
-    
+
     let snippet = content.substring(start, end);
-    
+
     if (start > 0) snippet = '...' + snippet;
     if (end < content.length) snippet = snippet + '...';
-    
+
     return snippet;
   }
 
@@ -617,7 +631,7 @@ export class CardStore {
     return YAML.stringify(obj, {
       indent: 2,
       lineWidth: 0,
-      minContentWidth: 0
+      minContentWidth: 0,
     });
   }
 

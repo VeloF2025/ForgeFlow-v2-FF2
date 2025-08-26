@@ -10,7 +10,7 @@ export enum ComponentCriticality {
   CRITICAL = 'critical',
   IMPORTANT = 'important',
   OPTIONAL = 'optional',
-  ENHANCEMENT = 'enhancement'
+  ENHANCEMENT = 'enhancement',
 }
 
 export enum ComponentStatus {
@@ -18,7 +18,7 @@ export enum ComponentStatus {
   DEGRADED = 'degraded',
   FAILED = 'failed',
   RECOVERING = 'recovering',
-  DISABLED = 'disabled'
+  DISABLED = 'disabled',
 }
 
 export interface ComponentHealth {
@@ -65,7 +65,7 @@ export interface CircuitBreakerConfig {
 export enum CircuitBreakerState {
   CLOSED = 'closed',
   OPEN = 'open',
-  HALF_OPEN = 'half_open'
+  HALF_OPEN = 'half_open',
 }
 
 export interface CircuitBreaker {
@@ -97,23 +97,23 @@ export class ErrorHandler {
    */
   handleError(error: Error | ForgeFlowError): void {
     const errorKey = this.generateErrorKey(error);
-    
+
     // Update error tracking
     this.updateErrorMetrics(errorKey, error);
-    
+
     // Apply circuit breaker logic
     this.updateCircuitBreaker(errorKey, false);
-    
+
     // Check for critical errors
     if (error instanceof ForgeFlowError && error.severity === ErrorSeverity.CRITICAL) {
       this.handleCriticalError(error);
     }
-    
+
     // Log with context
     logger.error(`Handled error: ${error.message}`, error, {
       errorKey,
       count: this.errorCounts.get(errorKey),
-      circuitState: this.circuitBreakers.get(errorKey)?.state
+      circuitState: this.circuitBreakers.get(errorKey)?.state,
     });
   }
 
@@ -125,7 +125,7 @@ export class ErrorHandler {
       state: CircuitBreakerState.CLOSED,
       failures: 0,
       nextAttempt: 0,
-      successfulCalls: 0
+      successfulCalls: 0,
     });
   }
 
@@ -135,7 +135,7 @@ export class ErrorHandler {
   async executeWithCircuitBreaker<T>(
     operationKey: string,
     operation: () => Promise<T>,
-    fallback?: () => Promise<T>
+    fallback?: () => Promise<T>,
   ): Promise<T> {
     const breaker = this.circuitBreakers.get(operationKey);
     if (!breaker) {
@@ -144,7 +144,7 @@ export class ErrorHandler {
         message: 'Circuit breaker not found',
         category: ErrorCategory.INTERNAL_ERROR,
         severity: ErrorSeverity.HIGH,
-        context: { operationKey }
+        context: { operationKey },
       });
     }
 
@@ -160,7 +160,7 @@ export class ErrorHandler {
           message: 'Circuit breaker is OPEN',
           category: ErrorCategory.CIRCUIT_BREAKER,
           severity: ErrorSeverity.HIGH,
-          context: { operationKey, nextAttempt: breaker.nextAttempt }
+          context: { operationKey, nextAttempt: breaker.nextAttempt },
         });
       }
       // Move to half-open state
@@ -175,14 +175,14 @@ export class ErrorHandler {
     } catch (error) {
       this.updateCircuitBreaker(operationKey, false);
       this.handleError(error as Error);
-      
+
       // Check circuit breaker state after update
       const updatedBreaker = this.circuitBreakers.get(operationKey);
       if (fallback && updatedBreaker?.state === CircuitBreakerState.OPEN) {
         logger.warn(`Operation failed, using fallback for ${operationKey}`);
         return await fallback();
       }
-      
+
       throw error;
     }
   }
@@ -197,14 +197,14 @@ export class ErrorHandler {
     if (success) {
       breaker.failures = 0;
       breaker.successfulCalls++;
-      
+
       if (breaker.state === CircuitBreakerState.HALF_OPEN && breaker.successfulCalls >= 3) {
         breaker.state = CircuitBreakerState.CLOSED;
         logger.info(`Circuit breaker CLOSED for ${operationKey}`);
       }
     } else {
       breaker.failures++;
-      
+
       if (breaker.state === CircuitBreakerState.CLOSED && breaker.failures >= 5) {
         breaker.state = CircuitBreakerState.OPEN;
         breaker.nextAttempt = Date.now() + 60000; // 1 minute
@@ -218,14 +218,18 @@ export class ErrorHandler {
   }
 
   private generateErrorKey(error: Error): string {
-    return `${error.constructor.name}:${error.message.substring(0, 100)}`;
+    return `${error.constructor.name}:${(error.message || '').substring(0, 100)}`;
   }
 
   private updateErrorMetrics(errorKey: string, error: Error): void {
     const current = this.errorCounts.get(errorKey) || 0;
     this.errorCounts.set(errorKey, current + 1);
 
-    const metrics = this.errorMetrics.get(errorKey) || { count: 0, lastSeen: new Date(), resolved: 0 };
+    const metrics = this.errorMetrics.get(errorKey) || {
+      count: 0,
+      lastSeen: new Date(),
+      resolved: 0,
+    };
     metrics.count++;
     metrics.lastSeen = new Date();
     this.errorMetrics.set(errorKey, metrics);
@@ -233,7 +237,7 @@ export class ErrorHandler {
 
   private handleCriticalError(error: ForgeFlowError): void {
     this.criticalErrors.push(error);
-    
+
     // Keep only last 50 critical errors
     if (this.criticalErrors.length > 50) {
       this.criticalErrors = this.criticalErrors.slice(-50);
@@ -245,7 +249,7 @@ export class ErrorHandler {
       errorId: error.code,
       severity: error.severity,
       category: error.category,
-      context: error.context
+      context: error.context,
     });
   }
 
@@ -259,29 +263,34 @@ export class ErrorHandler {
     circuitBreakers: Array<{ operation: string; state: CircuitBreakerState; failures: number }>;
     topErrors: Array<{ error: string; count: number; lastSeen: Date }>;
   } {
-    const circuitBreakers = Array.from(this.circuitBreakers.entries()).map(([operation, breaker]) => ({
-      operation,
-      state: breaker.state,
-      failures: breaker.failures
-    }));
+    const circuitBreakers = Array.from(this.circuitBreakers.entries()).map(
+      ([operation, breaker]) => ({
+        operation,
+        state: breaker.state,
+        failures: breaker.failures,
+      }),
+    );
 
     const topErrors = Array.from(this.errorMetrics.entries())
       .map(([error, metrics]) => ({
         error,
         count: metrics.count,
-        lastSeen: metrics.lastSeen
+        lastSeen: metrics.lastSeen,
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    const totalErrors = Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0);
+    const totalErrors = Array.from(this.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
 
     return {
       totalErrors,
       uniqueErrors: this.errorCounts.size,
       criticalErrors: this.criticalErrors.length,
       circuitBreakers,
-      topErrors
+      topErrors,
     };
   }
 }
@@ -307,7 +316,7 @@ export class GracefulDegradationManager extends EventEmitter {
    */
   registerComponent(component: SystemComponent): void {
     this.components.set(component.id, component);
-    
+
     const health: ComponentHealth = {
       componentId: component.id,
       status: ComponentStatus.HEALTHY,
@@ -320,8 +329,8 @@ export class GracefulDegradationManager extends EventEmitter {
       metrics: {
         uptime: 0,
         lastResponseTime: 0,
-        successRate: 1.0
-      }
+        successRate: 1.0,
+      },
     };
 
     this.componentHealth.set(component.id, health);
@@ -337,7 +346,7 @@ export class GracefulDegradationManager extends EventEmitter {
 
     logger.info(`Registered component ${component.name}`, {
       componentId: component.id,
-      criticality: component.criticality
+      criticality: component.criticality,
     });
   }
 
@@ -353,20 +362,23 @@ export class GracefulDegradationManager extends EventEmitter {
     }
 
     const previousStatus = health.status;
-    
+
     try {
       const startTime = Date.now();
       const isHealthy = await component.healthCheck();
       const responseTime = Date.now() - startTime;
-      
+
       health.metrics.lastResponseTime = responseTime;
-      
+
       if (isHealthy) {
-        if (previousStatus === ComponentStatus.FAILED || previousStatus === ComponentStatus.DEGRADED) {
+        if (
+          previousStatus === ComponentStatus.FAILED ||
+          previousStatus === ComponentStatus.DEGRADED
+        ) {
           logger.info(`Component ${component.name} recovered`, { componentId });
           this.emit('componentRecovered', componentId, health);
         }
-        
+
         health.status = ComponentStatus.HEALTHY;
         health.errorMessage = undefined;
         health.fallbackActive = false;
@@ -374,14 +386,13 @@ export class GracefulDegradationManager extends EventEmitter {
       } else {
         await this.handleComponentFailure(componentId, new Error('Health check failed'));
       }
-      
     } catch (error) {
       await this.handleComponentFailure(componentId, error as Error);
     }
-    
+
     health.lastHealthCheck = new Date();
     this.updateSystemHealthScore();
-    
+
     return health;
   }
 
@@ -403,7 +414,7 @@ export class GracefulDegradationManager extends EventEmitter {
       componentId,
       error: error.message,
       failureCount: health.failureCount,
-      criticality: component.criticality
+      criticality: component.criticality,
     });
 
     // Determine new status based on criticality and available fallbacks
@@ -430,7 +441,7 @@ export class GracefulDegradationManager extends EventEmitter {
     // Emit events based on criticality
     if (previousStatus !== health.status) {
       this.emit('componentStatusChanged', componentId, health.status, previousStatus);
-      
+
       if (component.criticality === ComponentCriticality.CRITICAL) {
         this.emit('criticalComponentDegraded', componentId, health);
       }
@@ -447,8 +458,8 @@ export class GracefulDegradationManager extends EventEmitter {
     if (!component?.fallbacks || !health) return;
 
     // Find the best available fallback
-    const availableFallbacks = component.fallbacks.filter(fallback => fallback.isAvailable());
-    
+    const availableFallbacks = component.fallbacks.filter((fallback) => fallback.isAvailable());
+
     if (availableFallbacks.length === 0) {
       logger.warn(`No fallbacks available for component ${component.name}`, { componentId });
       return;
@@ -466,21 +477,20 @@ export class GracefulDegradationManager extends EventEmitter {
       logger.info(`Activating fallback for component ${component.name}`, {
         componentId,
         fallback: selectedFallback.name,
-        performance: selectedFallback.performance
+        performance: selectedFallback.performance,
       });
 
       await selectedFallback.execute();
       health.fallbackActive = true;
-      
+
       this.emit('fallbackActivated', componentId, selectedFallback.name);
-      
     } catch (fallbackError) {
       logger.error(`Fallback failed for component ${component.name}`, {
         componentId,
         fallback: selectedFallback.name,
-        error: String(fallbackError)
+        error: String(fallbackError),
       });
-      
+
       this.emit('fallbackFailed', componentId, selectedFallback.name, fallbackError);
     }
   }
@@ -500,16 +510,16 @@ export class GracefulDegradationManager extends EventEmitter {
     }
 
     const recoveryDelay = Math.min(Math.pow(2, health.recoveryAttempts) * 1000, 300000); // Max 5 minutes
-    
+
     logger.info(`Scheduling recovery for component ${component.name}`, {
       componentId,
       attempt: health.recoveryAttempts + 1,
-      delay: recoveryDelay
+      delay: recoveryDelay,
     });
 
     const recoveryPromise = new Promise<void>(async (resolve) => {
-      await new Promise(r => setTimeout(r, recoveryDelay));
-      
+      await new Promise((r) => setTimeout(r, recoveryDelay));
+
       if (this.isShuttingDown) {
         resolve();
         return;
@@ -517,38 +527,37 @@ export class GracefulDegradationManager extends EventEmitter {
 
       health.status = ComponentStatus.RECOVERING;
       health.recoveryAttempts++;
-      
+
       this.emit('componentRecoveryStarted', componentId, health.recoveryAttempts);
 
       try {
-        await component.recovery!();
-        
+        await component.recovery();
+
         // Verify recovery with health check
         const isHealthy = await component.healthCheck();
-        
+
         if (isHealthy) {
           health.status = ComponentStatus.HEALTHY;
           health.errorMessage = undefined;
           health.failureCount = 0;
           health.recoveryAttempts = 0;
           health.fallbackActive = false;
-          
+
           logger.info(`Component ${component.name} recovered successfully`, { componentId });
           this.emit('componentRecovered', componentId, health);
         } else {
           throw new Error('Health check failed after recovery');
         }
-        
       } catch (recoveryError) {
         logger.error(`Recovery failed for component ${component.name}`, {
           componentId,
           attempt: health.recoveryAttempts,
-          error: String(recoveryError)
+          error: String(recoveryError),
         });
-        
+
         health.status = ComponentStatus.FAILED;
         this.emit('componentRecoveryFailed', componentId, health.recoveryAttempts, recoveryError);
-        
+
         // Schedule next recovery attempt if within limits
         if (health.recoveryAttempts < health.maxRecoveryAttempts) {
           setTimeout(() => this.scheduleRecovery(componentId), recoveryDelay * 2);
@@ -577,12 +586,13 @@ export class GracefulDegradationManager extends EventEmitter {
     const recommendedActions: string[] = [];
 
     // Identify critical issues
-    const criticalFailed = components.filter(c => 
-      c.criticality === ComponentCriticality.CRITICAL && c.status === ComponentStatus.FAILED
+    const criticalFailed = components.filter(
+      (c) => c.criticality === ComponentCriticality.CRITICAL && c.status === ComponentStatus.FAILED,
     );
-    
-    const criticalDegraded = components.filter(c => 
-      c.criticality === ComponentCriticality.CRITICAL && c.status === ComponentStatus.DEGRADED
+
+    const criticalDegraded = components.filter(
+      (c) =>
+        c.criticality === ComponentCriticality.CRITICAL && c.status === ComponentStatus.DEGRADED,
     );
 
     if (criticalFailed.length > 0) {
@@ -595,15 +605,19 @@ export class GracefulDegradationManager extends EventEmitter {
       recommendedActions.push('Monitor critical components running on fallbacks');
     }
 
-    const status = this.systemHealthScore >= 90 ? 'healthy' : 
-                  this.systemHealthScore >= 70 ? 'degraded' : 'critical';
+    const status =
+      this.systemHealthScore >= 90
+        ? 'healthy'
+        : this.systemHealthScore >= 70
+          ? 'degraded'
+          : 'critical';
 
     return {
       score: this.systemHealthScore,
       status,
       components,
       criticalIssues,
-      recommendedActions
+      recommendedActions,
     };
   }
 
@@ -623,7 +637,7 @@ export class GracefulDegradationManager extends EventEmitter {
     for (const health of components) {
       const weight = this.getComponentWeight(health.criticality);
       const score = this.getComponentScore(health);
-      
+
       totalWeight += weight;
       weightedScore += score * weight;
     }
@@ -637,10 +651,14 @@ export class GracefulDegradationManager extends EventEmitter {
    */
   private getComponentWeight(criticality: ComponentCriticality): number {
     switch (criticality) {
-      case ComponentCriticality.CRITICAL: return 4;
-      case ComponentCriticality.IMPORTANT: return 3;
-      case ComponentCriticality.OPTIONAL: return 2;
-      case ComponentCriticality.ENHANCEMENT: return 1;
+      case ComponentCriticality.CRITICAL:
+        return 4;
+      case ComponentCriticality.IMPORTANT:
+        return 3;
+      case ComponentCriticality.OPTIONAL:
+        return 2;
+      case ComponentCriticality.ENHANCEMENT:
+        return 1;
     }
   }
 
@@ -649,12 +667,18 @@ export class GracefulDegradationManager extends EventEmitter {
    */
   private getComponentScore(health: ComponentHealth): number {
     switch (health.status) {
-      case ComponentStatus.HEALTHY: return 100;
-      case ComponentStatus.DEGRADED: return health.fallbackActive ? 60 : 40;
-      case ComponentStatus.RECOVERING: return 30;
-      case ComponentStatus.FAILED: return 0;
-      case ComponentStatus.DISABLED: return 80; // Intentionally disabled
-      default: return 0;
+      case ComponentStatus.HEALTHY:
+        return 100;
+      case ComponentStatus.DEGRADED:
+        return health.fallbackActive ? 60 : 40;
+      case ComponentStatus.RECOVERING:
+        return 30;
+      case ComponentStatus.FAILED:
+        return 0;
+      case ComponentStatus.DISABLED:
+        return 80; // Intentionally disabled
+      default:
+        return 0;
     }
   }
 
@@ -665,14 +689,14 @@ export class GracefulDegradationManager extends EventEmitter {
     // Track system health metrics
     setInterval(() => {
       if (this.isShuttingDown) return;
-      
+
       const health = this.getSystemHealth();
-      
+
       logger.debug('System health update', {
         score: health.score,
         status: health.status,
         components: health.components.length,
-        criticalIssues: health.criticalIssues.length
+        criticalIssues: health.criticalIssues.length,
       });
     }, 60000); // Every minute
   }
@@ -699,7 +723,7 @@ export class GracefulDegradationManager extends EventEmitter {
     if (health) {
       health.status = ComponentStatus.DISABLED;
       health.errorMessage = `Disabled: ${reason}`;
-      
+
       logger.info(`Component ${componentId} disabled`, { reason });
       this.emit('componentDisabled', componentId, reason);
     }
@@ -713,7 +737,7 @@ export class GracefulDegradationManager extends EventEmitter {
     if (health && health.status === ComponentStatus.DISABLED) {
       health.status = ComponentStatus.HEALTHY;
       health.errorMessage = undefined;
-      
+
       logger.info(`Component ${componentId} enabled`);
       this.emit('componentEnabled', componentId);
     }
@@ -724,7 +748,7 @@ export class GracefulDegradationManager extends EventEmitter {
    */
   async shutdown(): Promise<void> {
     this.isShuttingDown = true;
-    
+
     // Clear all timers
     for (const timer of this.healthCheckIntervals.values()) {
       clearInterval(timer);
@@ -733,7 +757,7 @@ export class GracefulDegradationManager extends EventEmitter {
 
     // Wait for ongoing recovery operations
     await Promise.all(this.recoveryQueues.values());
-    
+
     logger.info('Graceful degradation manager shut down');
     this.emit('shutdown');
   }

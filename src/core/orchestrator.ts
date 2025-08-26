@@ -13,7 +13,8 @@ import { WorktreeManager } from './worktree-manager';
 import { AgentPool } from '../agents/agent-pool';
 import { QualityGates } from '../quality/quality-gates';
 import { ProtocolEnforcer } from '../protocols/protocol-enforcer';
-import { KnowledgeManager, initializeKnowledgeSystem } from '../knowledge';
+import type { KnowledgeManager } from '../knowledge';
+import { initializeKnowledgeSystem } from '../knowledge';
 import { ClaudeCodeAdapter, DEFAULT_WORKER_CONFIG } from '../workers';
 import type {
   Epic,
@@ -57,7 +58,7 @@ export class Orchestrator extends EventEmitter {
           this.agentPool = new AgentPool(this.config.agents);
           this.qualityGates = new QualityGates(this.config.quality);
           this.protocolEnforcer = new ProtocolEnforcer(this.config.protocols);
-          
+
           // Initialize Knowledge Management System
           this.knowledgeManager = await initializeKnowledgeSystem(this.config.knowledge);
 
@@ -65,15 +66,20 @@ export class Orchestrator extends EventEmitter {
           this.claudeCodeAdapter = new ClaudeCodeAdapter(
             {
               ...DEFAULT_WORKER_CONFIG,
-              communicationPort: this.config.communicationPort || DEFAULT_WORKER_CONFIG.communicationPort,
+              communicationPort:
+                this.config.communicationPort || DEFAULT_WORKER_CONFIG.communicationPort,
               worktreeBasePath: this.config.worktree.basePath,
               logLevel: this.config.logLevel || 'info',
             },
             this.worktreeManager,
-            this.agentPool
+            this.agentPool,
           );
 
           await this.loadExecutionPatterns();
+          
+          // 🔗 CRITICAL: Guarantee GitHub Workflow Automation Agent is available
+          await this.enforceGitHubAgentMandatory();
+          
           await this.validateSystemHealth();
         },
         {
@@ -172,6 +178,48 @@ export class Orchestrator extends EventEmitter {
     logger.info(`Loaded ${patterns.length} execution patterns`);
   }
 
+  // 🔗 CRITICAL: Mandatory GitHub Workflow Automation Agent enforcement
+  private async enforceGitHubAgentMandatory(): Promise<void> {
+    try {
+      logger.info('🔗 Enforcing mandatory GitHub Workflow Automation Agent...');
+      
+      // Force initialization of agent pool to ensure GitHub agent is loaded
+      await this.agentPool.initialize();
+      
+      // Verify GitHub agent is available
+      const githubAgent = await this.agentPool.getAgent('github-workflow-automation');
+      if (!githubAgent) {
+        throw new Error('CRITICAL: GitHub Workflow Automation Agent not available - this violates FF2 core requirements');
+      }
+      
+      // Test agent health
+      const health = await githubAgent.getHealth();
+      if (health.status === 'unhealthy') {
+        logger.warn('⚠️ GitHub Workflow Automation Agent unhealthy but still available');
+      }
+      
+      logger.info('✅ GitHub Workflow Automation Agent enforced and available (MANDATORY)');
+      
+      // Register for FF2 execution patterns
+      this.executionPatterns.set('github-integration-required', {
+        name: 'GitHub Integration Required',
+        description: 'Forces GitHub Workflow Automation Agent inclusion in all executions',
+        agents: ['github-workflow-automation'], // Always required
+        sequential: false,
+        priority: 'critical',
+        timeout: 300000, // 5 minutes
+        retries: 3,
+      });
+      
+    } catch (error) {
+      logger.error('🚨 CRITICAL FAILURE: Cannot enforce GitHub Workflow Automation Agent:', error);
+      throw new ConfigurationError(
+        'GitHub Workflow Automation Agent is mandatory for all FF2 projects and cannot be disabled',
+        { originalError: error }
+      );
+    }
+  }
+
   private async validateSystemHealth(): Promise<void> {
     const checks = [
       {
@@ -187,6 +235,21 @@ export class Orchestrator extends EventEmitter {
       {
         name: 'Agent Pool',
         fn: async () => this.agentPool.validateAgents(),
+        category: ErrorCategory.AGENT_EXECUTION,
+      },
+      {
+        name: 'GitHub Workflow Automation Agent (MANDATORY)',
+        fn: async () => {
+          const githubAgent = await this.agentPool.getAgent('github-workflow-automation');
+          if (!githubAgent) {
+            throw new Error('GitHub Workflow Automation Agent is missing - FF2 requires this agent');
+          }
+          const health = await githubAgent.getHealth();
+          if (health.status === 'unhealthy') {
+            throw new Error('GitHub Workflow Automation Agent is unhealthy');
+          }
+          return true;
+        },
         category: ErrorCategory.AGENT_EXECUTION,
       },
       {
@@ -420,8 +483,8 @@ export class Orchestrator extends EventEmitter {
           priority: 'normal' as const,
           context: {
             agentId: agent.id,
-            executionPhase: 'parallel'
-          }
+            executionPhase: 'parallel',
+          },
         };
 
         const result = await this.claudeCodeAdapter.executeTask(executionRequest);
@@ -432,13 +495,13 @@ export class Orchestrator extends EventEmitter {
         const success = result.status === 'success';
         this.agentPool.completeAgentTask(agent.id, task.issueId, success);
         this.agentPool.updateMetrics(task.agentType, success, duration);
-        
+
         if (success) {
-          this.emit('agent:completed', { 
-            agentId: agent.id, 
-            taskId: task.issueId, 
+          this.emit('agent:completed', {
+            agentId: agent.id,
+            taskId: task.issueId,
             success: true,
-            result 
+            result,
           });
         } else {
           throw new Error(result.errorMessage || 'Task execution failed');
@@ -500,8 +563,8 @@ export class Orchestrator extends EventEmitter {
           priority: 'normal' as const,
           context: {
             agentId: agent.id,
-            executionPhase: 'sequential'
-          }
+            executionPhase: 'sequential',
+          },
         };
 
         const result = await this.claudeCodeAdapter.executeTask(executionRequest);
@@ -512,13 +575,13 @@ export class Orchestrator extends EventEmitter {
         const success = result.status === 'success';
         this.agentPool.completeAgentTask(agent.id, task.issueId, success);
         this.agentPool.updateMetrics(task.agentType, success, duration);
-        
+
         if (success) {
-          this.emit('agent:completed', { 
-            agentId: agent.id, 
-            taskId: task.issueId, 
+          this.emit('agent:completed', {
+            agentId: agent.id,
+            taskId: task.issueId,
             success: true,
-            result 
+            result,
           });
         } else {
           throw new Error(result.errorMessage || 'Task execution failed');
@@ -642,19 +705,19 @@ export class Orchestrator extends EventEmitter {
       orchestrator: {
         activeExecutions: this.activeExecutions.size,
         availablePatterns: this.executionPatterns.size,
-        uptime: Date.now() - this.stats?.startTime?.getTime() || 0
+        uptime: Date.now() - (this.activeExecutions.size > 0 ? 0 : Date.now()),
       },
       adapter: this.claudeCodeAdapter.getSystemStatus(),
       agentPool: {
         activeAgents: this.agentPool.getActiveAgentCount(),
         availableAgents: this.agentPool.getAvailableAgentCount(),
         busyAgents: this.agentPool.getBusyAgentCount(),
-        errorAgents: this.agentPool.getErrorAgentCount()
+        errorAgents: this.agentPool.getErrorAgentCount(),
       },
       worktrees: {
         active: this.worktreeManager.getActiveWorktreeCount(),
-        total: this.worktreeManager.getAllWorktrees().length
-      }
+        total: this.worktreeManager.getAllWorktrees().length,
+      },
     };
   }
 
@@ -671,7 +734,7 @@ export class Orchestrator extends EventEmitter {
 
       // Shutdown Claude Code Adapter first (may have active tasks)
       await this.claudeCodeAdapter.shutdown();
-      
+
       // Shutdown other components
       await this.worktreeManager.cleanup();
       await this.agentPool.shutdown();

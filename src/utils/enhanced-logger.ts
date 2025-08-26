@@ -53,7 +53,7 @@ interface LoggingMetrics {
 
 /**
  * Enhanced Logger with intelligent error analysis and alerting
- * 
+ *
  * Features:
  * - Structured logging with categorization
  * - Error pattern recognition
@@ -71,21 +71,23 @@ export class EnhancedLogger {
   private logProcessingTimes: number[] = [];
   private isShuttingDown = false;
 
-  constructor(options: {
-    logDir?: string;
-    level?: string;
-    maxFiles?: number;
-    maxSize?: string;
-    enableConsole?: boolean;
-    enableAlerts?: boolean;
-  } = {}) {
+  constructor(
+    options: {
+      logDir?: string;
+      level?: string;
+      maxFiles?: number;
+      maxSize?: string;
+      enableConsole?: boolean;
+      enableAlerts?: boolean;
+    } = {},
+  ) {
     this.winston = winston.createLogger({
       level: options.level || 'info',
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
         winston.format.json(),
-        winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] })
+        winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] }),
       ),
       transports: [
         // File transport for all logs
@@ -93,18 +95,18 @@ export class EnhancedLogger {
           filename: `${options.logDir || './logs'}/forgeflow-combined.log`,
           maxFiles: options.maxFiles || 10,
           maxsize: this.parseSize(options.maxSize || '50MB'),
-          tailable: true
+          tailable: true,
         }),
-        
+
         // Separate file for errors only
         new winston.transports.File({
           filename: `${options.logDir || './logs'}/forgeflow-errors.log`,
           level: 'error',
           maxFiles: options.maxFiles || 5,
           maxsize: this.parseSize(options.maxSize || '50MB'),
-          tailable: true
+          tailable: true,
         }),
-        
+
         // Separate file for structured error analysis
         new winston.transports.File({
           filename: `${options.logDir || './logs'}/forgeflow-error-analysis.log`,
@@ -115,50 +117,56 @@ export class EnhancedLogger {
             winston.format.timestamp(),
             winston.format.json(),
             winston.format.printf((info) => {
-              return JSON.stringify({
-                ...info,
-                analysis: this.generateErrorAnalysis(info)
-              }, null, 2);
-            })
-          )
-        })
+              return JSON.stringify(
+                {
+                  ...info,
+                  analysis: this.generateErrorAnalysis(info),
+                },
+                null,
+                2,
+              );
+            }),
+          ),
+        }),
       ],
-      
+
       // Exception handling
       exceptionHandlers: [
         new winston.transports.File({
-          filename: `${options.logDir || './logs'}/forgeflow-exceptions.log`
-        })
+          filename: `${options.logDir || './logs'}/forgeflow-exceptions.log`,
+        }),
       ],
-      
+
       // Rejection handling
       rejectionHandlers: [
         new winston.transports.File({
-          filename: `${options.logDir || './logs'}/forgeflow-rejections.log`
-        })
+          filename: `${options.logDir || './logs'}/forgeflow-rejections.log`,
+        }),
       ],
-      
-      exitOnError: false
+
+      exitOnError: false,
     });
 
     // Add console transport if enabled
     if (options.enableConsole !== false) {
-      this.winston.add(new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.simple(),
-          winston.format.printf((info) => {
-            const { timestamp, level, message, ...meta } = info;
-            const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
-            return `${timestamp} [${level}]: ${message} ${metaStr}`;
-          })
-        )
-      }));
+      this.winston.add(
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple(),
+            winston.format.printf((info) => {
+              const { timestamp, level, message, ...meta } = info;
+              const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+              return `${timestamp} [${level}]: ${message} ${metaStr}`;
+            }),
+          ),
+        }),
+      );
     }
 
     this.setupLogProcessing();
     this.setupMetricsCollection();
-    
+
     if (options.enableAlerts !== false) {
       this.setupAlerting();
     }
@@ -168,13 +176,13 @@ export class EnhancedLogger {
    * Log an error with enhanced categorization
    */
   error(
-    message: string, 
-    error?: Error | ForgeFlowError, 
+    message: string,
+    error?: Error | ForgeFlowError,
     context?: Record<string, unknown>,
-    source = 'unknown'
+    source = 'unknown',
   ): void {
     const startTime = Date.now();
-    
+
     const logEntry: LogEntry = {
       timestamp: new Date(),
       level: 'error',
@@ -183,12 +191,12 @@ export class EnhancedLogger {
       context: this.sanitizeContext(context),
       source,
       severity: this.determineSeverity(error),
-      tags: this.generateTags(error, context)
+      tags: this.generateTags(error, context),
     };
 
     if (error) {
       logEntry.stackTrace = error.stack;
-      
+
       if (error instanceof ForgeFlowError) {
         logEntry.context = {
           ...logEntry.context,
@@ -196,7 +204,7 @@ export class EnhancedLogger {
           errorCategory: error.category,
           errorSeverity: error.severity,
           recoverable: error.recoverable,
-          userMessage: error.userMessage
+          userMessage: error.userMessage,
         };
       }
     }
@@ -204,7 +212,7 @@ export class EnhancedLogger {
     this.processLogEntry(logEntry);
     this.updateErrorMetrics(logEntry, error);
     this.checkForAlerts(logEntry, error);
-    
+
     this.logProcessingTimes.push(Date.now() - startTime);
     if (this.logProcessingTimes.length > 1000) {
       this.logProcessingTimes = this.logProcessingTimes.slice(-100);
@@ -214,11 +222,7 @@ export class EnhancedLogger {
   /**
    * Log a warning with categorization
    */
-  warn(
-    message: string, 
-    context?: Record<string, unknown>,
-    source = 'unknown'
-  ): void {
+  warn(message: string, context?: Record<string, unknown>, source = 'unknown'): void {
     const logEntry: LogEntry = {
       timestamp: new Date(),
       level: 'warn',
@@ -227,7 +231,7 @@ export class EnhancedLogger {
       context: this.sanitizeContext(context),
       source,
       severity: ErrorSeverity.LOW,
-      tags: this.generateTags(undefined, context)
+      tags: this.generateTags(undefined, context),
     };
 
     this.processLogEntry(logEntry);
@@ -236,11 +240,7 @@ export class EnhancedLogger {
   /**
    * Log info with context
    */
-  info(
-    message: string,
-    context?: Record<string, unknown>,
-    source = 'unknown'
-  ): void {
+  info(message: string, context?: Record<string, unknown>, source = 'unknown'): void {
     const logEntry: LogEntry = {
       timestamp: new Date(),
       level: 'info',
@@ -248,7 +248,7 @@ export class EnhancedLogger {
       message,
       context: this.sanitizeContext(context),
       source,
-      tags: this.generateTags(undefined, context)
+      tags: this.generateTags(undefined, context),
     };
 
     this.processLogEntry(logEntry);
@@ -257,11 +257,7 @@ export class EnhancedLogger {
   /**
    * Log debug information
    */
-  debug(
-    message: string,
-    context?: Record<string, unknown>,
-    source = 'unknown'
-  ): void {
+  debug(message: string, context?: Record<string, unknown>, source = 'unknown'): void {
     const logEntry: LogEntry = {
       timestamp: new Date(),
       level: 'debug',
@@ -269,7 +265,7 @@ export class EnhancedLogger {
       message,
       context: this.sanitizeContext(context),
       source,
-      tags: this.generateTags(undefined, context)
+      tags: this.generateTags(undefined, context),
     };
 
     this.processLogEntry(logEntry);
@@ -281,7 +277,7 @@ export class EnhancedLogger {
   private processLogEntry(entry: LogEntry): void {
     // Add to buffer for batch processing
     this.logBuffer.push(entry);
-    
+
     // Write to winston immediately for errors and warnings
     if (entry.level === 'error' || entry.level === 'warn') {
       this.winston.log(entry.level, entry.message, {
@@ -291,7 +287,7 @@ export class EnhancedLogger {
         severity: entry.severity,
         tags: entry.tags,
         stackTrace: entry.stackTrace,
-        timestamp: entry.timestamp
+        timestamp: entry.timestamp,
       });
     } else {
       // For info/debug, use winston's normal logging
@@ -304,14 +300,14 @@ export class EnhancedLogger {
    */
   private categorizeError(error?: Error | ForgeFlowError): string {
     if (!error) return 'generic';
-    
+
     if (error instanceof ForgeFlowError) {
       return error.category;
     }
 
     // Categorize based on error message/type
-    const message = error.message.toLowerCase();
-    
+    const message = (error.message || '').toLowerCase();
+
     if (message.includes('network') || message.includes('connection')) {
       return ErrorCategory.NETWORK;
     }
@@ -330,7 +326,7 @@ export class EnhancedLogger {
     if (message.includes('file') || message.includes('path')) {
       return ErrorCategory.FILE_SYSTEM;
     }
-    
+
     return ErrorCategory.INTERNAL_ERROR;
   }
 
@@ -339,14 +335,14 @@ export class EnhancedLogger {
    */
   private determineSeverity(error?: Error | ForgeFlowError): ErrorSeverity {
     if (!error) return ErrorSeverity.LOW;
-    
+
     if (error instanceof ForgeFlowError) {
       return error.severity;
     }
 
     // Determine severity based on error characteristics
-    const message = error.message.toLowerCase();
-    
+    const message = (error.message || '').toLowerCase();
+
     if (message.includes('critical') || message.includes('fatal')) {
       return ErrorSeverity.CRITICAL;
     }
@@ -356,14 +352,17 @@ export class EnhancedLogger {
     if (message.includes('timeout') || message.includes('network')) {
       return ErrorSeverity.MEDIUM;
     }
-    
+
     return ErrorSeverity.LOW;
   }
 
   /**
    * Generate contextual tags for log entry
    */
-  private generateTags(error?: Error | ForgeFlowError, context?: Record<string, unknown>): string[] {
+  private generateTags(
+    error?: Error | ForgeFlowError,
+    context?: Record<string, unknown>,
+  ): string[] {
     const tags: string[] = [];
 
     if (error instanceof ForgeFlowError) {
@@ -413,7 +412,7 @@ export class EnhancedLogger {
    */
   private updateErrorMetrics(entry: LogEntry, error?: Error | ForgeFlowError): void {
     const errorKey = `${entry.category}:${entry.message.substring(0, 100)}`;
-    
+
     this.errorCounts.set(errorKey, (this.errorCounts.get(errorKey) || 0) + 1);
     this.errorLastSeen.set(errorKey, entry.timestamp);
 
@@ -429,7 +428,7 @@ export class EnhancedLogger {
   private checkForAlerts(entry: LogEntry, error?: Error | ForgeFlowError): void {
     if (entry.level !== 'error' || !error) return;
 
-    const shouldAlert = 
+    const shouldAlert =
       entry.severity === ErrorSeverity.CRITICAL ||
       (entry.severity === ErrorSeverity.HIGH && entry.category === ErrorCategory.SECURITY) ||
       this.isRecurringError(entry);
@@ -445,7 +444,7 @@ export class EnhancedLogger {
   private isRecurringError(entry: LogEntry): boolean {
     const errorKey = `${entry.category}:${entry.message.substring(0, 100)}`;
     const count = this.errorCounts.get(errorKey) || 0;
-    
+
     return count >= 5; // Alert after 5 occurrences
   }
 
@@ -462,7 +461,7 @@ export class EnhancedLogger {
       affectedComponents: this.identifyAffectedComponents(entry),
       actionRequired: entry.severity === ErrorSeverity.CRITICAL,
       escalationLevel: this.determineEscalationLevel(entry.severity || ErrorSeverity.MEDIUM),
-      additionalContext: entry.context || {}
+      additionalContext: entry.context || {},
     };
 
     this.alertQueue.push(alert);
@@ -474,28 +473,35 @@ export class EnhancedLogger {
    */
   private identifyAffectedComponents(entry: LogEntry): string[] {
     const components: string[] = [];
-    
+
     if (entry.source && entry.source !== 'unknown') {
       components.push(entry.source);
     }
-    
+
     if (entry.context?.operationName) {
       components.push(String(entry.context.operationName));
     }
-    
+
     return components;
   }
 
   /**
    * Determine escalation level
    */
-  private determineEscalationLevel(severity: ErrorSeverity): 'low' | 'medium' | 'high' | 'critical' {
+  private determineEscalationLevel(
+    severity: ErrorSeverity,
+  ): 'low' | 'medium' | 'high' | 'critical' {
     switch (severity) {
-      case ErrorSeverity.CRITICAL: return 'critical';
-      case ErrorSeverity.HIGH: return 'high';
-      case ErrorSeverity.MEDIUM: return 'medium';
-      case ErrorSeverity.LOW: return 'low';
-      default: return 'low';
+      case ErrorSeverity.CRITICAL:
+        return 'critical';
+      case ErrorSeverity.HIGH:
+        return 'high';
+      case ErrorSeverity.MEDIUM:
+        return 'medium';
+      case ErrorSeverity.LOW:
+        return 'low';
+      default:
+        return 'low';
     }
   }
 
@@ -510,7 +516,7 @@ export class EnhancedLogger {
       category: alert.category,
       escalationLevel: alert.escalationLevel,
       affectedComponents: alert.affectedComponents,
-      actionRequired: alert.actionRequired
+      actionRequired: alert.actionRequired,
     });
 
     // Log the alert generation - external systems can monitor logs for alerts
@@ -522,8 +528,8 @@ export class EnhancedLogger {
         category: alert.category,
         escalationLevel: alert.escalationLevel,
         affectedComponents: alert.affectedComponents,
-        actionRequired: alert.actionRequired
-      }
+        actionRequired: alert.actionRequired,
+      },
     });
   }
 
@@ -536,7 +542,7 @@ export class EnhancedLogger {
       possibleCauses: this.identifyPossibleCauses(info),
       recommendedActions: this.suggestActions(info),
       relatedErrors: this.findRelatedErrors(info),
-      impactAssessment: this.assessImpact(info)
+      impactAssessment: this.assessImpact(info),
     };
 
     return analysis;
@@ -556,22 +562,22 @@ export class EnhancedLogger {
   private identifyPossibleCauses(info: any): string[] {
     const causes: string[] = [];
     const message = info.message?.toLowerCase() || '';
-    
+
     if (message.includes('network') || message.includes('connection')) {
       causes.push('Network connectivity issues');
       causes.push('External service unavailable');
     }
-    
+
     if (message.includes('timeout')) {
       causes.push('Operation taking too long');
       causes.push('Resource contention');
     }
-    
+
     if (message.includes('validation') || message.includes('invalid')) {
       causes.push('Invalid input data');
       causes.push('Schema validation failure');
     }
-    
+
     return causes;
   }
 
@@ -581,7 +587,7 @@ export class EnhancedLogger {
   private suggestActions(info: any): string[] {
     const actions: string[] = [];
     const category = info.category || '';
-    
+
     switch (category) {
       case ErrorCategory.NETWORK:
         actions.push('Check network connectivity');
@@ -598,7 +604,7 @@ export class EnhancedLogger {
       default:
         actions.push('Review error details and context');
     }
-    
+
     return actions;
   }
 
@@ -619,7 +625,7 @@ export class EnhancedLogger {
       severity: info.severity || 'unknown',
       affectedUsers: 'unknown',
       systemAvailability: info.severity === ErrorSeverity.CRITICAL ? 'degraded' : 'normal',
-      dataIntegrity: 'unknown'
+      dataIntegrity: 'unknown',
     };
   }
 
@@ -628,16 +634,16 @@ export class EnhancedLogger {
    */
   getMetrics(): LoggingMetrics {
     const now = Date.now();
-    const last24Hours = now - (24 * 60 * 60 * 1000);
-    const last7Days = now - (7 * 24 * 60 * 60 * 1000);
-    const last30Days = now - (30 * 24 * 60 * 60 * 1000);
+    const last24Hours = now - 24 * 60 * 60 * 1000;
+    const last7Days = now - 7 * 24 * 60 * 60 * 1000;
+    const last30Days = now - 30 * 24 * 60 * 60 * 1000;
 
-    const recentErrors = this.logBuffer.filter(entry => entry.level === 'error');
-    
+    const recentErrors = this.logBuffer.filter((entry) => entry.level === 'error');
+
     const errorTrends = {
-      last24Hours: recentErrors.filter(e => e.timestamp.getTime() > last24Hours).length,
-      last7Days: recentErrors.filter(e => e.timestamp.getTime() > last7Days).length,
-      last30Days: recentErrors.filter(e => e.timestamp.getTime() > last30Days).length
+      last24Hours: recentErrors.filter((e) => e.timestamp.getTime() > last24Hours).length,
+      last7Days: recentErrors.filter((e) => e.timestamp.getTime() > last7Days).length,
+      last30Days: recentErrors.filter((e) => e.timestamp.getTime() > last30Days).length,
     };
 
     const errorsByCategory: Record<ErrorCategory, number> = {} as any;
@@ -648,12 +654,12 @@ export class EnhancedLogger {
       // Count by category
       const category = entry.category as ErrorCategory;
       errorsByCategory[category] = (errorsByCategory[category] || 0) + 1;
-      
+
       // Count by severity
       if (entry.severity) {
         errorsBySeverity[entry.severity] = (errorsBySeverity[entry.severity] || 0) + 1;
       }
-      
+
       // Count by source
       errorsBySource[entry.source] = (errorsBySource[entry.source] || 0) + 1;
     }
@@ -662,14 +668,16 @@ export class EnhancedLogger {
       .map(([key, count]) => ({
         message: key,
         count,
-        lastOccurrence: this.errorLastSeen.get(key) || new Date()
+        lastOccurrence: this.errorLastSeen.get(key) || new Date(),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    const avgProcessingTime = this.logProcessingTimes.length > 0 
-      ? this.logProcessingTimes.reduce((sum, time) => sum + time, 0) / this.logProcessingTimes.length
-      : 0;
+    const avgProcessingTime =
+      this.logProcessingTimes.length > 0
+        ? this.logProcessingTimes.reduce((sum, time) => sum + time, 0) /
+          this.logProcessingTimes.length
+        : 0;
 
     return {
       errorsByCategory,
@@ -681,8 +689,8 @@ export class EnhancedLogger {
       performanceMetrics: {
         averageLogProcessingTime: avgProcessingTime,
         logVolume: this.logBuffer.length,
-        storageUsed: 0 // Would calculate actual storage usage
-      }
+        storageUsed: 0, // Would calculate actual storage usage
+      },
     };
   }
 
@@ -692,14 +700,14 @@ export class EnhancedLogger {
   private setupLogProcessing(): void {
     setInterval(() => {
       if (this.isShuttingDown) return;
-      
+
       // Clean old log buffer entries (keep last 10000)
       if (this.logBuffer.length > 10000) {
         this.logBuffer = this.logBuffer.slice(-5000);
       }
-      
+
       // Clean old error tracking
-      const cutoff = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000)); // 30 days
+      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
       for (const [key, date] of this.errorLastSeen.entries()) {
         if (date < cutoff) {
           this.errorLastSeen.delete(key);
@@ -715,7 +723,7 @@ export class EnhancedLogger {
   private setupMetricsCollection(): void {
     setInterval(() => {
       if (this.isShuttingDown) return;
-      
+
       const metrics = this.getMetrics();
       this.winston.info('Logging metrics', { metrics });
     }, 600000); // Every 10 minutes
@@ -727,10 +735,10 @@ export class EnhancedLogger {
   private setupAlerting(): void {
     setInterval(() => {
       if (this.isShuttingDown) return;
-      
+
       // Clean old alerts
-      const cutoff = new Date(Date.now() - (24 * 60 * 60 * 1000)); // 24 hours
-      this.alertQueue = this.alertQueue.filter(alert => alert.timestamp > cutoff);
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours
+      this.alertQueue = this.alertQueue.filter((alert) => alert.timestamp > cutoff);
     }, 3600000); // Every hour
   }
 
@@ -739,15 +747,15 @@ export class EnhancedLogger {
    */
   private parseSize(sizeStr: string): number {
     const units: Record<string, number> = {
-      'B': 1,
-      'KB': 1024,
-      'MB': 1024 * 1024,
-      'GB': 1024 * 1024 * 1024
+      B: 1,
+      KB: 1024,
+      MB: 1024 * 1024,
+      GB: 1024 * 1024 * 1024,
     };
-    
+
     const match = sizeStr.match(/^(\d+)\s*(\w+)$/);
     if (!match) return 52428800; // Default 50MB
-    
+
     const [, size, unit] = match;
     return parseInt(size) * (units[unit.toUpperCase()] || 1);
   }
@@ -770,5 +778,5 @@ export const enhancedLogger = new EnhancedLogger({
   logDir: './logs',
   level: process.env.LOG_LEVEL || 'info',
   enableConsole: process.env.NODE_ENV !== 'production',
-  enableAlerts: true
+  enableAlerts: true,
 });

@@ -3,37 +3,36 @@
 // Supports SQLite FTS5, Elasticsearch, OpenSearch, and future ML-based providers
 
 import { EventEmitter } from 'events';
-import {
+import type {
   IndexRegistry,
   IndexProvider,
   IndexProviderInfo,
   ProviderHealth,
-  IndexCapabilities,
   SearchQuery,
   SearchResults,
   IndexEntry,
-  IndexError,
-  IndexErrorCode
 } from './types.js';
+import { IndexCapabilities, IndexError, IndexErrorCode } from './types.js';
 
 export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistry {
   private providers = new Map<string, IndexProvider>();
   private activeProviderName: string | null = null;
   private healthCheckInterval?: NodeJS.Timeout;
   private lastHealthCheck = new Map<string, Date>();
-  
+
   // Performance tracking
   private providerMetrics = new Map<string, ProviderMetrics>();
   private circuitBreakers = new Map<string, CircuitBreaker>();
-  
+
   // Load balancing and failover
   private loadBalancingStrategy: LoadBalancingStrategy = 'round-robin';
   private fallbackChain: string[] = [];
   private requestCounter = 0;
 
-  constructor(healthCheckInterval = 30000) { // 30 seconds
+  constructor(healthCheckInterval = 30000) {
+    // 30 seconds
     super();
-    
+
     // Start health monitoring
     this.healthCheckInterval = setInterval(() => {
       this.performHealthChecks();
@@ -46,7 +45,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
       throw new IndexError(
         `Provider ${provider.name} is already registered`,
         IndexErrorCode.CONCURRENT_UPDATE_CONFLICT,
-        { providerName: provider.name }
+        { providerName: provider.name },
       );
     }
 
@@ -64,7 +63,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
 
     this.emit('provider_registered', {
       name: provider.name,
-      capabilities: provider.capabilities
+      capabilities: provider.capabilities,
     });
   }
 
@@ -72,17 +71,15 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   unregisterProvider(name: string): void {
     const provider = this.providers.get(name);
     if (!provider) {
-      throw new IndexError(
-        `Provider ${name} not found`,
-        IndexErrorCode.INVALID_QUERY,
-        { providerName: name }
-      );
+      throw new IndexError(`Provider ${name} not found`, IndexErrorCode.INVALID_QUERY, {
+        providerName: name,
+      });
     }
 
     console.log(`🗑️ Unregistering index provider: ${name}`);
 
     // Shutdown provider
-    provider.shutdown().catch(error => {
+    provider.shutdown().catch((error) => {
       console.error(`Error shutting down provider ${name}:`, error);
     });
 
@@ -93,13 +90,13 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     this.lastHealthCheck.delete(name);
 
     // Remove from fallback chain
-    this.fallbackChain = this.fallbackChain.filter(n => n !== name);
+    this.fallbackChain = this.fallbackChain.filter((n) => n !== name);
 
     // Switch active provider if necessary
     if (this.activeProviderName === name) {
       const remainingProviders = Array.from(this.providers.keys());
       this.activeProviderName = remainingProviders.length > 0 ? remainingProviders[0] : null;
-      
+
       if (this.activeProviderName) {
         console.log(`🔄 Switched active provider to: ${this.activeProviderName}`);
       } else {
@@ -120,7 +117,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     if (!this.activeProviderName) {
       throw new IndexError(
         'No active index provider available',
-        IndexErrorCode.DATABASE_CONNECTION_FAILED
+        IndexErrorCode.DATABASE_CONNECTION_FAILED,
       );
     }
 
@@ -129,7 +126,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
       throw new IndexError(
         `Active provider ${this.activeProviderName} not found`,
         IndexErrorCode.DATABASE_CONNECTION_FAILED,
-        { providerName: this.activeProviderName }
+        { providerName: this.activeProviderName },
       );
     }
 
@@ -140,11 +137,9 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   async switchProvider(name: string): Promise<void> {
     const provider = this.providers.get(name);
     if (!provider) {
-      throw new IndexError(
-        `Provider ${name} not found`,
-        IndexErrorCode.INVALID_QUERY,
-        { providerName: name }
-      );
+      throw new IndexError(`Provider ${name} not found`, IndexErrorCode.INVALID_QUERY, {
+        providerName: name,
+      });
     }
 
     console.log(`🔄 Switching to provider: ${name}`);
@@ -156,7 +151,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
         throw new IndexError(
           `Cannot switch to unhealthy provider: ${name}`,
           IndexErrorCode.DATABASE_CONNECTION_FAILED,
-          { providerName: name, health }
+          { providerName: name, health },
         );
       }
 
@@ -166,14 +161,14 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
       this.emit('provider_switched', {
         from: previousProvider,
         to: name,
-        health: health.status
+        health: health.status,
       });
 
       console.log(`✅ Successfully switched to provider: ${name}`);
     } catch (error) {
       this.emit('provider_switch_failed', {
         targetProvider: name,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -182,9 +177,9 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   // 🟢 WORKING: List all registered providers with health status
   listProviders(): IndexProviderInfo[] {
     return Array.from(this.providers.entries()).map(([name, provider]) => {
-      const metrics = this.providerMetrics.get(name)!;
-      const circuitBreaker = this.circuitBreakers.get(name)!;
-      
+      const metrics = this.providerMetrics.get(name);
+      const circuitBreaker = this.circuitBreakers.get(name);
+
       return {
         name,
         version: provider.version,
@@ -195,8 +190,8 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
           latency: metrics.getAverageLatency(),
           errorRate: metrics.getErrorRate(),
           uptime: metrics.getUptime(),
-          lastCheck: this.lastHealthCheck.get(name) || new Date(0)
-        }
+          lastCheck: this.lastHealthCheck.get(name) || new Date(0),
+        },
       };
     });
   }
@@ -204,10 +199,10 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   // 🟢 WORKING: Smart routing with load balancing and failover
   async executeWithFailover<T>(
     operation: (provider: IndexProvider) => Promise<T>,
-    retryCount = 3
+    retryCount = 3,
   ): Promise<T> {
     const providers = this.getProvidersInOrder();
-    
+
     let lastError: Error | null = null;
 
     for (const providerName of providers) {
@@ -227,7 +222,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
 
       try {
         const result = await operation(provider);
-        
+
         // Record success
         const duration = Date.now() - startTime;
         metrics.recordSuccess(duration);
@@ -236,14 +231,14 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
         this.emit('operation_success', {
           provider: providerName,
           duration,
-          operation: operation.name
+          operation: operation.name,
         });
 
         return result;
       } catch (error) {
         const duration = Date.now() - startTime;
         lastError = error as Error;
-        
+
         // Record failure
         metrics.recordFailure(duration);
         circuitBreaker.recordFailure();
@@ -252,7 +247,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
         this.emit('operation_failed', {
           provider: providerName,
           error: lastError.message,
-          duration
+          duration,
         });
 
         // Try next provider
@@ -264,7 +259,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     throw new IndexError(
       `All providers failed. Last error: ${lastError?.message || 'Unknown'}`,
       IndexErrorCode.DATABASE_CONNECTION_FAILED,
-      { providersAttempted: providers, lastError }
+      { providersAttempted: providers, lastError },
     );
   }
 
@@ -296,7 +291,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
         throw new IndexError(
           `Provider ${name} not found for fallback chain`,
           IndexErrorCode.INVALID_QUERY,
-          { providerName: name }
+          { providerName: name },
         );
       }
     }
@@ -309,18 +304,20 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   getRegistryStats(): RegistryStats {
     const providers = this.listProviders();
     const totalProviders = providers.length;
-    const healthyProviders = providers.filter(p => p.health.status === 'healthy').length;
-    
+    const healthyProviders = providers.filter((p) => p.health.status === 'healthy').length;
+
     return {
       totalProviders,
       healthyProviders,
       activeProvider: this.activeProviderName || 'none',
       loadBalancingStrategy: this.loadBalancingStrategy,
       fallbackChain: [...this.fallbackChain],
-      totalRequests: Array.from(this.providerMetrics.values())
-        .reduce((sum, metrics) => sum + metrics.getTotalRequests(), 0),
+      totalRequests: Array.from(this.providerMetrics.values()).reduce(
+        (sum, metrics) => sum + metrics.getTotalRequests(),
+        0,
+      ),
       averageLatency: this.calculateOverallAverageLatency(),
-      overallErrorRate: this.calculateOverallErrorRate()
+      overallErrorRate: this.calculateOverallErrorRate(),
     };
   }
 
@@ -335,16 +332,14 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     }
 
     // Shutdown all providers
-    const shutdownPromises = Array.from(this.providers.entries()).map(
-      async ([name, provider]) => {
-        try {
-          await provider.shutdown();
-          console.log(`✅ Provider ${name} shut down successfully`);
-        } catch (error) {
-          console.error(`❌ Error shutting down provider ${name}:`, error);
-        }
+    const shutdownPromises = Array.from(this.providers.entries()).map(async ([name, provider]) => {
+      try {
+        await provider.shutdown();
+        console.log(`✅ Provider ${name} shut down successfully`);
+      } catch (error) {
+        console.error(`❌ Error shutting down provider ${name}:`, error);
       }
-    );
+    });
 
     await Promise.allSettled(shutdownPromises);
 
@@ -380,10 +375,10 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
 
   private getRoundRobinOrder(providers: string[]): string[] {
     if (providers.length === 0) return [];
-    
+
     const startIndex = this.requestCounter % providers.length;
     this.requestCounter++;
-    
+
     return [...providers.slice(startIndex), ...providers.slice(0, startIndex)];
   }
 
@@ -391,9 +386,9 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     return providers.sort((a, b) => {
       const metricsA = this.providerMetrics.get(a);
       const metricsB = this.providerMetrics.get(b);
-      
+
       if (!metricsA || !metricsB) return 0;
-      
+
       return metricsA.getAverageLatency() - metricsB.getAverageLatency();
     });
   }
@@ -402,9 +397,9 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
     return providers.sort((a, b) => {
       const metricsA = this.providerMetrics.get(a);
       const metricsB = this.providerMetrics.get(b);
-      
+
       if (!metricsA || !metricsB) return 0;
-      
+
       // Sort by error rate (lower is better)
       return metricsA.getErrorRate() - metricsB.getErrorRate();
     });
@@ -412,37 +407,35 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
 
   private getActiveFirstOrder(providers: string[]): string[] {
     if (!this.activeProviderName) return providers;
-    
-    const filtered = providers.filter(p => p !== this.activeProviderName);
+
+    const filtered = providers.filter((p) => p !== this.activeProviderName);
     return [this.activeProviderName, ...filtered];
   }
 
   private async performHealthChecks(): Promise<void> {
-    const healthPromises = Array.from(this.providers.entries()).map(
-      async ([name, provider]) => {
-        try {
-          const health = await provider.getHealth();
-          this.lastHealthCheck.set(name, new Date());
-          
-          const metrics = this.providerMetrics.get(name);
-          if (metrics) {
-            metrics.updateHealth(health.status);
-          }
-          
-          this.emit('health_check_completed', {
-            provider: name,
-            status: health.status,
-            latency: health.latency
-          });
-        } catch (error) {
-          console.error(`Health check failed for provider ${name}:`, error);
-          this.emit('health_check_failed', {
-            provider: name,
-            error: (error as Error).message
-          });
+    const healthPromises = Array.from(this.providers.entries()).map(async ([name, provider]) => {
+      try {
+        const health = await provider.getHealth();
+        this.lastHealthCheck.set(name, new Date());
+
+        const metrics = this.providerMetrics.get(name);
+        if (metrics) {
+          metrics.updateHealth(health.status);
         }
+
+        this.emit('health_check_completed', {
+          provider: name,
+          status: health.status,
+          latency: health.latency,
+        });
+      } catch (error) {
+        console.error(`Health check failed for provider ${name}:`, error);
+        this.emit('health_check_failed', {
+          provider: name,
+          error: (error as Error).message,
+        });
       }
-    );
+    });
 
     await Promise.allSettled(healthPromises);
   }
@@ -450,7 +443,7 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   private calculateOverallAverageLatency(): number {
     const metrics = Array.from(this.providerMetrics.values());
     if (metrics.length === 0) return 0;
-    
+
     const totalLatency = metrics.reduce((sum, m) => sum + m.getAverageLatency(), 0);
     return totalLatency / metrics.length;
   }
@@ -458,10 +451,10 @@ export class ForgeFlowIndexRegistry extends EventEmitter implements IndexRegistr
   private calculateOverallErrorRate(): number {
     const metrics = Array.from(this.providerMetrics.values());
     if (metrics.length === 0) return 0;
-    
+
     const totalRequests = metrics.reduce((sum, m) => sum + m.getTotalRequests(), 0);
     const totalErrors = metrics.reduce((sum, m) => sum + m.getTotalErrors(), 0);
-    
+
     return totalRequests > 0 ? (totalErrors / totalRequests) * 100 : 0;
   }
 }
@@ -531,7 +524,7 @@ class CircuitBreaker {
   private failureCount = 0;
   private lastFailureTime = 0;
   private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
-  
+
   private readonly failureThreshold = 5;
   private readonly timeout = 60000; // 1 minute
   private readonly halfOpenMaxCalls = 3;
@@ -540,7 +533,7 @@ class CircuitBreaker {
   recordSuccess(): void {
     this.failureCount = 0;
     this.halfOpenSuccessCount++;
-    
+
     if (this.state === 'HALF_OPEN' && this.halfOpenSuccessCount >= this.halfOpenMaxCalls) {
       this.state = 'CLOSED';
       this.halfOpenSuccessCount = 0;
@@ -550,7 +543,7 @@ class CircuitBreaker {
   recordFailure(): void {
     this.failureCount++;
     this.lastFailureTime = Date.now();
-    
+
     if (this.state === 'HALF_OPEN') {
       this.state = 'OPEN';
       this.halfOpenSuccessCount = 0;
@@ -576,7 +569,7 @@ class CircuitBreaker {
 // 🟢 WORKING: Type definitions
 type LoadBalancingStrategy = 'round-robin' | 'least-latency' | 'health-based' | 'active-first';
 
-interface RegistryStats {
+export interface RegistryStats {
   totalProviders: number;
   healthyProviders: number;
   activeProvider: string;

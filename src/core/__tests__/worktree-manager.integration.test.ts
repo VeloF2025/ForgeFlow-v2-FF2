@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs-extra';
 import path from 'path';
 import { WorktreeManager } from '../worktree-manager';
-import { WorktreeConfig } from '../../types';
+import type { WorktreeConfig } from '../../types';
 import simpleGit from 'simple-git';
 
 const TEST_REPO_DIR = path.join(__dirname, 'test-repo');
@@ -30,7 +30,7 @@ describe('WorktreeManager Integration Tests', () => {
     await git.init();
     await git.addConfig('user.name', 'Test User');
     await git.addConfig('user.email', 'test@example.com');
-    
+
     // Create initial commit
     await fs.writeFile('README.md', '# Test Repository');
     await git.add('README.md');
@@ -82,7 +82,7 @@ describe('WorktreeManager Integration Tests', () => {
 
     it('should handle idempotent worktree creation', async () => {
       const issueId = 'idempotent-123';
-      
+
       // Create worktree first time
       const worktreeId1 = await manager.createWorktree(issueId);
       expect(worktreeId1).toBeTruthy();
@@ -110,7 +110,7 @@ describe('WorktreeManager Integration Tests', () => {
       expect(manager.getWorktreeInfo(worktreeId)).toBeUndefined();
 
       // Verify directory is removed (might take a moment)
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       expect(await fs.pathExists(worktreePath)).toBe(false);
 
       // Verify git worktree list doesn't show the worktree
@@ -135,7 +135,7 @@ describe('WorktreeManager Integration Tests', () => {
   describe('Concurrent Operations', () => {
     it('should handle concurrent worktree creation safely', async () => {
       const issueId = 'concurrent-123';
-      
+
       // Attempt to create the same worktree concurrently
       const promises = [
         manager.createWorktree(issueId),
@@ -144,11 +144,9 @@ describe('WorktreeManager Integration Tests', () => {
       ];
 
       const results = await Promise.allSettled(promises);
-      
+
       // All should resolve to the same worktree ID
-      const successfulResults = results
-        .filter(r => r.status === 'fulfilled')
-        .map(r => (r as PromiseFulfilledResult<string>).value);
+      const successfulResults = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
 
       expect(successfulResults).toHaveLength(3);
       expect(new Set(successfulResults).size).toBe(1); // All same ID
@@ -159,9 +157,9 @@ describe('WorktreeManager Integration Tests', () => {
 
     it('should handle concurrent different worktree creation', async () => {
       const issueIds = ['concurrent-a', 'concurrent-b', 'concurrent-c'];
-      
+
       // Create different worktrees concurrently
-      const promises = issueIds.map(id => manager.createWorktree(id));
+      const promises = issueIds.map((id) => manager.createWorktree(id));
       const results = await Promise.all(promises);
 
       expect(results).toHaveLength(3);
@@ -189,7 +187,7 @@ describe('WorktreeManager Integration Tests', () => {
       ];
 
       const results = await Promise.allSettled(promises);
-      
+
       // All should succeed (idempotent)
       for (const result of results) {
         expect(result.status).toBe('fulfilled');
@@ -201,10 +199,10 @@ describe('WorktreeManager Integration Tests', () => {
 
     it('should prevent race conditions between create and cleanup', async () => {
       const issueId = 'race-123';
-      
+
       // Start creating worktree
       const createPromise = manager.createWorktree(issueId);
-      
+
       // Wait a bit then try to cleanup (should wait for creation to complete)
       setTimeout(async () => {
         const worktreeId = await createPromise;
@@ -215,8 +213,8 @@ describe('WorktreeManager Integration Tests', () => {
       expect(worktreeId).toBeTruthy();
 
       // Give cleanup time to run
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // Final state should be clean
       expect(manager.getWorktreeInfo(worktreeId)).toBeUndefined();
     });
@@ -225,7 +223,7 @@ describe('WorktreeManager Integration Tests', () => {
   describe('Error Handling and Recovery', () => {
     it('should handle worktree creation failures with rollback', async () => {
       const issueId = 'fail-create-123';
-      
+
       // Mock git command to fail
       const originalRaw = manager['git'].raw;
       vi.spyOn(manager['git'], 'raw').mockImplementationOnce(() => {
@@ -246,7 +244,7 @@ describe('WorktreeManager Integration Tests', () => {
     it('should handle cleanup failures gracefully', async () => {
       const issueId = 'fail-cleanup-123';
       const worktreeId = await manager.createWorktree(issueId);
-      
+
       // Mock git command to fail cleanup
       const originalRaw = manager['git'].raw;
       vi.spyOn(manager['git'], 'raw').mockImplementation((command) => {
@@ -261,28 +259,28 @@ describe('WorktreeManager Integration Tests', () => {
 
       // Restore and verify force cleanup worked
       manager['git'].raw = originalRaw;
-      
+
       // The force cleanup should have removed it from tracking
       expect(manager.getWorktreeInfo(worktreeId)).toBeUndefined();
     });
 
     it('should recover from interrupted operations', async () => {
       const issueId = 'interrupted-123';
-      
+
       // Simulate interrupted creation by creating partial state
       const worktreeId = `wt-${issueId}-test123`;
       const worktreePath = path.join(TEST_WORKTREE_DIR, worktreeId);
-      
+
       // Create directory but not git worktree
       await fs.ensureDir(worktreePath);
-      
+
       // Validate repository should clean this up
       await manager.validateRepository();
-      
+
       // Now normal creation should work
       const newWorktreeId = await manager.createWorktree(issueId);
       expect(newWorktreeId).toBeTruthy();
-      
+
       const info = manager.getWorktreeInfo(newWorktreeId);
       expect(info?.status).toBe('active');
     });
@@ -290,15 +288,15 @@ describe('WorktreeManager Integration Tests', () => {
     it('should handle conflicting worktree names', async () => {
       const issueId = 'conflict-123';
       const worktreeId = await manager.createWorktree(issueId);
-      
+
       // Manually create directory with potential conflict name
       const conflictPath = path.join(TEST_WORKTREE_DIR, 'potential-conflict');
       await fs.ensureDir(conflictPath);
-      
+
       // Should still be able to create more worktrees
       const secondIssueId = 'conflict-456';
       const secondWorktreeId = await manager.createWorktree(secondIssueId);
-      
+
       expect(secondWorktreeId).toBeTruthy();
       expect(secondWorktreeId).not.toBe(worktreeId);
     });
@@ -308,22 +306,22 @@ describe('WorktreeManager Integration Tests', () => {
     it('should handle maximum worktree limits', async () => {
       const maxWorktrees = config.maxWorktrees;
       const worktreeIds: string[] = [];
-      
+
       // Create maximum number of worktrees
       for (let i = 0; i < maxWorktrees; i++) {
         const worktreeId = await manager.createWorktree(`issue-${i}`);
         worktreeIds.push(worktreeId);
       }
-      
+
       expect(manager.getAllWorktrees()).toHaveLength(maxWorktrees);
-      
+
       // Creating one more should trigger cleanup of oldest
       const extraWorktreeId = await manager.createWorktree('extra-issue');
       expect(extraWorktreeId).toBeTruthy();
-      
+
       // Should still have maximum worktrees
       expect(manager.getAllWorktrees()).toHaveLength(maxWorktrees);
-      
+
       // First worktree should be cleaned up
       expect(manager.getWorktreeInfo(worktreeIds[0])).toBeUndefined();
     });
@@ -331,25 +329,25 @@ describe('WorktreeManager Integration Tests', () => {
     it('should perform well with multiple operations', async () => {
       const operationCount = 10;
       const startTime = Date.now();
-      
+
       // Create multiple worktrees
-      const createPromises = Array.from({ length: operationCount }, (_, i) => 
-        manager.createWorktree(`perf-issue-${i}`)
+      const createPromises = Array.from({ length: operationCount }, (_, i) =>
+        manager.createWorktree(`perf-issue-${i}`),
       );
-      
+
       const worktreeIds = await Promise.all(createPromises);
       expect(worktreeIds).toHaveLength(operationCount);
-      
+
       // Clean up all worktrees
-      const cleanupPromises = worktreeIds.map(id => manager.cleanupWorktree(id));
+      const cleanupPromises = worktreeIds.map((id) => manager.cleanupWorktree(id));
       await Promise.all(cleanupPromises);
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       // Should complete within reasonable time (adjust based on system)
       expect(duration).toBeLessThan(30000); // 30 seconds max
-      
+
       // All should be cleaned up
       expect(manager.getAllWorktrees()).toHaveLength(0);
     });
@@ -359,14 +357,14 @@ describe('WorktreeManager Integration Tests', () => {
     it('should sync worktree with remote changes', async () => {
       const issueId = 'sync-123';
       const worktreeId = await manager.createWorktree(issueId);
-      
+
       // Mock successful sync operations
       const worktreePath = manager.getWorktreePath(worktreeId);
       const worktreeGit = simpleGit(worktreePath);
-      
+
       vi.spyOn(worktreeGit, 'fetch').mockResolvedValue(undefined as any);
       vi.spyOn(worktreeGit, 'pull').mockResolvedValue(undefined as any);
-      
+
       // Sync should work without errors
       await expect(manager.syncWorktree(worktreeId)).resolves.not.toThrow();
     });
@@ -374,17 +372,17 @@ describe('WorktreeManager Integration Tests', () => {
     it('should prevent concurrent sync operations', async () => {
       const issueId = 'concurrent-sync-123';
       const worktreeId = await manager.createWorktree(issueId);
-      
+
       // Start multiple sync operations
       const syncPromises = [
         manager.syncWorktree(worktreeId),
         manager.syncWorktree(worktreeId),
         manager.syncWorktree(worktreeId),
       ];
-      
+
       // All should complete successfully due to locking and idempotency
       const results = await Promise.allSettled(syncPromises);
-      
+
       for (const result of results) {
         expect(result.status).toBe('fulfilled');
       }
@@ -393,13 +391,13 @@ describe('WorktreeManager Integration Tests', () => {
     it('should handle sync failures gracefully', async () => {
       const issueId = 'sync-fail-123';
       const worktreeId = await manager.createWorktree(issueId);
-      
+
       const worktreePath = manager.getWorktreePath(worktreeId);
       const worktreeGit = simpleGit(worktreePath);
-      
+
       // Mock sync failure
       vi.spyOn(worktreeGit, 'fetch').mockRejectedValue(new Error('Network error'));
-      
+
       await expect(manager.syncWorktree(worktreeId)).rejects.toThrow('Network error');
     });
   });
@@ -407,15 +405,15 @@ describe('WorktreeManager Integration Tests', () => {
   describe('Statistics and Monitoring', () => {
     it('should provide accurate idempotency statistics', async () => {
       const issueIds = ['stats-1', 'stats-2', 'stats-3'];
-      
+
       // Create some worktrees
       for (const issueId of issueIds) {
         await manager.createWorktree(issueId);
       }
-      
+
       // Get idempotency statistics
       const stats = await manager.getIdempotencyStats();
-      
+
       expect(stats.total).toBeGreaterThan(0);
       expect(stats.byOperation.createWorktree).toBe(issueIds.length);
       expect(stats.successRate).toBeGreaterThan(0);
@@ -424,13 +422,13 @@ describe('WorktreeManager Integration Tests', () => {
     it('should show current lock status', async () => {
       // Start a long-running operation in background
       const longRunningPromise = manager.createWorktree('lock-status-test');
-      
+
       // Check lock status immediately
       const lockStatus = await manager.getLockStatus();
-      
+
       // Wait for operation to complete
       await longRunningPromise;
-      
+
       // Lock status should show information during operation
       // (Exact assertion depends on timing)
       expect(Array.isArray(lockStatus)).toBe(true);
@@ -439,10 +437,10 @@ describe('WorktreeManager Integration Tests', () => {
     it('should clean up old idempotency records', async () => {
       const issueId = 'cleanup-records-123';
       await manager.createWorktree(issueId);
-      
+
       // Clean up old records (immediate cleanup for testing)
       const cleanedCount = await manager.cleanupIdempotencyRecords(0);
-      
+
       expect(cleanedCount).toBeGreaterThanOrEqual(0);
     });
   });
@@ -450,10 +448,10 @@ describe('WorktreeManager Integration Tests', () => {
   describe('Force Operations (Emergency)', () => {
     it('should force release all locks when needed', async () => {
       const issueId = 'force-release-123';
-      
+
       // This test is mainly to ensure the method exists and doesn't crash
       await expect(manager.forceReleaseAllLocks()).resolves.not.toThrow();
-      
+
       // Normal operations should still work after force release
       const worktreeId = await manager.createWorktree(issueId);
       expect(worktreeId).toBeTruthy();
@@ -461,17 +459,17 @@ describe('WorktreeManager Integration Tests', () => {
 
     it('should handle emergency cleanup scenarios', async () => {
       const issueIds = ['emergency-1', 'emergency-2', 'emergency-3'];
-      
+
       // Create multiple worktrees
       for (const issueId of issueIds) {
         await manager.createWorktree(issueId);
       }
-      
+
       expect(manager.getAllWorktrees()).toHaveLength(issueIds.length);
-      
+
       // Emergency cleanup
       await manager.cleanup();
-      
+
       // Should clean up everything
       expect(manager.getAllWorktrees()).toHaveLength(0);
     });

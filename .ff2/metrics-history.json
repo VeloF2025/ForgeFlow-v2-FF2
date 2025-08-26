@@ -1,0 +1,2369 @@
+[
+  {
+    "timestamp": "2025-08-25T10:51:07.673Z",
+    "metrics": {
+      "timestamp": "2025-08-25T10:51:07.673Z",
+      "cumulative": {
+        "totalJobs": 37,
+        "successfulJobs": 25,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 37,
+        "avgQuality": 0.7378378378378383,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6756756756756757,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7378378378378383,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6756756756756757,
+          "target": 0.9,
+          "deadline": "2025-11-23T10:51:07.673Z",
+          "progress": 0.7507507507507507,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7378378378378383,
+          "target": 0.85,
+          "deadline": "2025-10-24T10:51:07.673Z",
+          "progress": 0.8680445151033392,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:01:35.634Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:01:35.634Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:01:35.634Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:01:35.634Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:02:48.357Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:02:48.357Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 1,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:02:48.357Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:02:48.357Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:12:18.212Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:12:18.212Z",
+      "cumulative": {
+        "totalJobs": 37,
+        "successfulJobs": 25,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 37,
+        "avgQuality": 0.7378378378378383,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6756756756756757,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7378378378378383,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6756756756756757,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:12:18.212Z",
+          "progress": 0.7507507507507507,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7378378378378383,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:12:18.212Z",
+          "progress": 0.8680445151033392,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:12:55.073Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:12:55.073Z",
+      "cumulative": {
+        "totalJobs": 36,
+        "successfulJobs": 24,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 36,
+        "avgQuality": 0.7361111111111115,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6666666666666666,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7361111111111115,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6666666666666666,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:12:55.073Z",
+          "progress": 0.7407407407407407,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7361111111111115,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:12:55.073Z",
+          "progress": 0.8660130718954253,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:26:18.635Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:26:18.635Z",
+      "cumulative": {
+        "totalJobs": 39,
+        "successfulJobs": 27,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6923076923076923,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7410256410256414,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6923076923076923,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:26:18.635Z",
+          "progress": 0.7692307692307692,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7410256410256414,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:26:18.635Z",
+          "progress": 0.8717948717948723,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T11:41:44.708Z",
+    "metrics": {
+      "timestamp": "2025-08-25T11:41:44.708Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T11:41:44.708Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T11:41:44.708Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T12:02:42.609Z",
+    "metrics": {
+      "timestamp": "2025-08-25T12:02:42.609Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 1,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T12:02:42.609Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T12:02:42.609Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T12:53:10.855Z",
+    "metrics": {
+      "timestamp": "2025-08-25T12:53:10.855Z",
+      "cumulative": {
+        "totalJobs": 440,
+        "successfulJobs": 428,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 440,
+        "avgQuality": 0.07659090909090911,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [
+        {
+          "name": "90% Success Rate",
+          "achievedAt": "2025-08-25T12:53:10.855Z",
+          "significance": "critical",
+          "description": "Achieved 90% or higher success rate"
+        }
+      ],
+      "kpis": {
+        "successRate": 0.9727272727272728,
+        "avgJobDuration": 1095.7472527472528,
+        "qualityScore": 0.07659090909090911,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.9727272727272728,
+          "target": 0.9,
+          "deadline": "2025-11-23T12:53:10.855Z",
+          "progress": 1,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.07659090909090911,
+          "target": 0.85,
+          "deadline": "2025-10-24T12:53:10.855Z",
+          "progress": 0.09010695187165778,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T12:53:26.693Z",
+    "metrics": {
+      "timestamp": "2025-08-25T12:53:26.693Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T12:53:26.693Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T12:53:26.693Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:02:09.102Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:02:09.102Z",
+      "cumulative": {
+        "totalJobs": 57,
+        "successfulJobs": 45,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 57,
+        "avgQuality": 0.6789473684210525,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7894736842105263,
+        "avgJobDuration": 606,
+        "qualityScore": 0.6789473684210525,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7894736842105263,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:02:09.102Z",
+          "progress": 0.8771929824561403,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6789473684210525,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:02:09.102Z",
+          "progress": 0.7987616099071206,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:04:27.507Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:04:27.507Z",
+      "cumulative": {
+        "totalJobs": 72,
+        "successfulJobs": 60,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 72,
+        "avgQuality": 0.45416666666666683,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8333333333333334,
+        "avgJobDuration": 610.875,
+        "qualityScore": 0.45416666666666683,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8333333333333334,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:04:27.507Z",
+          "progress": 0.9259259259259259,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.45416666666666683,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:04:27.507Z",
+          "progress": 0.5343137254901963,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:12:44.851Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:12:44.851Z",
+      "cumulative": {
+        "totalJobs": 90,
+        "successfulJobs": 78,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 90,
+        "avgQuality": 0.48111111111111116,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8666666666666667,
+        "avgJobDuration": 541.6666666666666,
+        "qualityScore": 0.48111111111111116,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8666666666666667,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:12:44.851Z",
+          "progress": 0.962962962962963,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.48111111111111116,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:12:44.851Z",
+          "progress": 0.5660130718954249,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:13:11.239Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:13:11.239Z",
+      "cumulative": {
+        "totalJobs": 113,
+        "successfulJobs": 101,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 113,
+        "avgQuality": 0.3362831858407081,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8938053097345132,
+        "avgJobDuration": 577.7894736842105,
+        "qualityScore": 0.3362831858407081,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8938053097345132,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:13:11.239Z",
+          "progress": 0.9931170108161258,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.3362831858407081,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:13:11.239Z",
+          "progress": 0.3956272774596566,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:13:23.396Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:13:23.396Z",
+      "cumulative": {
+        "totalJobs": 75,
+        "successfulJobs": 63,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 75,
+        "avgQuality": 0.4360000000000001,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.84,
+        "avgJobDuration": 608.625,
+        "qualityScore": 0.4360000000000001,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.84,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:13:23.396Z",
+          "progress": 0.9333333333333332,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4360000000000001,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:13:23.396Z",
+          "progress": 0.5129411764705883,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:15:47.748Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:15:47.748Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 1,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:15:47.748Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:15:47.748Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:15:57.840Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:15:57.840Z",
+      "cumulative": {
+        "totalJobs": 38,
+        "successfulJobs": 26,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 38,
+        "avgQuality": 0.7394736842105267,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6842105263157895,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7394736842105267,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6842105263157895,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:15:57.840Z",
+          "progress": 0.7602339181286549,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7394736842105267,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:15:57.840Z",
+          "progress": 0.8699690402476785,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:16:33.807Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:16:33.807Z",
+      "cumulative": {
+        "totalJobs": 54,
+        "successfulJobs": 42,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 54,
+        "avgQuality": 0.5629629629629632,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7777777777777778,
+        "avgJobDuration": 489,
+        "qualityScore": 0.5629629629629632,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7777777777777778,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:16:33.807Z",
+          "progress": 0.8641975308641975,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.5629629629629632,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:16:33.807Z",
+          "progress": 0.6623093681917215,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:17:12.890Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:17:12.890Z",
+      "cumulative": {
+        "totalJobs": 88,
+        "successfulJobs": 76,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 88,
+        "avgQuality": 0.3875000000000001,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8636363636363636,
+        "avgJobDuration": 607.3333333333334,
+        "qualityScore": 0.3875000000000001,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8636363636363636,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:17:12.890Z",
+          "progress": 0.9595959595959596,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.3875000000000001,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:17:12.890Z",
+          "progress": 0.4558823529411766,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:17:25.050Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:17:25.050Z",
+      "cumulative": {
+        "totalJobs": 55,
+        "successfulJobs": 43,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 55,
+        "avgQuality": 0.552727272727273,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7818181818181819,
+        "avgJobDuration": 613.5,
+        "qualityScore": 0.552727272727273,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7818181818181819,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:17:25.050Z",
+          "progress": 0.8686868686868687,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.552727272727273,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:17:25.050Z",
+          "progress": 0.6502673796791447,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:17:52.250Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:17:52.250Z",
+      "cumulative": {
+        "totalJobs": 73,
+        "successfulJobs": 61,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 73,
+        "avgQuality": 0.43561643835616454,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8356164383561644,
+        "avgJobDuration": 464.625,
+        "qualityScore": 0.43561643835616454,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8356164383561644,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:17:52.250Z",
+          "progress": 0.928462709284627,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.43561643835616454,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:17:52.250Z",
+          "progress": 0.5124899274778406,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:19:22.833Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:19:22.833Z",
+      "cumulative": {
+        "totalJobs": 62,
+        "successfulJobs": 50,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 62,
+        "avgQuality": 0.5774193548387098,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8064516129032258,
+        "avgJobDuration": 489.6,
+        "qualityScore": 0.5774193548387098,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8064516129032258,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:19:22.833Z",
+          "progress": 0.8960573476702508,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.5774193548387098,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:19:22.833Z",
+          "progress": 0.6793168880455409,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:19:36.363Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:19:36.363Z",
+      "cumulative": {
+        "totalJobs": 87,
+        "successfulJobs": 75,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 87,
+        "avgQuality": 0.39195402298850585,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8620689655172413,
+        "avgJobDuration": 553.5454545454545,
+        "qualityScore": 0.39195402298850585,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8620689655172413,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:19:36.363Z",
+          "progress": 0.9578544061302681,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.39195402298850585,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:19:36.363Z",
+          "progress": 0.4611223799864775,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:28:13.932Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:28:13.932Z",
+      "cumulative": {
+        "totalJobs": 190,
+        "successfulJobs": 178,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 190,
+        "avgQuality": 0.27105263157894754,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [
+        {
+          "name": "90% Success Rate",
+          "achievedAt": "2025-08-25T13:28:13.931Z",
+          "significance": "critical",
+          "description": "Achieved 90% or higher success rate"
+        }
+      ],
+      "kpis": {
+        "successRate": 0.9368421052631579,
+        "avgJobDuration": 590.4,
+        "qualityScore": 0.27105263157894754,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.9368421052631579,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:28:13.932Z",
+          "progress": 1,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.27105263157894754,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:28:13.932Z",
+          "progress": 0.3188854489164089,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:29:04.316Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:29:04.316Z",
+      "cumulative": {
+        "totalJobs": 88,
+        "successfulJobs": 76,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 88,
+        "avgQuality": 0.3875000000000001,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8636363636363636,
+        "avgJobDuration": 642.9166666666666,
+        "qualityScore": 0.3875000000000001,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8636363636363636,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:29:04.316Z",
+          "progress": 0.9595959595959596,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.3875000000000001,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:29:04.316Z",
+          "progress": 0.4558823529411766,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:30:20.996Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:30:20.996Z",
+      "cumulative": {
+        "totalJobs": 49,
+        "successfulJobs": 37,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 49,
+        "avgQuality": 0.6204081632653065,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7551020408163265,
+        "avgJobDuration": 487,
+        "qualityScore": 0.6204081632653065,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7551020408163265,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:30:20.996Z",
+          "progress": 0.8390022675736961,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6204081632653065,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:30:20.996Z",
+          "progress": 0.7298919567827135,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:31:13.433Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:31:13.433Z",
+      "cumulative": {
+        "totalJobs": 87,
+        "successfulJobs": 75,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 87,
+        "avgQuality": 0.4022988505747127,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8620689655172413,
+        "avgJobDuration": 474.38461538461536,
+        "qualityScore": 0.4022988505747127,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8620689655172413,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:31:13.433Z",
+          "progress": 0.9578544061302681,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4022988505747127,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:31:13.433Z",
+          "progress": 0.473292765382015,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:31:31.014Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:31:31.014Z",
+      "cumulative": {
+        "totalJobs": 54,
+        "successfulJobs": 42,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 54,
+        "avgQuality": 0.5796296296296298,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7777777777777778,
+        "avgJobDuration": 306.5,
+        "qualityScore": 0.5796296296296298,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7777777777777778,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:31:31.014Z",
+          "progress": 0.8641975308641975,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.5796296296296298,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:31:31.014Z",
+          "progress": 0.6819172113289763,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:31:56.042Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:31:56.042Z",
+      "cumulative": {
+        "totalJobs": 87,
+        "successfulJobs": 75,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 87,
+        "avgQuality": 0.3827586206896552,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8620689655172413,
+        "avgJobDuration": 608.25,
+        "qualityScore": 0.3827586206896552,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8620689655172413,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:31:56.042Z",
+          "progress": 0.9578544061302681,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.3827586206896552,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:31:56.042Z",
+          "progress": 0.4503042596348885,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:32:07.695Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:32:07.695Z",
+      "cumulative": {
+        "totalJobs": 47,
+        "successfulJobs": 35,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 47,
+        "avgQuality": 0.6319148936170216,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7446808510638298,
+        "avgJobDuration": 610,
+        "qualityScore": 0.6319148936170216,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7446808510638298,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:32:07.695Z",
+          "progress": 0.8274231678486997,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6319148936170216,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:32:07.695Z",
+          "progress": 0.7434292866082607,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:32:48.514Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:32:48.514Z",
+      "cumulative": {
+        "totalJobs": 71,
+        "successfulJobs": 59,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 70,
+        "avgQuality": 0.45428571428571446,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8309859154929577,
+        "avgJobDuration": 524,
+        "qualityScore": 0.4591549295774649,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8309859154929577,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:32:48.514Z",
+          "progress": 0.9233176838810642,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4591549295774649,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:32:48.514Z",
+          "progress": 0.5401822700911352,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:34:20.690Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:34:20.690Z",
+      "cumulative": {
+        "totalJobs": 93,
+        "successfulJobs": 81,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 93,
+        "avgQuality": 0.3752688172043012,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8709677419354839,
+        "avgJobDuration": 504.6666666666667,
+        "qualityScore": 0.3752688172043012,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8709677419354839,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:34:20.690Z",
+          "progress": 0.967741935483871,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.3752688172043012,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:34:20.690Z",
+          "progress": 0.44149272612270735,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:35:41.470Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:35:41.470Z",
+      "cumulative": {
+        "totalJobs": 61,
+        "successfulJobs": 49,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 61,
+        "avgQuality": 0.5098360655737707,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8032786885245902,
+        "avgJobDuration": 500.4,
+        "qualityScore": 0.5098360655737707,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8032786885245902,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:35:41.470Z",
+          "progress": 0.8925318761384335,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.5098360655737707,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:35:41.470Z",
+          "progress": 0.599807135969142,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:37:03.508Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:37:03.508Z",
+      "cumulative": {
+        "totalJobs": 48,
+        "successfulJobs": 36,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 48,
+        "avgQuality": 0.6375000000000003,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.75,
+        "avgJobDuration": 614,
+        "qualityScore": 0.6375000000000003,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.75,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:37:03.508Z",
+          "progress": 0.8333333333333333,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6375000000000003,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:37:03.508Z",
+          "progress": 0.7500000000000003,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:41:14.550Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:41:14.550Z",
+      "cumulative": {
+        "totalJobs": 97,
+        "successfulJobs": 85,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 97,
+        "avgQuality": 0.36804123711340214,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8762886597938144,
+        "avgJobDuration": 615.2857142857143,
+        "qualityScore": 0.36804123711340214,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8762886597938144,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:41:14.550Z",
+          "progress": 0.9736540664375716,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.36804123711340214,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:41:14.550Z",
+          "progress": 0.4329896907216496,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:43:04.084Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:43:04.084Z",
+      "cumulative": {
+        "totalJobs": 37,
+        "successfulJobs": 25,
+        "knowledgeCards": 2,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 37,
+        "avgQuality": 0.7378378378378383,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.6756756756756757,
+        "avgJobDuration": 0,
+        "qualityScore": 0.7378378378378383,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.6756756756756757,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:43:04.084Z",
+          "progress": 0.7507507507507507,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.7378378378378383,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:43:04.084Z",
+          "progress": 0.8680445151033392,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:43:39.860Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:43:39.860Z",
+      "cumulative": {
+        "totalJobs": 124,
+        "successfulJobs": 112,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 125,
+        "avgQuality": 0.3224000000000002,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [
+        {
+          "name": "90% Success Rate",
+          "achievedAt": "2025-08-25T13:43:39.860Z",
+          "significance": "critical",
+          "description": "Achieved 90% or higher success rate"
+        }
+      ],
+      "kpis": {
+        "successRate": 0.9032258064516129,
+        "avgJobDuration": 559.5,
+        "qualityScore": 0.32500000000000023,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.9032258064516129,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:43:39.860Z",
+          "progress": 1,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.32500000000000023,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:43:39.860Z",
+          "progress": 0.3823529411764709,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:43:46.846Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:43:46.846Z",
+      "cumulative": {
+        "totalJobs": 47,
+        "successfulJobs": 35,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 47,
+        "avgQuality": 0.6319148936170216,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7446808510638298,
+        "avgJobDuration": 613,
+        "qualityScore": 0.6319148936170216,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7446808510638298,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:43:46.846Z",
+          "progress": 0.8274231678486997,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6319148936170216,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:43:46.846Z",
+          "progress": 0.7434292866082607,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:44:08.698Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:44:08.698Z",
+      "cumulative": {
+        "totalJobs": 68,
+        "successfulJobs": 56,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 68,
+        "avgQuality": 0.4808823529411766,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8235294117647058,
+        "avgJobDuration": 351.57142857142856,
+        "qualityScore": 0.4808823529411766,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8235294117647058,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:44:08.698Z",
+          "progress": 0.9150326797385621,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4808823529411766,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:44:08.698Z",
+          "progress": 0.5657439446366783,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:44:30.963Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:44:30.963Z",
+      "cumulative": {
+        "totalJobs": 72,
+        "successfulJobs": 60,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 72,
+        "avgQuality": 0.45416666666666683,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8333333333333334,
+        "avgJobDuration": 612.5,
+        "qualityScore": 0.45416666666666683,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8333333333333334,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:44:30.963Z",
+          "progress": 0.9259259259259259,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.45416666666666683,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:44:30.963Z",
+          "progress": 0.5343137254901963,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:44:46.575Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:44:46.575Z",
+      "cumulative": {
+        "totalJobs": 71,
+        "successfulJobs": 59,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 71,
+        "avgQuality": 0.4605633802816903,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8309859154929577,
+        "avgJobDuration": 609.875,
+        "qualityScore": 0.4605633802816903,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8309859154929577,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:44:46.575Z",
+          "progress": 0.9233176838810642,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4605633802816903,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:44:46.575Z",
+          "progress": 0.5418392709196357,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:45:06.982Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:45:06.982Z",
+      "cumulative": {
+        "totalJobs": 71,
+        "successfulJobs": 59,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 71,
+        "avgQuality": 0.4605633802816903,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8309859154929577,
+        "avgJobDuration": 609.625,
+        "qualityScore": 0.4605633802816903,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8309859154929577,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:45:06.982Z",
+          "progress": 0.9233176838810642,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4605633802816903,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:45:06.982Z",
+          "progress": 0.5418392709196357,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:45:22.544Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:45:22.544Z",
+      "cumulative": {
+        "totalJobs": 47,
+        "successfulJobs": 35,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 47,
+        "avgQuality": 0.6319148936170217,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7446808510638298,
+        "avgJobDuration": 405,
+        "qualityScore": 0.6319148936170217,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7446808510638298,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:45:22.544Z",
+          "progress": 0.8274231678486997,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6319148936170217,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:45:22.544Z",
+          "progress": 0.7434292866082608,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:49:46.358Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:49:46.358Z",
+      "cumulative": {
+        "totalJobs": 72,
+        "successfulJobs": 60,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 72,
+        "avgQuality": 0.4666666666666668,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8333333333333334,
+        "avgJobDuration": 549,
+        "qualityScore": 0.4666666666666668,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8333333333333334,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:49:46.358Z",
+          "progress": 0.9259259259259259,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4666666666666668,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:49:46.358Z",
+          "progress": 0.5490196078431374,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:50:07.332Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:50:07.332Z",
+      "cumulative": {
+        "totalJobs": 94,
+        "successfulJobs": 82,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 94,
+        "avgQuality": 0.37021276595744695,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8723404255319149,
+        "avgJobDuration": 561.5384615384615,
+        "qualityScore": 0.37021276595744695,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8723404255319149,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:50:07.332Z",
+          "progress": 0.9692671394799055,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.37021276595744695,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:50:07.332Z",
+          "progress": 0.4355444305381729,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:50:48.134Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:50:48.134Z",
+      "cumulative": {
+        "totalJobs": 71,
+        "successfulJobs": 59,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 71,
+        "avgQuality": 0.4605633802816903,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8309859154929577,
+        "avgJobDuration": 455.5,
+        "qualityScore": 0.4605633802816903,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8309859154929577,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:50:48.134Z",
+          "progress": 0.9233176838810642,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4605633802816903,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:50:48.134Z",
+          "progress": 0.5418392709196357,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T13:51:23.553Z",
+    "metrics": {
+      "timestamp": "2025-08-25T13:51:23.553Z",
+      "cumulative": {
+        "totalJobs": 70,
+        "successfulJobs": 58,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 70,
+        "avgQuality": 0.45428571428571446,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8285714285714286,
+        "avgJobDuration": 526.5714285714286,
+        "qualityScore": 0.45428571428571446,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8285714285714286,
+          "target": 0.9,
+          "deadline": "2025-11-23T13:51:23.553Z",
+          "progress": 0.9206349206349207,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.45428571428571446,
+          "target": 0.85,
+          "deadline": "2025-10-24T13:51:23.553Z",
+          "progress": 0.5344537815126053,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T14:02:33.796Z",
+    "metrics": {
+      "timestamp": "2025-08-25T14:02:33.796Z",
+      "cumulative": {
+        "totalJobs": 46,
+        "successfulJobs": 34,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 46,
+        "avgQuality": 0.6260869565217394,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7391304347826086,
+        "avgJobDuration": 606.5,
+        "qualityScore": 0.6260869565217394,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7391304347826086,
+          "target": 0.9,
+          "deadline": "2025-11-23T14:02:33.796Z",
+          "progress": 0.8212560386473429,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.6260869565217394,
+          "target": 0.85,
+          "deadline": "2025-10-24T14:02:33.796Z",
+          "progress": 0.7365728900255758,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T14:06:43.289Z",
+    "metrics": {
+      "timestamp": "2025-08-25T14:06:43.289Z",
+      "cumulative": {
+        "totalJobs": 69,
+        "successfulJobs": 57,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 69,
+        "avgQuality": 0.4637681159420291,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8260869565217391,
+        "avgJobDuration": 540.7142857142857,
+        "qualityScore": 0.4637681159420291,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8260869565217391,
+          "target": 0.9,
+          "deadline": "2025-11-23T14:06:43.289Z",
+          "progress": 0.9178743961352657,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.4637681159420291,
+          "target": 0.85,
+          "deadline": "2025-10-24T14:06:43.289Z",
+          "progress": 0.5456095481670931,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T14:11:51.085Z",
+    "metrics": {
+      "timestamp": "2025-08-25T14:11:51.085Z",
+      "cumulative": {
+        "totalJobs": 79,
+        "successfulJobs": 67,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 79,
+        "avgQuality": 0.42278481012658237,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.8481012658227848,
+        "avgJobDuration": 489.3,
+        "qualityScore": 0.42278481012658237,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.8481012658227848,
+          "target": 0.9,
+          "deadline": "2025-11-23T14:11:51.084Z",
+          "progress": 0.9423347398030941,
+          "onTrack": true
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.42278481012658237,
+          "target": 0.85,
+          "deadline": "2025-10-24T14:11:51.085Z",
+          "progress": 0.4973938942665675,
+          "onTrack": false
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-25T18:05:39.423Z",
+    "metrics": {
+      "timestamp": "2025-08-25T18:05:39.423Z",
+      "cumulative": {
+        "totalJobs": 55,
+        "successfulJobs": 43,
+        "knowledgeCards": 3,
+        "patternsLearned": 0,
+        "gotchasResolved": 0
+      },
+      "recent": {
+        "jobsCompleted": 55,
+        "avgQuality": 0.552727272727273,
+        "avgLearningValue": 0.5,
+        "newKnowledge": 0,
+        "improvementRate": 0
+      },
+      "milestones": [],
+      "kpis": {
+        "successRate": 0.7818181818181819,
+        "avgJobDuration": 618,
+        "qualityScore": 0.552727272727273,
+        "learningEfficiency": 0.7,
+        "knowledgeReuse": 0.6
+      },
+      "targets": [
+        {
+          "metric": "Success Rate",
+          "current": 0.7818181818181819,
+          "target": 0.9,
+          "deadline": "2025-11-23T18:05:39.423Z",
+          "progress": 0.8686868686868687,
+          "onTrack": false
+        },
+        {
+          "metric": "Quality Score",
+          "current": 0.552727272727273,
+          "target": 0.85,
+          "deadline": "2025-10-24T18:05:39.423Z",
+          "progress": 0.6502673796791447,
+          "onTrack": false
+        }
+      ]
+    }
+  }
+]
