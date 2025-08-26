@@ -26,17 +26,50 @@ try {
   };
 }
 
+// Load team configuration
+function loadTeamConfig() {
+  const fs = require('fs');
+  const path = require('path');
+  
+  const configPath = path.join(process.cwd(), '.ff2', 'team-config.json');
+  
+  if (!fs.existsSync(configPath)) {
+    throw new Error('Team configuration not found. Please run: node setup-team-mode.js');
+  }
+  
+  try {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    return config;
+  } catch (error) {
+    throw new Error(`Failed to load team configuration: ${error.message}`);
+  }
+}
+
 // Redis connection helper
 async function getRedisConnection() {
   const Redis = require('ioredis');
-  const redis = new Redis({
-    host: 'localhost',
-    port: 6379,
-    password: 'ff2_team_redis_2024',
-    db: 0,
+  const config = loadTeamConfig();
+  
+  if (!config.redis) {
+    throw new Error('Redis configuration not found in team config');
+  }
+  
+  const redisOptions = {
+    host: config.redis.host,
+    port: config.redis.port,
+    password: config.redis.password,
+    db: config.redis.db,
     retryDelayOnFailover: 100,
     maxRetriesPerRequest: 3,
-  });
+    connectTimeout: 10000,
+  };
+  
+  // Add TLS if needed (for Redis Cloud)
+  if (config.redis.tls || config.teamMode?.redisType === 'cloud') {
+    redisOptions.tls = {};
+  }
+  
+  const redis = new Redis(redisOptions);
   
   // Test connection
   await redis.ping();
@@ -116,14 +149,29 @@ async function teamStatus(options) {
   console.log(chalk.blue('📊 FF2 Team Collaboration Status\n'));
 
   try {
+    const config = loadTeamConfig();
     const redis = await getRedisConnection();
+    
+    // Display Redis backend info
     console.log(chalk.green('✅ Redis Backend: Connected'));
+    console.log(chalk.gray(`   Type: ${config.teamMode?.redisType || 'unknown'}`));
+    console.log(chalk.gray(`   Host: ${config.redis.host}`));
+    console.log(chalk.gray(`   Port: ${config.redis.port}`));
+    console.log(chalk.gray(`   Database: ${config.redis.db}`));
+    
+    if (config.teamMode?.redisType === 'cloud') {
+      console.log(chalk.blue('☁️  Remote team collaboration enabled'));
+    } else if (config.teamMode?.redisType === 'docker') {
+      console.log(chalk.yellow('🐳 Development mode - local Docker only'));
+    }
+    
+    console.log('');
 
     // List all teams
     const keys = await redis.keys('ff2:team:*');
     if (keys.length === 0) {
       console.log(chalk.yellow('⚠️  No teams found'));
-      console.log(chalk.blue('💡 Create a team: node ff2-team.js init'));
+      console.log(chalk.blue('💡 Create a team: ./ff2.bat team init'));
       redis.disconnect();
       return;
     }
@@ -147,10 +195,23 @@ async function teamStatus(options) {
     redis.disconnect();
 
   } catch (error) {
-    console.error(chalk.red('❌ Redis Backend: Disconnected'));
-    console.error(chalk.red('Error:'), error.message);
-    if (error.message.includes('ECONNREFUSED')) {
-      console.log(chalk.yellow('💡 Start Redis: docker-compose -f infrastructure/docker/docker-compose.redis.yml up -d'));
+    if (error.message.includes('Team configuration not found')) {
+      console.error(chalk.red('❌ Team mode not initialized'));
+      console.log(chalk.blue('💡 Run setup first: node setup-team-mode.js'));
+    } else {
+      console.error(chalk.red('❌ Redis Backend: Connection failed'));
+      console.error(chalk.red('Error:'), error.message);
+      
+      if (error.message.includes('ECONNREFUSED') || error.message.includes('ENOTFOUND')) {
+        const config = loadTeamConfig();
+        if (config.teamMode?.redisType === 'cloud') {
+          console.log(chalk.yellow('💡 Check your Redis Cloud connection and credentials'));
+        } else if (config.teamMode?.redisType === 'docker') {
+          console.log(chalk.yellow('💡 Start local Redis: docker-compose -f infrastructure/docker/docker-compose.redis.yml up -d'));
+        } else {
+          console.log(chalk.yellow('💡 Check your Redis server is running and accessible'));
+        }
+      }
     }
     process.exit(1);
   }
