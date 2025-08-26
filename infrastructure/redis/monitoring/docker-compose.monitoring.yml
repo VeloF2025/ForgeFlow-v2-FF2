@@ -1,0 +1,240 @@
+version: '3.8'
+
+services:
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: forgeflow-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-redis.yml:/etc/prometheus/prometheus.yml:ro
+      - ./redis-alerts.yml:/etc/prometheus/redis-alerts.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - forgeflow-monitoring
+    labels:
+      - "forgeflow.service=prometheus"
+      - "forgeflow.role=monitoring"
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: forgeflow-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=redis-datasource,grafana-piechart-panel
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    networks:
+      - forgeflow-monitoring
+    depends_on:
+      - prometheus
+    labels:
+      - "forgeflow.service=grafana"
+      - "forgeflow.role=visualization"
+
+  # AlertManager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: forgeflow-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--cluster.listen-address=0.0.0.0:9094'
+    networks:
+      - forgeflow-monitoring
+    labels:
+      - "forgeflow.service=alertmanager"
+      - "forgeflow.role=alerting"
+
+  # Node Exporter for System Metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: forgeflow-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.systemd'
+      - '--collector.processes'
+    networks:
+      - forgeflow-monitoring
+    labels:
+      - "forgeflow.service=node-exporter"
+      - "forgeflow.role=metrics"
+
+  # Redis Exporter
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: forgeflow-redis-exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://forgeflow-redis-master:6379
+      - REDIS_PASSWORD=${REDIS_MONITOR_PASSWORD:-monitor2024!}
+      - REDIS_USER=monitor
+      - CHECK_KEYS=locks:*,teams:*,tasks:*,sessions:*
+      - CHECK_SINGLE_KEYS=teams:*:member_list,teams:*:task_index
+    networks:
+      - forgeflow-monitoring
+      - forgeflow-redis
+    depends_on:
+      - prometheus
+    labels:
+      - "forgeflow.service=redis-exporter"
+      - "forgeflow.role=metrics"
+
+  # cAdvisor for Container Metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: forgeflow-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - forgeflow-monitoring
+    labels:
+      - "forgeflow.service=cadvisor"
+      - "forgeflow.role=metrics"
+
+  # Backup Service
+  redis-backup-service:
+    image: alpine:latest
+    container_name: forgeflow-redis-backup
+    restart: unless-stopped
+    volumes:
+      - ./scripts/backup-service.sh:/backup-service.sh:ro
+      - backup-data:/backups
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REDIS_HOST=forgeflow-redis-master
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_BACKUP_PASSWORD:-backup2024!}
+      - BACKUP_SCHEDULE=0 2 * * *
+      - BACKUP_RETENTION_DAYS=7
+      - S3_BUCKET=${BACKUP_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    command: ["/backup-service.sh"]
+    networks:
+      - forgeflow-redis
+    depends_on:
+      - prometheus
+    labels:
+      - "forgeflow.service=redis-backup"
+      - "forgeflow.role=backup"
+
+  # Log Aggregation with Loki
+  loki:
+    image: grafana/loki:latest
+    container_name: forgeflow-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - forgeflow-monitoring
+    labels:
+      - "forgeflow.service=loki"
+      - "forgeflow.role=logging"
+
+  # Promtail for Log Collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: forgeflow-promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - forgeflow-monitoring
+    depends_on:
+      - loki
+    labels:
+      - "forgeflow.service=promtail"
+      - "forgeflow.role=logging"
+
+volumes:
+  prometheus-data:
+    driver: local
+    labels:
+      - "forgeflow.volume=prometheus-data"
+  grafana-data:
+    driver: local
+    labels:
+      - "forgeflow.volume=grafana-data"
+  alertmanager-data:
+    driver: local
+    labels:
+      - "forgeflow.volume=alertmanager-data"
+  backup-data:
+    driver: local
+    labels:
+      - "forgeflow.volume=backup-data"
+  loki-data:
+    driver: local
+    labels:
+      - "forgeflow.volume=loki-data"
+
+networks:
+  forgeflow-monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    labels:
+      - "forgeflow.network=monitoring"
+  forgeflow-redis:
+    external: true

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ff2-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../redis/config/redis.conf:/usr/local/etc/redis/redis.conf
+      - redis_data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    networks:
+      - ff2-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: ff2-redis-commander
+    environment:
+      - REDIS_HOSTS=redis:ff2-redis:6379:0:ff2_team_redis_2024
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - ff2-network
+
+volumes:
+  redis_data:
+
+networks:
+  ff2-network:
+    driver: bridge

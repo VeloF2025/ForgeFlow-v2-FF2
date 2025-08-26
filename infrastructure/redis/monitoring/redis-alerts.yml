@@ -1,0 +1,257 @@
+# Redis Alerting Rules for ForgeFlow v2
+# Comprehensive monitoring and alerting for Redis infrastructure
+
+groups:
+  - name: redis-availability
+    rules:
+      # Redis Instance Down
+      - alert: RedisInstanceDown
+        expr: up{job=~"redis-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis instance {{ $labels.instance }} is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 1 minute"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-down"
+
+      # Master-Replica Connection Issues
+      - alert: RedisReplicationLinkDown
+        expr: redis_connected_slaves{job="redis-master"} < 2
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis master has less than 2 connected replicas"
+          description: "Redis master {{ $labels.instance }} has {{ $value }} connected replicas (expected: 2)"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-replication"
+
+      # Sentinel Monitoring
+      - alert: RedisSentinelDown
+        expr: up{job="redis-sentinel"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          service: redis-sentinel
+          team: devops
+        annotations:
+          summary: "Redis Sentinel {{ $labels.instance }} is down"
+          description: "Redis Sentinel instance is down, potential impact on failover capability"
+
+  - name: redis-performance
+    rules:
+      # High Memory Usage
+      - alert: RedisHighMemoryUsage
+        expr: (redis_memory_used_bytes / redis_config_maxmemory) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis memory usage is high on {{ $labels.instance }}"
+          description: "Redis memory usage is {{ $value }}% (threshold: 80%)"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-memory"
+
+      # Critical Memory Usage
+      - alert: RedisCriticalMemoryUsage
+        expr: (redis_memory_used_bytes / redis_config_maxmemory) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis memory usage is critically high on {{ $labels.instance }}"
+          description: "Redis memory usage is {{ $value }}% (critical threshold: 95%)"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-memory"
+
+      # High Connection Count
+      - alert: RedisHighConnectionCount
+        expr: redis_connected_clients > 800
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+          team: devops
+        annotations:
+          summary: "High Redis connection count on {{ $labels.instance }}"
+          description: "Redis has {{ $value }} connected clients (threshold: 800)"
+
+      # Slow Queries
+      - alert: RedisSlowQueries
+        expr: increase(redis_slowlog_length[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis slow queries detected on {{ $labels.instance }}"
+          description: "{{ $value }} slow queries in the last 5 minutes"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-performance"
+
+      # High CPU Usage
+      - alert: RedisHighCPUUsage
+        expr: rate(redis_cpu_sys_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis CPU usage is high on {{ $labels.instance }}"
+          description: "Redis CPU usage is {{ $value }}% (threshold: 80%)"
+
+  - name: redis-persistence
+    rules:
+      # RDB Save Failures
+      - alert: RedisRDBSaveFailed
+        expr: redis_rdb_last_save_time_seconds < (time() - 3600)
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis RDB save failed on {{ $labels.instance }}"
+          description: "Last successful RDB save was more than 1 hour ago"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-persistence"
+
+      # AOF Write Errors
+      - alert: RedisAOFWriteError
+        expr: redis_aof_last_write_status != 1
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+          team: devops
+        annotations:
+          summary: "Redis AOF write error on {{ $labels.instance }}"
+          description: "Redis AOF last write status indicates an error"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-persistence"
+
+  - name: redis-forgeflow-specific
+    rules:
+      # Distributed Lock Contention
+      - alert: HighDistributedLockContention
+        expr: increase(redis_commands_processed_total{cmd="eval"}[1m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: forgeflow
+          team: platform
+        annotations:
+          summary: "High distributed lock contention detected"
+          description: "High number of lock operations ({{ $value }}/min) may indicate contention"
+
+      # Team Collaboration Channel Backlog
+      - alert: TeamCollaborationBacklog
+        expr: redis_list_length{key=~"teams:.*:message_history"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: forgeflow
+          team: platform
+        annotations:
+          summary: "Team collaboration message backlog is high"
+          description: "Message queue {{ $labels.key }} has {{ $value }} messages"
+
+      # Expired Task Coordination Data
+      - alert: ExpiredTaskCoordinationData
+        expr: time() - redis_key_last_modified_time{key=~"teams:.*:tasks:.*"} > 86400
+        for: 1h
+        labels:
+          severity: info
+          service: forgeflow
+          team: platform
+        annotations:
+          summary: "Old task coordination data detected"
+          description: "Task {{ $labels.key }} hasn't been updated for over 24 hours"
+
+  - name: redis-security
+    rules:
+      # Unauthorized Connection Attempts
+      - alert: RedisUnauthorizedConnections
+        expr: increase(redis_rejected_connections_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: redis
+          team: security
+        annotations:
+          summary: "Unauthorized Redis connection attempts on {{ $labels.instance }}"
+          description: "{{ $value }} rejected connections in the last 5 minutes"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-security"
+
+      # Dangerous Commands Executed
+      - alert: RedisDangerousCommands
+        expr: increase(redis_commands_processed_total{cmd=~"flushdb|flushall|debug|config|shutdown"}[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          service: redis
+          team: security
+        annotations:
+          summary: "Dangerous Redis command executed on {{ $labels.instance }}"
+          description: "Command {{ $labels.cmd }} was executed {{ $value }} times"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-security-incident"
+
+  - name: redis-cluster-health
+    rules:
+      # Cluster Node Failures
+      - alert: RedisClusterNodeDown
+        expr: redis_cluster_nodes{role="master", status="fail"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis-cluster
+          team: devops
+        annotations:
+          summary: "Redis cluster master node is down"
+          description: "{{ $value }} master nodes are in failed state"
+
+      # Cluster Slot Coverage
+      - alert: RedisClusterSlotCoverage
+        expr: redis_cluster_slots_assigned < 16384
+        for: 2m
+        labels:
+          severity: critical
+          service: redis-cluster
+          team: devops
+        annotations:
+          summary: "Redis cluster slot coverage is incomplete"
+          description: "Only {{ $value }}/16384 slots are assigned"
+
+  - name: redis-backup-monitoring
+    rules:
+      # Backup Failures
+      - alert: RedisBackupFailed
+        expr: time() - redis_last_backup_time > 86400
+        for: 10m
+        labels:
+          severity: warning
+          service: redis-backup
+          team: devops
+        annotations:
+          summary: "Redis backup is overdue on {{ $labels.instance }}"
+          description: "Last successful backup was more than 24 hours ago"
+          runbook: "https://wiki.forgeflow.com/runbooks/redis-backup"
+
+      # Backup Size Anomalies
+      - alert: RedisBackupSizeAnomaly
+        expr: |
+          abs(redis_backup_size_bytes - redis_backup_size_bytes offset 24h) / 
+          redis_backup_size_bytes offset 24h > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: redis-backup
+          team: devops
+        annotations:
+          summary: "Redis backup size anomaly detected"
+          description: "Backup size changed by more than 50% compared to 24h ago"

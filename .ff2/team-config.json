@@ -1,0 +1,22 @@
+{
+  "teamMode": {
+    "enabled": true,
+    "initialized": "2025-08-26T08:23:45.000Z",
+    "version": "1.0.0"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "password": "ff2_team_redis_2024",
+    "db": 0
+  },
+  "auth": {
+    "providers": ["local"],
+    "jwtSecret": "ff2_jwt_secret_change_in_production_2024",
+    "sessionTTL": 86400
+  },
+  "team": {
+    "maxMembers": 50,
+    "defaultRole": "developer"
+  }
+}

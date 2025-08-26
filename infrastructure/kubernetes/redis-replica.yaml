@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-replica
+  namespace: forgeflow-redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+    app.kubernetes.io/part-of: forgeflow-v2
+spec:
+  serviceName: redis-replica-service
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: replica
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/component: replica
+        app.kubernetes.io/part-of: forgeflow-v2
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: redis
+        image: redis:7.2-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: redis-password
+        command:
+        - redis-server
+        - /etc/redis/redis.conf
+        - --requirepass
+        - $(REDIS_PASSWORD)
+        - --aclfile
+        - /etc/redis/acl.conf
+        - --slaveof
+        - redis-master
+        - "6379"
+        - --masterauth
+        - $(REDIS_PASSWORD)
+        - --replica-read-only
+        - "yes"
+        volumeMounts:
+        - name: redis-config
+          mountPath: /etc/redis/redis.conf
+          subPath: redis.conf
+        - name: redis-auth
+          mountPath: /etc/redis/acl.conf
+          subPath: redis-acl.conf
+        - name: redis-data
+          mountPath: /data
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - --raw
+            - incr
+            - ping
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - --raw
+            - incr
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-config
+      - name: redis-auth
+        secret:
+          name: redis-auth
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-replica-service
+  namespace: forgeflow-redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+    app.kubernetes.io/part-of: forgeflow-v2
+spec:
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-replica
+  namespace: forgeflow-redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+    app.kubernetes.io/part-of: forgeflow-v2
+spec:
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: replica
+  ports:
+  - port: 6379
+    targetPort: 6379
+    name: redis
+  clusterIP: None  # Headless service for StatefulSet

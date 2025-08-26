@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: forgeflow-redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: forgeflow-v2
+data:
+  redis.conf: |
+    # Redis Configuration for Kubernetes
+    bind 0.0.0.0
+    port 6379
+    protected-mode yes
+    tcp-backlog 511
+    tcp-keepalive 300
+    timeout 0
+
+    # Memory Management
+    maxmemory 2gb
+    maxmemory-policy allkeys-lru
+    maxmemory-samples 5
+
+    # Persistence
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+
+    # Performance
+    hz 10
+    dynamic-hz yes
+    tcp-nodelay yes
+
+    # Logging
+    loglevel notice
+    syslog-enabled no
+
+    # Security - password will be set via environment
+    # ACL will be loaded from secret
+
+    # Keyspace notifications for distributed locking
+    notify-keyspace-events "Ex"
+
+    # Slow log
+    slowlog-log-slower-than 10000
+    slowlog-max-len 128
+
+    # Client limits
+    maxclients 1000
+
+    # Latency monitoring
+    latency-monitor-threshold 100
+
+  sentinel.conf: |
+    port 26379
+    sentinel announce-ip ${POD_IP}
+    sentinel announce-port 26379
+    sentinel monitor forgeflow-master redis-master 6379 2
+    sentinel down-after-milliseconds forgeflow-master 5000
+    sentinel parallel-syncs forgeflow-master 1
+    sentinel failover-timeout forgeflow-master 10000
+    sentinel resolve-hostnames yes
+    sentinel announce-hostnames yes
+    logfile ""
+    loglevel notice

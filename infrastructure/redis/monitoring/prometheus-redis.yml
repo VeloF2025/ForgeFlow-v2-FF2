@@ -1,0 +1,75 @@
+# Prometheus Configuration for Redis Monitoring
+# ForgeFlow v2 Production Monitoring Setup
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'forgeflow-v2'
+    environment: 'production'
+
+rule_files:
+  - "redis-alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - 'alertmanager:9093'
+
+scrape_configs:
+  # Redis Exporter - Master
+  - job_name: 'redis-master'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    params:
+      target: ['redis://redis-master:6379']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: redis-exporter:9121
+      - target_label: redis_role
+        replacement: master
+
+  # Redis Exporter - Replicas
+  - job_name: 'redis-replicas'
+    static_configs:
+      - targets: 
+          - 'redis-replica-1:6379'
+          - 'redis-replica-2:6379'
+    scrape_interval: 10s
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: redis_role
+        replacement: replica
+
+  # Redis Sentinel
+  - job_name: 'redis-sentinel'
+    static_configs:
+      - targets:
+          - 'redis-sentinel-1:26379'
+          - 'redis-sentinel-2:26379'
+          - 'redis-sentinel-3:26379'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    relabel_configs:
+      - target_label: redis_role
+        replacement: sentinel
+
+  # Node Exporter for System Metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # ForgeFlow Application Metrics
+  - job_name: 'forgeflow-app'
+    static_configs:
+      - targets: ['forgeflow-app:3000']
+    scrape_interval: 30s
+    metrics_path: /metrics
